@@ -17,8 +17,10 @@ int main(void)
     Vector w = {malloc(sizeof(double)), 1};
     w.data[0] = 0.0;
     double b = 0.0;
+    double lambda = 0.01;
+    bool regularize = true;
 
-    if (train_linear_model(&X, &y, &w, &b, 0.01, 100) < 0)
+    if (train_linear_model(&X, &y, &w, &b, 0.01, 200, lambda, regularize) < 0)
     {
         printf("Error with training linear model.\n");
         return -1;
