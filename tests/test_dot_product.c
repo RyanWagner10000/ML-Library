@@ -1,3 +1,11 @@
+/*
+ * file: test_dot_pruduct.c
+ * description: script to test the ability of the dot product funciton
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: 
+ */
+
 #include "unity.h"
 #include <stdio.h>
 #include "../header/math_funcs.h"

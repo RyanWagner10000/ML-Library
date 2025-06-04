@@ -1,8 +1,21 @@
-// main c file
+/*
+ * file: main.c
+ * description: file used to practice or setup a scenario for learning
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes:
+ */
 #include "../header/math_funcs.h"
 #include "../header/linear_regression.h"
 // #include "main.h"
 
+/**
+ * @brief Main function to run a linear regression
+ *
+ * @param None
+ *
+ * @return 0 on success, -1 on failure
+ */
 int main(void)
 {
 

@@ -1,3 +1,11 @@
+/*
+ * file: test_identity.c
+ * description: script to test the ability of the identity matric generator function
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: 
+ */
+
 #include "unity.h"
 #include <stdio.h>
 #include "../header/math_funcs.h"

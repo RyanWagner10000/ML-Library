@@ -1,4 +1,11 @@
-// main header file
+/*
+ * file: linear_regression.h
+ * description: header file that gives access to all the linear regression funcitons
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: 
+ */
+
 #ifndef LINEAR_REGRESSION_H
 #define LINEAR_REGRESSION_H
 

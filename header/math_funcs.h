@@ -1,4 +1,11 @@
-// main header file
+/*
+ * file: math_funcs.h
+ * description: header file to cover all the funcs that perform math operations
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: 
+ */
+
 #ifndef MATH_FUNCS_H
 #define MATH_FUNCS_H
 

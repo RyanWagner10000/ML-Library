@@ -1,14 +1,49 @@
+/*
+ * file: linear_regression.c
+ * description: script of all linear regression functions
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: script encompasses prediction, loss with MSE & regularization w/ lambda,
+ *        gradient descent, and a linear model trainer
+ */
+
 #include "../header/linear_regression.h"
 
+/**
+ * @brief Prediction function for linear regression
+ *
+ * @param x Vector pointer for input values
+ * @param w Vector pointer for weights for each predicted value in Vector x
+ * @param b Bias applied to each prediction
+ * @param result Result from the prediction operation
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int predict(Vector *x, Vector *w, double b, double *result)
 {
-    return dot_product(x, w, result);
+    // Apply wights and biases to input values
+    return dot_product(x, w, result) + b;
 }
 
+/**
+ * @brief Compute the loss of the current epoch with MSE and L2 Regularization with lambda
+ *
+ * @param x Vector pointer for input values
+ * @param y Vector pointer of target values
+ * @param w Vector pointer for weights of features per sample
+ * @param b Bias value applied in prediction step
+ * @param result Resulting Vector of predicted valeus
+ * @param lambda Strength of the regularization
+ * @param regularize Boolean if the user wants to apply regularization
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, double lambda, bool regularize)
 {
     double y_pred = 0;
     *result = 0;
+
+    // apply the prediction to each row in input matrix
     for (int i = 0; i < x->rows; ++i)
     {
         Vector xi = {&x->data[i * x->cols], x->cols};
@@ -18,33 +53,53 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
             return -1;
         }
 
+        // Accumulate error based on prediction and target values
         double error = y->data[i] - y_pred;
         *result += error * error;
     }
 
+    // Average the result
     *result /= x->rows;
 
     if (regularize)
     {
+        // Apply L2 Norm regularization (sum of squares)
         double reg_term = 0.0;
         for (int i = 0; i < w->size; ++i)
         {
             reg_term += w->data[i] * w->data[i];
         }
+        // Apply lambda on regularization
         *result += lambda * reg_term;
     }
 
     return 0;
 }
 
+/**
+ * @brief Computes the gradient descent as it solves the problem
+ *
+ * @param x Vector pointer of input Values
+ * @param y_true Vector pointer of target values
+ * @param w Vector pointer of weights per feature
+ * @param b Bias value applied to each predicted value
+ * @param grad_w Vector pointer of the gradient of the weights
+ * @param grad_b Vector pointer of the gradient of the bias(es)
+ * @param lambda Lambda value used for regularization
+ * @param regularize Bool value if the user wants regularization
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *grad_w, double *grad_b, double lambda, bool regularize)
 {
+    // Init gradient weights and biases to 0
     for (int j = 0; j < w->size; ++j)
     {
         grad_w->data[j] = 0.0;
     }
     *grad_b = 0.0;
 
+    // Apply the prediction ro each row in the input Matrix
     for (int i = 0; i < x->rows; ++i)
     {
         Vector xi = {&x->data[i * x->cols], x->cols};
@@ -56,6 +111,7 @@ int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *gra
         }
         double error = y_true->data[i] - y_pred;
 
+        // Calculate the weights and biases gradients
         for (int j = 0; j < w->size; ++j)
         {
             grad_w->data[j] += -2 * error * xi.data[j];
@@ -81,8 +137,23 @@ int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *gra
     return 0;
 }
 
+/**
+ * @brief
+ *
+ * @param x Vector pointer of input Values
+ * @param y_true Vector pointer of target values
+ * @param w Vector pointer of weights per feature
+ * @param b Bias value applied to each predicted value
+ * @param lr Learning Rate controls how fast the system learns information over the epochs
+ * @param epochs Number of iterations the user wants the system to run and get close to the target
+ * @param lambda Lambda value used for regularization
+ * @param regularize Bool value if the user wants regularization
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, double lr, int epochs, double lambda, bool regularize)
 {
+    // Init weights gradient Vector and bias
     Vector grad_w = {malloc(sizeof(double) * w->size), w->size};
     double grad_b = 0.0;
 
@@ -93,6 +164,7 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, double l
             return -1;
         }
 
+        // Adjust the weights and biases based on the learning rate and respective gradients
         for (int j = 0; j < w->size; ++j)
         {
             w->data[j] -= lr * grad_w.data[j];
@@ -100,6 +172,7 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, double l
 
         *b -= lr * grad_b;
 
+        // Purely for user to see progress over time/epoch
         if (epoch % 10 == 0 || epoch == epochs - 1)
         {
             double loss = 0.0;

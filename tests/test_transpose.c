@@ -1,3 +1,11 @@
+/*
+ * file: test_transpose.c
+ * description: script to test the ability of the transpose function
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: tests the transpose of 1d, 2d, 3d matrices
+ */
+
 #include "unity.h"
 #include <stdio.h>
 #include "../header/math_funcs.h"

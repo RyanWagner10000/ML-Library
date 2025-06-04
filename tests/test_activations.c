@@ -1,3 +1,11 @@
+/*
+ * file: test_activations.c
+ * description: script to test the ability of the activation functions
+ * author: Ryan Wagner
+ * date: June 6, 2025
+ * notes: 
+ */
+
 #include "unity.h"
 #include <stdio.h>
 #include "../header/math_funcs.h"
