@@ -34,11 +34,11 @@ int predict(Vector *x, Vector *w, double b, double *result)
  * @param b Bias value applied in prediction step
  * @param result Resulting Vector of predicted valeus
  * @param lambda Strength of the regularization
- * @param regularize Boolean if the user wants to apply regularization
+ * @param regularize RegularizationType option for which type of norm to use
  *
  * @return 0 if successful, -1 if failure
  */
-int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, double lambda, bool regularize)
+int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, double lambda, RegularizationType regularize)
 {
     double y_pred = 0;
     *result = 0;
@@ -61,7 +61,18 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
     // Average the result
     *result /= x->rows;
 
-    if (regularize)
+    if (regularize == REG_L1)
+    {
+        // Apply L1 Norm regularization (sum of absolute values)
+        double reg_term = 0.0;
+        for (int i = 0; i < w->size; ++i)
+        {
+            reg_term += fabs(w->data[i]);
+        }
+        // Apply lambda on regularization
+        *result += lambda * reg_term;
+    }
+    else if (regularize == REG_L2)
     {
         // Apply L2 Norm regularization (sum of squares)
         double reg_term = 0.0;
@@ -86,11 +97,11 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
  * @param grad_w Vector pointer of the gradient of the weights
  * @param grad_b Vector pointer of the gradient of the bias(es)
  * @param lambda Lambda value used for regularization
- * @param regularize Bool value if the user wants regularization
+ * @param regularize RegularizationType option for which type of norm to use
  *
  * @return 0 if successful, -1 if failure
  */
-int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *grad_w, double *grad_b, double lambda, bool regularize)
+int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *grad_w, double *grad_b, double lambda, RegularizationType regularize)
 {
     // Init gradient weights and biases to 0
     for (int j = 0; j < w->size; ++j)
@@ -126,7 +137,11 @@ int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *gra
         grad_w->data[j] /= x->rows;
 
         // Add regularization gradient
-        if (regularize)
+        if (regularize == REG_L1)
+        {
+            grad_w->data[j] += lambda * ((w->data[j] > 0) ? 1.0 : (w->data[j] < 0) ? -1.0 : 0.0);
+        }
+        else if (regularize == REG_L2)
         {
             grad_w->data[j] += 2 * lambda * w->data[j];
         }
@@ -143,23 +158,19 @@ int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *gra
  * @param x Vector pointer of input Values
  * @param y_true Vector pointer of target values
  * @param w Vector pointer of weights per feature
- * @param b Bias value applied to each predicted value
- * @param lr Learning Rate controls how fast the system learns information over the epochs
- * @param epochs Number of iterations the user wants the system to run and get close to the target
- * @param lambda Lambda value used for regularization
- * @param regularize Bool value if the user wants regularization
+ * @param config TrainConfig pointer for all training options from user
  *
  * @return 0 if successful, -1 if failure
  */
-int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, double lr, int epochs, double lambda, bool regularize)
+int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainConfig *config)
 {
     // Init weights gradient Vector and bias
     Vector grad_w = {malloc(sizeof(double) * w->size), w->size};
     double grad_b = 0.0;
 
-    for (int epoch = 0; epoch < epochs; ++epoch)
+    for (int epoch = 0; epoch < config->epochs; ++epoch)
     {
-        if (computeGradients(x, y_true, w, *b, &grad_w, &grad_b, lambda, regularize) < 0)
+        if (computeGradients(x, y_true, w, *b, &grad_w, &grad_b, config->lambda, config->regularization) < 0)
         {
             return -1;
         }
@@ -167,16 +178,16 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, double l
         // Adjust the weights and biases based on the learning rate and respective gradients
         for (int j = 0; j < w->size; ++j)
         {
-            w->data[j] -= lr * grad_w.data[j];
+            w->data[j] -= config->learning_rate * grad_w.data[j];
         }
 
-        *b -= lr * grad_b;
+        *b -= config->learning_rate * grad_b;
 
         // Purely for user to see progress over time/epoch
-        if (epoch % 10 == 0 || epoch == epochs - 1)
+        if (epoch % 10 == 0 || epoch == config->epochs - 1)
         {
             double loss = 0.0;
-            if (computeLoss(x, y_true, w, *b, &loss, lambda, regularize) < 0)
+            if (computeLoss(x, y_true, w, *b, &loss, config->lambda, config->regularization) < 0)
             {
                 return -1;
             }

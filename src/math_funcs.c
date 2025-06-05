@@ -6,11 +6,6 @@
  * notes: All math functions are row-wise vectors/matrices in memory
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
 #include "../header/math_funcs.h"
 
 /**

@@ -30,10 +30,14 @@ int main(void)
     Vector w = {malloc(sizeof(double)), 1};
     w.data[0] = 0.0;
     double b = 0.0;
-    double lambda = 0.01;
-    bool regularize = true;
 
-    if (train_linear_model(&X, &y, &w, &b, 0.01, 200, lambda, regularize) < 0)
+    TrainConfig config = {
+        .learning_rate = 0.01,
+        .epochs = 200,
+        .lambda = 0.01,
+        .regularization = REG_L1};
+
+    if (train_linear_model(&X, &y, &w, &b, &config) < 0)
     {
         printf("Error with training linear model.\n");
         return -1;

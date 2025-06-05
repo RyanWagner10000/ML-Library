@@ -5,6 +5,12 @@
  * date: June 6, 2025
  * notes: 
  */
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <math.h>
 
 #ifndef MATH_FUNCS_H
 #define MATH_FUNCS_H
