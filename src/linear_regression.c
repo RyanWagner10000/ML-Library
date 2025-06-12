@@ -46,15 +46,41 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
     // apply the prediction to each row in input matrix
     for (int i = 0; i < x->rows; ++i)
     {
-        Vector xi = {&x->data[i * x->cols], x->cols};
-
-        if (predict(&xi, w, b, &y_pred) < 0)
+        switch (x->type)
         {
-            return -1;
+        case TYPE_INT:
+        {
+            Vector xi = {x->cols, &((int *)x->data)[i * x->cols], TYPE_INT};
+            if (predict(&xi, w, b, &y_pred) < 0)
+            {
+                return -1;
+            }
+            break;
+        }
+        case TYPE_FLOAT:
+        {
+            Vector xi = {x->cols, &((float *)x->data)[i * x->cols], TYPE_FLOAT};
+            if (predict(&xi, w, b, &y_pred) < 0)
+            {
+                return -1;
+            }
+            break;
+        }
+        case TYPE_DOUBLE:
+        {
+            Vector xi = {x->cols, &((double *)x->data)[i * x->cols], TYPE_DOUBLE};
+            if (predict(&xi, w, b, &y_pred) < 0)
+            {
+                return -1;
+            }
+            break;
+        }
+        default:
+            break;
         }
 
         // Accumulate error based on prediction and target values
-        double error = y->data[i] - y_pred;
+        double error = ((double *)y->data)[i] - y_pred;
         *result += error * error;
     }
 
@@ -67,7 +93,7 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
         double reg_term = 0.0;
         for (int i = 0; i < w->size; ++i)
         {
-            reg_term += fabs(w->data[i]);
+            reg_term += fabs(((double *)w->data)[i]);
         }
         // Apply lambda on regularization
         *result += lambda * reg_term;
@@ -78,7 +104,7 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
         double reg_term = 0.0;
         for (int i = 0; i < w->size; ++i)
         {
-            reg_term += w->data[i] * w->data[i];
+            reg_term += ((double *)w->data)[i] * ((double *)w->data)[i];
         }
         // Apply lambda on regularization
         *result += lambda * reg_term;
@@ -104,47 +130,186 @@ int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result, doubl
 int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *grad_w, double *grad_b, double lambda, RegularizationType regularize)
 {
     // Init gradient weights and biases to 0
-    for (int j = 0; j < w->size; ++j)
+    switch (grad_w->type)
     {
-        grad_w->data[j] = 0.0;
+    case TYPE_INT:
+    {
+        for (int j = 0; j < w->size; ++j)
+        {
+            ((int *)grad_w->data)[j] = 0;
+        }
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        for (int j = 0; j < w->size; ++j)
+        {
+            ((float *)grad_w->data)[j] = 0.0;
+        }
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        for (int j = 0; j < w->size; ++j)
+        {
+            ((double *)grad_w->data)[j] = 0.0;
+        }
+        break;
+    }
+    default:
+    {
+        printf("Unrecognized data type for gradient weights zero initialization\n");
+        return -1;
+    }
     }
     *grad_b = 0.0;
 
-    // Apply the prediction ro each row in the input Matrix
+    // Apply the prediction to each row in the input Matrix
     for (int i = 0; i < x->rows; ++i)
     {
-        Vector xi = {&x->data[i * x->cols], x->cols};
+        Vector xi;
+        switch (x->type)
+        {
+        case TYPE_INT:
+        {
+            if (makeVector(&xi, x->cols, &((int *)x->data)[i * x->cols], TYPE_INT) < 0)
+            {
+                printf("Unsucessful making of \'xi\' vector\n");
+                return -1;
+            }
+            break;
+        }
+        case TYPE_FLOAT:
+        {
+            if (makeVector(&xi, x->cols, &((float *)x->data)[i * x->cols], TYPE_FLOAT) < 0)
+            {
+                printf("Unsucessful making of \'xi\' vector\n");
+                return -1;
+            }
+            break;
+        }
+        case TYPE_DOUBLE:
+        {
+            if (makeVector(&xi, x->cols, &((double *)x->data)[i * x->cols], TYPE_DOUBLE) < 0)
+            {
+                printf("Unsucessful making of \'xi\' vector\n");
+                return -1;
+            }
+            break;
+        }
+        default:
+            break;
+        }
 
         double y_pred = 0;
         if (predict(&xi, w, b, &y_pred) < 0)
         {
             return -1;
         }
-        double error = y_true->data[i] - y_pred;
+        double error = ((double *)y_true->data)[i] - y_pred;
 
         // Calculate the weights and biases gradients
-        for (int j = 0; j < w->size; ++j)
+        switch (grad_w->type)
         {
-            grad_w->data[j] += -2 * error * xi.data[j];
+        case TYPE_INT:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((int *)grad_w->data)[j] += -2 * error * ((int *)xi.data)[j];
+            }
+            break;
+        }
+        case TYPE_FLOAT:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((float *)grad_w->data)[j] += -2 * error * ((float *)xi.data)[j];
+            }
+            break;
+        }
+        case TYPE_DOUBLE:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((double *)grad_w->data)[j] += -2 * error * ((double *)xi.data)[j];
+            }
+            break;
+        }
+        default:
+        {
+            printf("Unrecognized data type for gradient weights calculation\n");
+            return -1;
+        }
         }
 
         *grad_b += -2 * error;
     }
 
     // Average the gradients
-    for (int j = 0; j < grad_w->size; ++j)
+    switch (grad_w->type)
     {
-        grad_w->data[j] /= x->rows;
+    case TYPE_INT:
+    {
+        for (int j = 0; j < grad_w->size; ++j)
+        {
+            ((int *)grad_w->data)[j] /= x->rows;
 
-        // Add regularization gradient
-        if (regularize == REG_L1)
-        {
-            grad_w->data[j] += lambda * ((w->data[j] > 0) ? 1.0 : (w->data[j] < 0) ? -1.0 : 0.0);
+            // Add regularization gradient
+            if (regularize == REG_L1)
+            {
+                ((int *)grad_w->data)[j] += lambda * ((((int *)w->data)[j] > 0) ? 1.0 : (((int *)w->data)[j] < 0) ? -1.0
+                                                                                                                  : 0.0);
+            }
+            else if (regularize == REG_L2)
+            {
+                ((int *)grad_w->data)[j] += 2 * lambda * ((int *)w->data)[j];
+            }
         }
-        else if (regularize == REG_L2)
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        for (int j = 0; j < grad_w->size; ++j)
         {
-            grad_w->data[j] += 2 * lambda * w->data[j];
+            ((float *)grad_w->data)[j] /= x->rows;
+
+            // Add regularization gradient
+            if (regularize == REG_L1)
+            {
+                ((float *)grad_w->data)[j] += lambda * ((((float *)w->data)[j] > 0) ? 1.0 : (((float *)w->data)[j] < 0) ? -1.0
+                                                                                                                        : 0.0);
+            }
+            else if (regularize == REG_L2)
+            {
+                ((float *)grad_w->data)[j] += 2 * lambda * ((float *)w->data)[j];
+            }
         }
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        for (int j = 0; j < grad_w->size; ++j)
+        {
+            ((double *)grad_w->data)[j] /= x->rows;
+
+            // Add regularization gradient
+            if (regularize == REG_L1)
+            {
+                ((double *)grad_w->data)[j] += lambda * ((((double *)w->data)[j] > 0) ? 1.0 : (((double *)w->data)[j] < 0) ? -1.0
+                                                                                                                           : 0.0);
+            }
+            else if (regularize == REG_L2)
+            {
+                ((double *)grad_w->data)[j] += 2 * lambda * ((double *)w->data)[j];
+            }
+        }
+        break;
+    }
+    default:
+    {
+        printf("Unrecognized data type for gradient weights calculation\n");
+        return -1;
+    }
     }
 
     *grad_b /= x->rows;
@@ -165,7 +330,12 @@ int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vector *gra
 int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainConfig *config)
 {
     // Init weights gradient Vector and bias
-    Vector grad_w = {malloc(sizeof(double) * w->size), w->size};
+    Vector grad_w;
+    if (makeVectorZeros(&grad_w, w->size, w->type) < 0)
+    {
+        printf("Unsuccessful initialization of gradient weights vector in model training\n");
+        return -1;
+    }
     double grad_b = 0.0;
 
     for (int epoch = 0; epoch < config->epochs; ++epoch)
@@ -176,9 +346,37 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainCon
         }
 
         // Adjust the weights and biases based on the learning rate and respective gradients
-        for (int j = 0; j < w->size; ++j)
+        switch (w->type)
         {
-            w->data[j] -= config->learning_rate * grad_w.data[j];
+        case TYPE_INT:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((int *)w->data)[j] -= config->learning_rate * ((int *)grad_w.data)[j];
+            }
+            break;
+        }
+        case TYPE_FLOAT:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((float *)w->data)[j] -= config->learning_rate * ((float *)grad_w.data)[j];
+            }
+            break;
+        }
+        case TYPE_DOUBLE:
+        {
+            for (int j = 0; j < w->size; ++j)
+            {
+                ((double *)w->data)[j] -= config->learning_rate * ((double *)grad_w.data)[j];
+            }
+            break;
+        }
+        default:
+        {
+            printf("Unrecognized data type for weights update\n");
+            return -1;
+        }
         }
 
         *b -= config->learning_rate * grad_b;
@@ -195,6 +393,6 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainCon
         }
     }
 
-    free(grad_w.data);
+    freeVector(&grad_w);
     return 0;
 }

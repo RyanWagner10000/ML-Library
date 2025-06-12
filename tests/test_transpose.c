@@ -20,62 +20,95 @@ void tearDown(void) {
 
 void test_transpose_1d(void)
 {
-    Matrix result;
     int status = -1;
 
+    Matrix result;
+    status = makeMatrix(&result, 3, 1, NULL, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
     double init_A[] = {1, 1, 1};
-    Matrix A = makeMatrix(init_A, 1, 3);
+    Matrix A;
+    status = makeMatrix(&A, 1, 3, &init_A, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     double init_ans[] = {1, 1, 1};
-    Matrix ans = makeMatrix(init_ans, 3, 1);
+    Matrix ans;
+    status = makeMatrix(&ans, 3, 1, &init_ans, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     status = transpose(&A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)
     {
-        TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)result.data[i]);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeMatrix(&result);
+    freeMatrix(&A);
+    freeMatrix(&ans);
 }
 
 void test_transpose_2d(void)
 {
-    Matrix result;
     int status = -1;
 
+    Matrix result;
+    status = makeMatrix(&result, 3, 2, NULL, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
     double init_A[] = {1, 1, 1, 2, 2, 2};
-    Matrix A = makeMatrix(init_A, 2, 3);
+    Matrix A;
+    status = makeMatrix(&A, 2, 3, &init_A, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     double init_ans[] = {1, 2, 1, 2, 1, 2};
-    Matrix ans = makeMatrix(init_ans, 3, 2);
+    Matrix ans;
+    status = makeMatrix(&ans, 3, 2, &init_ans, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     status = transpose(&A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)
     {
-        TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)result.data[i]);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeMatrix(&result);
+    freeMatrix(&A);
+    freeMatrix(&ans);
 }
 
 void test_transpose_3d(void)
 {
-    Matrix result;
     int status = -1;
 
+    Matrix result;
+    status = makeMatrix(&result, 3, 3, NULL, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
     double init_A[] = {1, 1, 1, 2, 2, 2, 3, 3, 3};
-    Matrix A = makeMatrix(init_A, 3, 3);
+    Matrix A;
+    status = makeMatrix(&A, 3, 3, &init_A, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     double init_ans[] = {1, 2, 3, 1, 2, 3, 1, 2, 3};
-    Matrix ans = makeMatrix(init_ans, 3, 3);
+    Matrix ans;
+    status = makeMatrix(&ans, 3, 3, &init_ans, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     status = transpose(&A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)
     {
-        TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)result.data[i]);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeMatrix(&result);
+    freeMatrix(&A);
+    freeMatrix(&ans);
 }
 
 int main(void)

@@ -9,90 +9,6 @@
 #include "../header/math_funcs.h"
 
 /**
- * @brief Makes a Vector object from an array and a size
- *
- * @param array of doubles for vector
- * @param size of the array being put into vector
- *
- * @return Vector object filled with input array and size
- */
-Vector makeVector(double *array, int size)
-{
-    // Create vector and allocate memory the size of input array
-    Vector v;
-    v.size = size;
-    v.data = malloc(sizeof(double) * size);
-
-    for (int i = 0; i < size; ++i)
-    {
-        v.data[i] = array[i];
-    }
-
-    return v;
-}
-
-/**
- * @brief Makes a Matrix object from an array and number of rows and cols
- *
- * @param array of doubles for matrix
- * @param rows for matrix
- * @param cols for matrix
- *
- * @return Matrix object filled with input array of or M rows and N cols
- */
-Matrix makeMatrix(double *array, int rows, int cols)
-{
-    // Create Matrix and allocate memory the size of input rows X cols
-    Matrix m;
-    m.rows = rows;
-    m.cols = cols;
-    m.data = malloc(sizeof(double) * rows * cols);
-    memcpy(m.data, array, sizeof(double) * rows * cols);
-    return m;
-}
-
-/**
- * @brief Basic printing of a vector object
- *
- * @param v Vector object to print
- *
- * @return None
- */
-void printVector(Vector *v)
-{
-    printf("[");
-    for (int i = 0; i < v->size; ++i)
-    {
-        printf("%.2f", v->data[i]);
-        if (i < v->size - 1)
-            printf(", ");
-    }
-    printf("]\n");
-}
-
-/**
- * @brief Basic printing of a Matrix object
- *
- * @param m Matrix object to print
- *
- * @return None
- */
-void printMatrix(Matrix *m)
-{
-    for (int i = 0; i < m->rows; ++i)
-    {
-        printf("[");
-        for (int j = 0; j < m->cols; ++j)
-        {
-            printf("%.2f", m->data[i * m->cols + j]);
-            if (j < m->cols - 1)
-                printf(", ");
-        }
-        printf("]\n");
-    }
-}
-
-/**
  * @brief Performs the dot product of two vectors
  *
  * @param x Pointer to x of Vector type
@@ -101,20 +17,40 @@ void printMatrix(Matrix *m)
  *
  * @return 0 on success and -1 on failure
  */
-int dot_product(Vector *x, Vector *y, double *result)
+int dot_product(Vector *x, Vector *y, void *result)
 {
     // If they ain't the right size then exit on failure
-    if (x->size != y->size || x->size <= 0 || y->size <= 0)
+    if (x->size != y->size || x->size <= 0 || y->size <= 0 || x->type != y->type)
     {
         return -1;
     }
 
-    *result = 0.0;
-
     // Perform sum of products
-    for (int i = 0; i < x->size; ++i)
+    switch (x->type)
     {
-        *result += x->data[i] * y->data[i];
+    case TYPE_INT:
+        *(int *)result = 0;
+        for (int i = 0; i < x->size; ++i)
+        {
+            *(int *)result += ((int *)x->data)[i] * ((int *)y->data)[i];
+        }
+        break;
+    case TYPE_FLOAT:
+        *(float *)result = 0;
+        for (int i = 0; i < x->size; ++i)
+        {
+            *(float *)result += ((float *)x->data)[i] * ((float *)y->data)[i];
+        }
+        break;
+    case TYPE_DOUBLE:
+        *(double *)result = 0;
+        for (int i = 0; i < x->size; ++i)
+        {
+            *(double *)result += ((double *)x->data)[i] * ((double *)y->data)[i];
+        }
+        break;
+    default:
+        break;
     }
 
     return 0;
@@ -132,22 +68,67 @@ int dot_product(Vector *x, Vector *y, double *result)
 int matvec_mult(Matrix *A, Vector *x, Vector *result)
 {
     // If sizes don't match, then exit on failure
-    if (A->cols != x->size)
+    if (A->cols != x->size || A->type != x->type || A->type != result->type)
     {
         return -1;
     }
 
-    result->data = malloc(sizeof(double) * x->size);
-
     // Perform sum of products for rows in Matrix
-    for (int i = 0; i < A->rows; ++i)
+    switch (x->type)
     {
-        result->data[i] = 0.0;
-
-        for (int j = 0; j < A->cols; ++j)
+    case TYPE_INT:
+        if (result->data != NULL)
         {
-            result->data[i] += A->data[i * A->cols + j] * x->data[j];
+            freeVector(result);
         }
+        result->data = malloc(sizeof(int) * x->size);
+
+        for (int i = 0; i < A->rows; ++i)
+        {
+            ((int *)result->data)[i] = 0.0;
+
+            for (int j = 0; j < A->cols; ++j)
+            {
+                ((int *)result->data)[i] += ((int *)A->data)[i * A->cols + j] * ((int *)x->data)[j];
+            }
+        }
+        break;
+    case TYPE_FLOAT:
+        if (result->data != NULL)
+        {
+            freeVector(result);
+        }
+        result->data = malloc(sizeof(float) * x->size);
+
+        for (int i = 0; i < A->rows; ++i)
+        {
+            ((float *)result->data)[i] = 0.0;
+
+            for (int j = 0; j < A->cols; ++j)
+            {
+                ((float *)result->data)[i] += ((float *)A->data)[i * A->cols + j] * ((float *)x->data)[j];
+            }
+        }
+        break;
+    case TYPE_DOUBLE:
+        if (result->data != NULL)
+        {
+            freeVector(result);
+        }
+        result->data = malloc(sizeof(double) * x->size);
+
+        for (int i = 0; i < A->rows; ++i)
+        {
+            ((double *)result->data)[i] = 0.0;
+
+            for (int j = 0; j < A->cols; ++j)
+            {
+                ((double *)result->data)[i] += ((double *)A->data)[i * A->cols + j] * ((double *)x->data)[j];
+            }
+        }
+        break;
+    default:
+        break;
     }
 
     return 0;
@@ -163,22 +144,46 @@ int matvec_mult(Matrix *A, Vector *x, Vector *result)
  */
 int transpose(Matrix *A, Matrix *A_t)
 {
-    if (A == NULL)
+    if (A == NULL || A->data == NULL || A->type != A_t->type)
     {
         return -1;
     }
 
-    A_t->data = malloc(sizeof(double) * A->rows * A->cols);
     A_t->rows = A->cols;
     A_t->cols = A->rows;
 
     // Iterate COLUMN-wise through row-matrix to transpose it
-    for (int c = 0; c < A->cols; ++c)
+    switch (A->type)
     {
-        for (int r = 0; r < A->rows; ++r)
+    case TYPE_INT:
+        for (int c = 0; c < A->cols; ++c)
         {
-            A_t->data[c * A->rows + r] = A->data[r * A->cols + c];
+            for (int r = 0; r < A->rows; ++r)
+            {
+                ((int *)A_t->data)[c * A->rows + r] = ((int *)A->data)[r * A->cols + c];
+            }
         }
+        break;
+    case TYPE_FLOAT:
+        for (int c = 0; c < A->cols; ++c)
+        {
+            for (int r = 0; r < A->rows; ++r)
+            {
+                ((float *)A_t->data)[c * A->rows + r] = ((float *)A->data)[r * A->cols + c];
+            }
+        }
+        break;
+    case TYPE_DOUBLE:
+        for (int c = 0; c < A->cols; ++c)
+        {
+            for (int r = 0; r < A->rows; ++r)
+            {
+                ((double *)A_t->data)[c * A->rows + r] = ((double *)A->data)[r * A->cols + c];
+            }
+        }
+        break;
+    default:
+        break;
     }
 
     return 0;
@@ -201,11 +206,32 @@ int identity(Matrix *A, int size)
 
     A->cols = size;
     A->rows = size;
-    A->data = calloc(size * size, sizeof(double));
 
-    for (int i = 0; i < size; ++i)
+    switch (A->type)
     {
-        A->data[i * size + i] = 1.0;
+    case TYPE_INT:
+        A->data = calloc(size * size, sizeof(int));
+        for (int i = 0; i < size; ++i)
+        {
+            ((int *)A->data)[i * size + i] = 1;
+        }
+        break;
+    case TYPE_FLOAT:
+        A->data = calloc(size * size, sizeof(float));
+        for (int i = 0; i < size; ++i)
+        {
+            ((float *)A->data)[i * size + i] = 1.0;
+        }
+        break;
+    case TYPE_DOUBLE:
+        A->data = calloc(size * size, sizeof(double));
+        for (int i = 0; i < size; ++i)
+        {
+            ((double *)A->data)[i * size + i] = 1.0;
+        }
+        break;
+    default:
+        break;
     }
 
     return 0;
@@ -214,63 +240,241 @@ int identity(Matrix *A, int size)
 /**
  * @brief Sigmoid function: (1/(1 + e^(-x)))
  *
- * @param x Value to apply to sigmoid function
+ * @param x type-less pointer to input variable in Sigmoid function
+ * @param type Datatype of x used in Matrix/Vector
+ * @param x_out type-less pointer to output varaible from function
  *
- * @return Value calculated from function
+ * @return 0 if successful, -1 if failure
  */
-double sigmoid(double x)
+int sigmoid(void *x, DataType type, void *x_out)
 {
-    return 1.0 / (1.0 + exp(-1.0 * x));
+    if (!x || !x_out)
+    {
+        return -1;
+    }
+
+    switch (type)
+    {
+    case TYPE_INT:
+    {
+        // Scales decimal to percentage
+        // Ex: sig(2.0) = 0.88 == 0 as an int
+        //     0.88 * 100 = 88, which can be stored in int
+        double temp = 1.0 / (1.0 + exp(-1.0 * *(int *)x));
+        *(int *)x_out = (int)(temp * 100);
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        float temp = 1.0 / (1.0 + exp(-1.0 * *(float *)x));
+        *(float *)x_out = temp;
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        double temp = 1.0 / (1.0 + exp(-1.0 * *(double *)x));
+        *(double *)x_out = temp;
+        break;
+    }
+    default:
+    {
+        return -1;
+    }
+    }
+
+    return 0;
 }
 
 /**
  * @brief Derivative of sigmoid function: (1/(1 + e^(-x))) * (1 - (1/(1 + e^(-x))))
  *
- * @param x Value to apply to function
+ * @param x type-less pointer to input variable in Sigmoid Derivative function
+ * @param type Datatype of x used in Matrix/Vector
+ * @param x_out type-less pointer to output varaible from function
  *
- * @return Value calculated from function
+ * @return 0 if successful, -1 if failure
  */
-double sigmoid_dx(double x)
+int sigmoid_dx(void *x, DataType type, void *x_out)
 {
-    double x_ = sigmoid(x);
-    return x_ * (1 - x_);
+    if (!x || !x_out)
+    {
+        return -1;
+    }
+
+    switch (type)
+    {
+    case TYPE_INT:
+    {
+        int temp_out = 0;
+        if (sigmoid((int *)x, type, &temp_out) < 0)
+        {
+            x_out = NULL;
+            return -1;
+        }
+        *(int *)x_out = temp_out * (1 - temp_out);
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        float temp_out = 0.0;
+        if (sigmoid((float *)x, type, &temp_out) < 0)
+        {
+            x_out = NULL;
+            return -1;
+        }
+        *(float *)x_out = temp_out * (1 - temp_out);
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        double temp_out = 0.0;
+        if (sigmoid((double *)x, type, &temp_out) < 0)
+        {
+            x_out = NULL;
+            return -1;
+        }
+        *(double *)x_out = temp_out * (1 - temp_out);
+        break;
+    }
+    default:
+    {
+        return -1;
+    }
+    }
+
+    return 0;
 }
 
 /**
  * @brief ReLu function: maximum of 0 or x
  *
- * @param x Value to apply to sigmoid function
+ * @param x type-less pointer to input variable in Relu Derivative function
+ * @param type Datatype of x used in Matrix/Vector
+ * @param x_out type-less pointer to output varaible from function
  *
- * @return Value calculated from function
+ * @return 0 if successful, -1 if failure
  */
-double relu(double x)
+int relu(void *x, DataType type, void *x_out)
 {
-    return x > 0 ? x : 0;
+    if (!x || !x_out)
+    {
+        return -1;
+    }
+
+    switch (type)
+    {
+    case TYPE_INT:
+    {
+        *(int *)x_out = *(int *)x > 0 ? *(int *)x : 0;
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        *(float *)x_out = *(float *)x > 0 ? *(float *)x : 0;
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        *(double *)x_out = *(double *)x > 0 ? *(double *)x : 0;
+        break;
+    }
+    default:
+    {
+        return -1;
+    }
+    }
+
+    return 0;
 }
 
 /**
  * @brief ReLu derivative function
  *
- * @param x Value to apply to function
+ * @param x type-less pointer to input variable in Relu Derivative function
+ * @param type Datatype of x used in Matrix/Vector
+ * @param x_out type-less pointer to output varaible from function
  *
- * @return Value calculated from function
+ * @return 0 if successful, -1 if failure
  */
-double relu_dx(double x)
+int relu_dx(void *x, DataType type, void *x_out)
 {
-    return x > 0 ? 1 : 0;
+    if (!x || !x_out)
+    {
+        return -1;
+    }
+
+    switch (type)
+    {
+    case TYPE_INT:
+    {
+        *(int *)x_out = *(int *)x > 0 ? 1 : 0;
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        *(float *)x_out = *(float *)x > 0 ? 1.0 : 0;
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        *(double *)x_out = *(double *)x > 0 ? 1.0 : 0;
+        break;
+    }
+    default:
+    {
+        return -1;
+    }
+    }
+
+    return 0;
 }
 
 /**
  * @brief Tanh derivative function: 1-(tanh(x))^2
  *
- * @param x Value to apply to function
+ * @param x type-less pointer to input variable in Tanh Derivative function
+ * @param type Datatype of x used in Matrix/Vector
+ * @param x_out type-less pointer to output varaible from function
  *
- * @return Value calculated from function
+ * @return 0 if successful, -1 if failure
  */
-double tanh_dx(double x)
+int tanh_dx(void *x, DataType type, void *x_out)
 {
-    double x_ = tanh(x);
-    return (1 - x_ * x_);
+    if (!x || !x_out)
+    {
+        return -1;
+    }
+
+    switch (type)
+    {
+    case TYPE_INT:
+    {
+        // Scales decimal to percentage
+        // Ex: tanh_dx(1.0) = 0.42 == 0 as an int
+        //     0.42 * 100 = 42, which can be stored in int
+        double x_ = tanh(*(int *)x);
+        *(int *)x_out = (1 - x_ * x_) * 100;
+        break;
+    }
+    case TYPE_FLOAT:
+    {
+        float x_ = tanh(*(float *)x);
+        *(float *)x_out = 1 - x_ * x_;
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        double x_ = tanh(*(double *)x);
+        *(double *)x_out = (1 - x_ * x_);
+        break;
+    }
+    default:
+    {
+        return -1;
+    }
+    }
+
+    return 0;
 }
 
 /**
@@ -281,12 +485,60 @@ double tanh_dx(double x)
  *
  * @return None
  */
-void applyToVector(Vector *v, double (*func)(double))
+void applyToVector(Vector *v, int (*func)(void *, DataType, void *), DataType type)
 {
-    for (int i = 0; i < v->size; ++i)
+    switch (type)
     {
-        v->data[i] = func(v->data[i]);
+    case TYPE_INT:
+    {
+        int temp_out = 0;
+        for (int i = 0; i < v->size; ++i)
+        {
+            if (func(&((int *)v->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                v->data = NULL;
+                return;
+            }
+            ((int *)v->data)[i] = temp_out;
+        }
+        break;
     }
+    case TYPE_FLOAT:
+    {
+        float temp_out = 0;
+        for (int i = 0; i < v->size; ++i)
+        {
+            if (func(&((float *)v->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                v->data = NULL;
+                return;
+            }
+            ((float *)v->data)[i] = temp_out;
+        }
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        double temp_out = 0;
+        for (int i = 0; i < v->size; ++i)
+        {
+            if (func(&((double *)v->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                v->data = NULL;
+                return;
+            }
+            ((double *)v->data)[i] = temp_out;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    return;
 }
 
 /**
@@ -297,10 +549,58 @@ void applyToVector(Vector *v, double (*func)(double))
  *
  * @return None
  */
-void applyToMatrix(Matrix *m, double (*func)(double))
+void applyToMatrix(Matrix *m, int (*func)(void *, DataType, void *), DataType type)
 {
-    for (int i = 0; i < m->rows * m->cols; ++i)
+    switch (type)
     {
-        m->data[i] = func(m->data[i]);
+    case TYPE_INT:
+    {
+        int temp_out = 0;
+        for (int i = 0; i < m->rows * m->cols; ++i)
+        {
+            if (func(&((int *)m->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                m->data = NULL;
+                return;
+            }
+            ((int *)m->data)[i] = temp_out;
+        }
+        break;
     }
+    case TYPE_FLOAT:
+    {
+        float temp_out = 0;
+        for (int i = 0; i < m->rows * m->cols; ++i)
+        {
+            if (func(&((float *)m->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                m->data = NULL;
+                return;
+            }
+            ((float *)m->data)[i] = temp_out;
+        }
+        break;
+    }
+    case TYPE_DOUBLE:
+    {
+        double temp_out = 0;
+        for (int i = 0; i < m->rows * m->cols; ++i)
+        {
+            if (func(&((double *)m->data)[i], type, &temp_out) < 0)
+            {
+                printf("Error applying function to each element in vector.\n");
+                m->data = NULL;
+                return;
+            }
+            ((double *)m->data)[i] = temp_out;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    return;
 }
