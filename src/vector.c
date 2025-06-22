@@ -20,22 +20,7 @@ void printVector(Vector *v)
     printf("[");
     for (int i = 0; i < v->size; ++i)
     {
-        switch (v->type)
-        {
-        case TYPE_INT:
-            printf("%d", ((int *)v->data)[i]);
-            break;
-        case TYPE_FLOAT:
-            printf("%.2f", ((float *)v->data)[i]);
-            break;
-        case TYPE_DOUBLE:
-            printf("%.2lf", ((double *)v->data)[i]);
-            break;
-
-        default:
-            printf("?");
-            break;
-        }
+        printf("%.2lf", ((double *)v->data)[i]);
 
         if (i < v->size - 1)
             printf(", ");
@@ -60,86 +45,31 @@ void freeVector(Vector *v)
 }
 
 /**
- * @brief Function to set the value at an index of a Matrix
- *
- * @param m Pointer to Vector object
- * @param row Row index
- * @param col Col index
- * @param value Value to set in Vector v
- *
- * @return 0 if successful, -1 otherwise
- */
-int setVectorValue(Vector *v, int idx, void *value)
-{
-    if (!v || !v->data || idx >= v->size || idx < 0)
-    {
-        printf("Out of bounds access to Vector at idx: %d\n", idx);
-        return -1;
-    }
-
-    switch (v->type)
-    {
-    case TYPE_INT:
-        ((int *)v->data)[idx] = *(int *)value;
-        break;
-    case TYPE_FLOAT:
-        ((float *)v->data)[idx] = *(float *)value;
-        break;
-    case TYPE_DOUBLE:
-        ((double *)v->data)[idx] = *(double *)value;
-        break;
-    default:
-        break;
-    }
-
-    return 0;
-}
-
-/**
  * @brief Makes a Vector object from an array and a size
  *
  * @param v pointer to Vector object to make
  * @param size of the array being put into Vector
  * @param data Optional data to input into Vector, NULL otherwise
- * @param type DataType enum to make this Vector
+ * @param type DataType enum of input data
  *
- * @return Vector object filled with input array and size
+ * @return 0 if successful, -1 otherwise
  */
 int makeVector(Vector *v, int size, void *data, DataType type)
 {
-    // Create vector and allocate memory the size of input array
-    v->size = size;
-    v->type = type;
-
-    size_t elem_size;
-    switch (type)
-    {
-    case TYPE_INT:
-        elem_size = sizeof(int);
-        break;
-    case TYPE_FLOAT:
-        elem_size = sizeof(float);
-        break;
-    case TYPE_DOUBLE:
-        elem_size = sizeof(double);
-        break;
-    default:
-        elem_size = 0;
-        break;
-    }
-
-    if (elem_size == 0 || size <= 0)
+    if (size <= 0)
     {
         v->data = NULL;
         return -1;
     }
-    else
+
+    // Create vector and allocate memory the size of input array
+    v->size = size;
+
+    v->data = malloc(size * sizeof(double));
+    if (!v->data)
     {
-        v->data = malloc(size * elem_size);
-        if (!v->data)
-        {
-            printf("Failed to allocate vector\n");
-        }
+        printf("Failed to allocate vector\n");
+        return -1;
     }
 
     // Assign values to matrix if given
@@ -151,12 +81,7 @@ int makeVector(Vector *v, int size, void *data, DataType type)
         {
             for (int i = 0; i < size; ++i)
             {
-                if (setVectorValue(v, i, &((int *)data)[i]) < 0)
-                {
-                    printf("Setting of input data to Vector was unsuccessful\n");
-                    v->data = NULL;
-                    return -1;
-                }
+                ((double *)v->data)[i] = (double)((int *)data)[i];
             }
             break;
         }
@@ -164,12 +89,7 @@ int makeVector(Vector *v, int size, void *data, DataType type)
         {
             for (int i = 0; i < size; ++i)
             {
-                if (setVectorValue(v, i, &((float *)data)[i]) < 0)
-                {
-                    printf("Setting of input data to Vector was unsuccessful\n");
-                    v->data = NULL;
-                    return -1;
-                }
+                ((double *)v->data)[i] = (double)((float *)data)[i];
             }
             break;
         }
@@ -177,12 +97,7 @@ int makeVector(Vector *v, int size, void *data, DataType type)
         {
             for (int i = 0; i < size; ++i)
             {
-                if (setVectorValue(v, i, &((double *)data)[i]) < 0)
-                {
-                    printf("Setting of input data to Vector was unsuccessful\n");
-                    v->data = NULL;
-                    return -1;
-                }
+                v->data[i] = ((double *)data)[i];
             }
             break;
         }
@@ -199,43 +114,107 @@ int makeVector(Vector *v, int size, void *data, DataType type)
  *
  * @param v pointer to Vector object to make
  * @param size of the array being put into Vector
- * @param type DataType enum to make this Vector
  *
- * @return Vector object filled with input array and size
+ * @return 0 if successful, -1 otherwise
  */
-int makeVectorZeros(Vector *v, int size, DataType type)
+int makeVectorZeros(Vector *v, int size)
 {
+    if (size <= 0)
+    {
+        printf("Size <= 0 when making this vector.\n");
+        v->data = NULL;
+        return -1;
+    }
+
     // Create vector and allocate memory the size of input array
     v->size = size;
-    v->type = type;
 
-    size_t elem_size;
-    switch (type)
+    v->data = calloc(size, sizeof(double));
+    if (!v->data)
     {
-    case TYPE_INT:
-        elem_size = sizeof(int);
-        break;
-    case TYPE_FLOAT:
-        elem_size = sizeof(float);
-        break;
-    case TYPE_DOUBLE:
-        elem_size = sizeof(double);
-        break;
-    default:
-        elem_size = 0;
-        break;
+        printf("Failed to allocate vector\n");
     }
 
-    if (elem_size == 0 || size <= 0)
+    return 0;
+}
+
+/**
+ * @brief Remove element from Vector
+ *
+ * @param v pointer to Vector object to edit
+ * @param elem to delete from Vector v
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int deleteElemVector(Vector *v, int elem)
+{
+    if (!v || !v->data || elem >= v->size || elem < 0)
     {
-        v->data = NULL;
+        printf("Error deleting element #%d from Vector", elem);
+        return -1;
     }
-    else
+
+    int new_size = v->size - 1;
+    int elem_counter = 0;
+
+    // Make temp array with data w/o desired elemeent;
+    double *temp_array = calloc(v->size - 1, sizeof(double));
+
+    for (int e = 0; e < v->size; ++e)
     {
-        v->data = calloc(size, elem_size);
-        if (!v->data)
+        if (e != elem)
         {
-            printf("Failed to allocate vector\n");
+            temp_array[elem_counter] = v->data[elem_counter];
+            ++elem_counter;
+        }
+    }
+
+    // Free the old vector data, then copy the new stuff over
+    free(v->data);
+    memcpy(v->data, temp_array, new_size * sizeof(double));
+    free(temp_array);
+
+    --v->size;
+
+    return 0;
+}
+
+/**
+ * @brief Get column from matrix and fill vector
+ *
+ * @param m pointer to Matrix object to edit
+ * @param col to get data from Matrix m
+ * @param v pointer to Vector object to fill
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int getColMatrix(Matrix *m, int col, Vector *v)
+{
+    if (!m || !m->data || col >= m->cols || col < 0 || !v || !v->data)
+    {
+        printf("Error getting column #%d from Matrix for Vector.\n", col);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    freeVector(v);
+    if (makeVectorZeros(v, m->rows) < 0)
+    {
+        printf("Error initializing zero vector.\n");
+        return -1;
+    }
+
+    int elem_num = 0;
+
+    for (int r = 0; r < m->rows; ++r)
+    {
+        for (int c = 0; c < m->cols; ++c)
+        {
+            if (c == col)
+            {
+                v->data[elem_num] = m->data[r * m->cols + c];
+                elem_num++;
+            }
         }
     }
 

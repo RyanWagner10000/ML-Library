@@ -24,22 +24,7 @@ void printMatrix(Matrix *m)
         {
             int idx = r * m->cols + c;
 
-            switch (m->type)
-            {
-            case TYPE_INT:
-                printf("%d", ((int *)m->data)[idx]);
-                break;
-            case TYPE_FLOAT:
-                printf("%.2f", ((float *)m->data)[idx]);
-                break;
-            case TYPE_DOUBLE:
-                printf("%.2lf", ((double *)m->data)[idx]);
-                break;
-
-            default:
-                printf("?");
-                break;
-            }
+            printf("%.2lf", m->data[idx]);
 
             if (c < m->cols - 1)
                 printf(", ");
@@ -74,39 +59,6 @@ void freeMatrix(Matrix *m)
  *
  * @return 0 if successful, -1 otherwise
  */
-int setMatrixValue(Matrix *m, int row, int col, void *value)
-{
-    if (!m || !m->data || row >= m->rows || row < 0 || col >= m->cols || col < 0)
-    {
-        printf("Out of bounds access to Matrix at row: %d col: %d\n", row, col);
-        return -1;
-    }
-
-    int idx = row * m->cols + col;
-
-    switch (m->type)
-    {
-    case TYPE_INT:
-    {
-        ((int *)m->data)[idx] = *(int *)value;
-        break;
-    }
-    case TYPE_FLOAT:
-    {
-        ((float *)m->data)[idx] = *(float *)value;
-        break;
-    }
-    case TYPE_DOUBLE:
-    {
-        ((double *)m->data)[idx] = *(double *)value;
-        break;
-    }
-    default:
-        break;
-    }
-
-    return 0;
-}
 
 /**
  * @brief Makes a Matrix object
@@ -114,60 +66,26 @@ int setMatrixValue(Matrix *m, int row, int col, void *value)
  * @param rows for matrix
  * @param cols for matrix
  * @param data Optional data to input into Matrix, NULL otherwise
- * @param type DataType enum to make this matrix
+ * @param type DataType enum of input data
  *
- * @return Matrix object
+ * @return 0 if successful, -1 otherwise
  */
 int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
 {
     // Create Matrix and assign basic members
     m->rows = rows;
     m->cols = cols;
-    m->type = type;
 
-    // Calculate the size of memory to allocate given type
-    size_t elem_size;
-    switch (type)
+    m->data = malloc(rows * cols * sizeof(double));
+    if (!m->data)
     {
-    case TYPE_INT:
-    {
-        elem_size = sizeof(int);
-        break;
-    }
-    case TYPE_FLOAT:
-    {
-        elem_size = sizeof(float);
-        break;
-    }
-    case TYPE_DOUBLE:
-    {
-        elem_size = sizeof(double);
-        break;
-    }
-    default:
-    {
-        elem_size = 0;
-        break;
-    }
-    }
-
-    // Malloc memory for Matrix
-    if (elem_size == 0 || rows <= 0 || cols <= 0)
-    {
-        m->data = NULL;
-    }
-    else
-    {
-        m->data = malloc(rows * cols * elem_size);
-        if (!m->data)
-        {
-            printf("Failed to allocate matrix\n");
-            return -1;
-        }
+        printf("Failed to allocate matrix\n");
+        return -1;
     }
 
     // Assign values to matrix if given
-    int idx = 0;
+    int idx_m = 0;
+    int idx_d = 0;
     if (data != NULL)
     {
         switch (type)
@@ -178,13 +96,9 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx = r * cols + c;
-                    if (setMatrixValue(m, r, c, &((int *)data)[idx]) < 0)
-                    {
-                        printf("Setting of input data to Matrix was unsuccessful\n");
-                        m->data = NULL;
-                        return -1;
-                    }
+                    idx_m = r * cols + c;
+                    m->data[idx_m] = (double)((int *)data)[idx_d];
+                    idx_d++;
                 }
             }
             break;
@@ -195,13 +109,9 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx = r * cols + c;
-                    if (setMatrixValue(m, r, c, &((float *)data)[idx]) < 0)
-                    {
-                        printf("Setting of input data to Matrix was unsuccessful\n");
-                        m->data = NULL;
-                        return -1;
-                    }
+                    idx_m = r * cols + c;
+                    m->data[idx_m] = (double)((float *)data)[idx_d];
+                    idx_d++;
                 }
             }
             break;
@@ -212,13 +122,9 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx = r * cols + c;
-                    if (setMatrixValue(m, r, c, &((double *)data)[idx]) < 0)
-                    {
-                        printf("Setting of input data to Matrix was unsuccessful\n");
-                        m->data = NULL;
-                        return -1;
-                    }
+                    idx_m = r * cols + c;
+                    m->data[idx_m] = ((double *)data)[idx_d];
+                    idx_d++;
                 }
             }
             break;
@@ -234,52 +140,73 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
 /**
  * @brief Makes a Matrix object of 0's given a size
  *
- * @param v pointer to Matrix object to make
+ * @param m pointer to Matrix object to make
  * @param rows for matrix
  * @param cols for matrix
- * @param type DataType enum to make this Matrix
  *
- * @return Matrix object filled with input array and size
+ * @return 0 if successful, -1 otherwise
  */
-int makeMatrixZeros(Matrix *m, int rows, int cols, DataType type)
+int makeMatrixZeros(Matrix *m, int rows, int cols)
 {
+    if (rows <= 0 || cols <= 0)
+    {
+        m->data = NULL;
+        return -1;
+    }
     // Create Matrix and assign basic members
     m->rows = rows;
     m->cols = cols;
-    m->type = type;
 
-    // Calculate the size of memory to allocate given type
-    size_t elem_size;
-    switch (type)
+    m->data = calloc(rows * cols, sizeof(double));
+    if (!m->data)
     {
-    case TYPE_INT:
-        elem_size = sizeof(int);
-        break;
-    case TYPE_FLOAT:
-        elem_size = sizeof(float);
-        break;
-    case TYPE_DOUBLE:
-        elem_size = sizeof(double);
-        break;
-    default:
-        elem_size = 0;
-        break;
+        printf("Failed to allocate matrix\n");
+        return -1;
     }
 
-    // Malloc memory for Matrix
-    if (elem_size == 0 || rows <= 0 || cols <= 0)
+    return 0;
+}
+
+/**
+ * @brief Remove column from matrix
+ *
+ * @param m pointer to Matrix object to edit
+ * @param col to delete from Matrix m
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int deleteColMatrix(Matrix *m, int col)
+{
+    if (!m || !m->data || col >= m->cols || col < 0)
     {
-        m->data = NULL;
+        printf("Error deleting column #%d from Matrix.\n", col);
+        printf("Could not pass initial tests.\n");
+        return -1;
     }
-    else
+
+    int new_cols = m->cols - 1;
+    int col_counter = 0;
+
+    double *temp_array = calloc((m->cols - 1) * m->rows, sizeof(double));
+    for (int r = 0; r < m->rows; ++r)
     {
-        m->data = calloc(rows * cols, elem_size);
-        if (!m->data)
+        col_counter = 0;
+        for (int c = 0; c < m->cols; ++c)
         {
-            printf("Failed to allocate matrix\n");
-            return -1;
+            if (c != col)
+            {
+                ((double *)temp_array)[r * new_cols + col_counter] = ((double *)m->data)[r * m->cols + c];
+                ++col_counter;
+            }
         }
     }
+
+    // Free the old matrix data, then copy the new stuff over
+    free(m->data);
+    memcpy(m->data, temp_array, m->rows * new_cols * sizeof(double));
+    free(temp_array);
+
+    --m->cols;
 
     return 0;
 }
