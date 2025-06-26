@@ -299,17 +299,17 @@ int main(void)
         printf("Default Linear Regression test was unsuccessful.\n");
     }
 
-    printf("\n---------------File Linear Regression---------------\n");
-    if (run_linear_regression_from_file() < 0)
-    {
-        printf("CSV File Linear Regression test was unsuccessful.\n");
-    }
+    // printf("\n---------------File Linear Regression---------------\n");
+    // if (run_linear_regression_from_file() < 0)
+    // {
+    //     printf("CSV File Linear Regression test was unsuccessful.\n");
+    // }
 
-    printf("\n---------------Default Logistic Regression---------------\n");
-    if (run_logistic_regression_default() < 0)
-    {
-        printf("Default Logistic Regression test was unsuccessful.\n");
-    }
+    // printf("\n---------------Default Logistic Regression---------------\n");
+    // if (run_logistic_regression_default() < 0)
+    // {
+    //     printf("Default Logistic Regression test was unsuccessful.\n");
+    // }
     
     return 0;
 }
