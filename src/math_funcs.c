@@ -64,12 +64,6 @@ int matvec_mult(Matrix *A, Vector *x, Vector *result)
     }
 
     // Perform sum of products for rows in Matrix
-    if (result->data != NULL)
-    {
-        freeVector(result);
-    }
-    result->data = calloc(x->size, sizeof(double));
-
     for (int i = 0; i < A->rows; ++i)
     {
 

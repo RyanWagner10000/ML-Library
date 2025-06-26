@@ -133,6 +133,7 @@ int makeVectorZeros(Vector *v, int size)
     if (!v->data)
     {
         printf("Failed to allocate vector\n");
+        return -1;
     }
 
     return 0;

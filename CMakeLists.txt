@@ -14,12 +14,13 @@ include_directories(header tests)
 add_library(math_funcs STATIC src/math_funcs.c src/matrix.c src/vector.c)
 
 # Add the executable using source files
-add_executable(main src/main.c src/linear_regression.c src/file_handling.c)
+add_executable(main src/main.c src/linear_regression.c src/logistic_regression.c src/file_handling.c)
 
 # Add test executable
 add_executable(testActivation tests/test_activations.c tests/unity.c)
 add_executable(testDot tests/test_dot_product.c tests/unity.c)
 add_executable(testIden tests/test_identity.c tests/unity.c)
+add_executable(testLinReg tests/test_linear_regression.c src/linear_regression.c tests/unity.c)
 add_executable(testMatVect tests/test_mat_vect_mult.c tests/unity.c)
 add_executable(testTrans tests/test_transpose.c tests/unity.c)
 
@@ -27,6 +28,7 @@ add_executable(testTrans tests/test_transpose.c tests/unity.c)
 target_link_libraries(testActivation PRIVATE math_funcs m)
 target_link_libraries(testDot PRIVATE math_funcs m)
 target_link_libraries(testIden PRIVATE math_funcs m)
+target_link_libraries(testLinReg PRIVATE math_funcs m)
 target_link_libraries(testMatVect PRIVATE math_funcs m)
 target_link_libraries(testTrans PRIVATE math_funcs m)
 target_link_libraries(main PRIVATE math_funcs m)

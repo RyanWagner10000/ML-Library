@@ -1,16 +1,16 @@
 /*
- * file: linear_regression.c
- * description: script of all linear regression functions
+ * file: logistic_regression.c
+ * description: script of all logistic regression functions
  * author: Ryan Wagner
- * date: June 6, 2025
- * notes: script encompasses prediction, loss with MSE & regularization w/ lambda,
- *        gradient descent, and a linear model trainer
+ * date: June 23, 2025
+ * notes: script encompasses prediction, loss with Cross Entropy,
+ *        gradient descent, and a model trainer
  */
 
-#include "../header/linear_regression.h"
+#include "../header/logistic_regression.h"
 
 /**
- * @brief Prediction function for linear regression
+ * @brief Prediction function for logistic regression
  *
  * @param x Vector pointer for input values
  * @param w Vector pointer for weights for each predicted value in Vector x
@@ -27,12 +27,24 @@ static int predict(Vector *x, Vector *w, double b, double *result)
         printf("Dot product operation was unsuccessful.\n");
         return -1;
     }
+
+    // Add bias
     *result += b;
+
+    // Apply sigmoid to dot product and bias sum
+    double temp_res = 0.0;
+    if (sigmoid(result, &temp_res) < 0)
+    {
+        printf("Sigmoid was unsuccessful in prediction operation.\n");
+        return -1;
+    }
+    *result = temp_res;
+
     return 0;
 }
 
 /**
- * @brief Compute the loss of the current epoch with MSE and L2 Regularization with lambda
+ * @brief Compute the loss of the current epoch with Cross Entropy
  *
  * @param x Vector pointer for input values
  * @param y Vector pointer of target values
@@ -61,12 +73,14 @@ static int computeLoss(Matrix *x, Vector *y, Vector *w, double b, double *result
         }
 
         // Accumulate error based on prediction and target values
-        double error = (y->data)[i] - y_pred;
-        *result += error * error;
+        // double error = (y->data)[i] - y_pred;
+        double error = y_pred - (y->data)[i];
+        *result += y->data[i] * log10(y_pred) + (1 - y->data[i]) * log10(1 - y_pred);
     }
 
     // Average the result
     *result /= x->rows;
+    *result *= -1;
 
     if (regularize == REG_L1)
     {
@@ -129,15 +143,16 @@ static int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vect
             printf("Prediction was unsuccessful when computing gradients with xi.\n");
             return -1;
         }
-        double error = y_true->data[i] - y_pred;
+        // double error = y_true->data[i] - y_pred;
+        double error = y_pred - y_true->data[i];
 
         // Calculate the weights and biases gradients
         for (int j = 0; j < w->size; ++j)
         {
-            grad_w->data[j] += -2 * error * xi.data[j];
+            grad_w->data[j] += error * xi.data[j];
         }
 
-        *grad_b += -2 * error;
+        *grad_b += error;
         freeVector(&xi);
     }
 
@@ -177,7 +192,7 @@ static int computeGradients(Matrix *x, Vector *y_true, Vector *w, double b, Vect
  *
  * @return 0 if successful, -1 if failure
  */
-int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainConfig *config)
+int train_logistic_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainConfig *config)
 {
     // Init weights gradient Vector and bias
     Vector grad_w;
