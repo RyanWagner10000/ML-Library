@@ -188,6 +188,22 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainCon
     }
     double grad_b = 0.0;
 
+    // Set a division factor for printing the loss over epochs
+    int division_factor = 10.0;
+    if (config->epochs >= 1000)
+    {
+        division_factor = 100;
+    }
+    if (config->epochs >= 5000)
+    {
+        division_factor = 250;
+    }
+    if (config->epochs >= 10000)
+    {
+        division_factor = 500;
+    }
+
+    // Iterate through N-number of epochs adjusting the weights based on MSE and loss
     for (int epoch = 0; epoch < config->epochs; ++epoch)
     {
         if (computeGradients(x, y_true, w, *b, &grad_w, &grad_b, config->lambda, config->regularization) < 0)
@@ -212,11 +228,12 @@ int train_linear_model(Matrix *x, Vector *y_true, Vector *w, double *b, TrainCon
         }
 
         // Purely for user to see progress over time/epoch
-        if (epoch % 10 == 0 || epoch == config->epochs - 1)
+        if (epoch % division_factor == 0 || epoch == config->epochs - 1)
         {
             printf("Epoch %d | Loss %.6f\n", epoch, loss);
         }
     }
+    printf("\n");
 
     freeVector(&grad_w);
     return 0;
