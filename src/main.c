@@ -691,17 +691,17 @@ int main(void)
     //     printf("Default Logistic Regression test was unsuccessful.\n");
     // }
 
-    printf("\n---------------2D Logistic Regression---------------\n");
-    if (run_logistic_regression_2d() < 0)
-    {
-        printf("Default Logistic Regression test was unsuccessful.\n");
-    }
+    // printf("\n---------------2D Logistic Regression---------------\n");
+    // if (run_logistic_regression_2d() < 0)
+    // {
+    //     printf("Default Logistic Regression test was unsuccessful.\n");
+    // }
 
-    printf("\n---------------3D Logistic Regression---------------\n");
-    if (run_logistic_regression_3d() < 0)
-    {
-        printf("Default Logistic Regression test was unsuccessful.\n");
-    }
+    // printf("\n---------------3D Logistic Regression---------------\n");
+    // if (run_logistic_regression_3d() < 0)
+    // {
+    //     printf("Default Logistic Regression test was unsuccessful.\n");
+    // }
 
     return 0;
 }
