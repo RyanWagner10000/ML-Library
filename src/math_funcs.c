@@ -22,17 +22,19 @@ int dot_product(Vector *x, Vector *y, double *result)
     // If they ain't the right size then exit on failure
     if (x->size != y->size)
     {
-        printf("Size of input Vectors do not match for dot product operation");
+        printf("Size of input Vectors do not match for dot product operation.\n");
+        printf("Size of Vector x = %d.\n", x->size);
+        printf("Size of Vector y = %d.\n", y->size);
         return -1;
     }
     if (x->size <= 0)
     {
-        printf("Size of input Vector x in <= 0");
+        printf("Size of input Vector x in <= 0.\n");
         return -1;
     }
     if (y->size <= 0)
     {
-        printf("Size of input Vector y in <= 0");
+        printf("Size of input Vector y in <= 0.\n");
         return -1;
     }
 
