@@ -179,7 +179,11 @@ static int computeLogits(Model *m)
         // Row-wise softmax
         for (int r = 0; r < m->logits->rows; ++r)
         {
-            getRowMatrix(*m->logits, r, &temp_row);
+            if (getRowMatrix(*m->logits, r, &temp_row))
+            {
+                printf("Getting row %d from Matrix m for computing Logits was unsuccessful.\n", r);
+                return -1;
+            }
 
             for (int j = 0; j < m->logits->cols; ++j)
             {

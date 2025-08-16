@@ -244,13 +244,13 @@ int deleteElemVector(Vector *v, int elem)
 /**
  * @brief Get column from matrix and fill vector
  *
- * @param m pointer to Matrix object to edit
- * @param col to get data from Matrix m
- * @param v pointer to Vector object to fill
+ * @param m Matrix object
+ * @param col Column index
+ * @param v Pointer to Vector object to fill
  *
  * @return 0 if successful, -1 otherwise
  */
-int getColMatrix(Matrix m, int col, Vector *v)
+int getColMatrix_v(Matrix m, int col, Vector *v)
 {
     // Test inputs
     if (!m.data || col >= m.cols || col < 0 || !v)
@@ -286,15 +286,51 @@ int getColMatrix(Matrix m, int col, Vector *v)
 }
 
 /**
+ * @brief Get column from matrix and fill matrix
+ *
+ * @param m Matrix object with data
+ * @param col Column index
+ * @param mf Pointer to Matrix object to fill
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int getColMatrix_m(Matrix m, int col, Matrix *mf)
+{
+    // Test inputs
+    if (!m.data || !mf || col >= m.cols || col < 0)
+    {
+        printf("Error getting column #%d from Matrix for Matrix.\n", col);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    freeMatrix(mf);
+    if (makeMatrixZeros(mf, m.rows, 1) < 0)
+    {
+        printf("Recreating mf matrix was unsuccessful.\n");
+        return -1;
+    }
+
+    int index = 0;
+    for (int r = 0; r < m.rows; ++r)
+    {
+        index = r * m.cols + col;
+        mf->data[r] = m.data[index];
+    }
+
+    return 0;
+}
+
+/**
  * @brief Get row from matrix and fill vector
  *
- * @param m Pointer to Matrix object
+ * @param m Matrix object
  * @param row Row index
- * @param v pointer to Vector object to fill
+ * @param v Pointer to Vector object to fill
  *
- * @return Vector object containing row values from matrix
+ * @return 0 if successful, -1 otherwise
  */
-int getRowMatrix(Matrix m, int row, Vector *v)
+int getRowMatrix_v(Matrix m, int row, Vector *v)
 {
     // Test inputs
     if (!m.data || row >= m.rows || row < 0 || !v)
@@ -326,6 +362,40 @@ int getRowMatrix(Matrix m, int row, Vector *v)
     for (int i = 0; i < v->size; ++i)
     {
         v->data[i] = m.data[row * m.cols + i];
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Get row from matrix and fill matrix
+ *
+ * @param m Matrix object
+ * @param row Row index
+ * @param mf Pointer to Matrix object to fill
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int getRowMatrix_m(Matrix m, int row, Matrix *mf)
+{
+    // Test inputs
+    if (!m.data || row >= m.rows || row < 0 || !mf)
+    {
+        printf("Error getting row #%d from Matrix for Matrix.\n", row);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    freeMatrix(mf);
+    if (makeMatrixZeros(mf, 1, m.cols) < 0)
+    {
+        printf("Recreating mf matrix was unsuccessful.\n");
+        return -1;
+    }
+
+    for (int c = 0; c < m.cols; ++c)
+    {
+        mf->data[row * m.cols + c] = m.data[row * m.cols + c];
     }
 
     return 0;

@@ -15,7 +15,7 @@ add_library(math_funcs STATIC src/math_funcs.c src/matrix.c src/vector.c)
 
 # Add the executable using source files
 # add_executable(main src/main.c src/regression.c src/file_handling.c src/eval_metrics.c)
-add_executable(main src/main.c src/regression.c)
+add_executable(main src/main.c src/regression.c src/file_handling.c)
 
 # Add test executable
 # add_executable(testActivation tests/test_activations.c tests/unity.c)
