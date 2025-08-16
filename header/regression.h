@@ -1,6 +1,6 @@
 /*
- * file: linear_regression.h
- * description: header file that gives access to all the linear regression funcitons
+ * file: regression.h
+ * description: header file that gives access to all the regression funcitons
  * author: Ryan Wagner
  * date: June 6, 2025
  * notes:
@@ -20,8 +20,9 @@ typedef enum
 
 typedef enum
 {
-    LINEAR,
-    LOGISTIC
+    LINEAR_REGRESSION,
+    LOGISTIC_REGRESSION,
+    SOFTMAX_REGRESSION
 } RegressionType;
 
 typedef struct
@@ -34,15 +35,17 @@ typedef struct
 
 typedef struct
 {
-    RegressionType type;             // Type of regression to use
-    ModelConfig config;              // Configuration for the model
-    Matrix *X;                       // Input matrix of NxM dimension
-    Vector *y;                       // Input vector of N dimension
-    Vector *weights;                 // Learned weights
-    double bias;                     // Learned bias
-    int (*func)(double *, double *); // Activation function
-    int input_dim;                   // number of features
-    int output_dim;                  // 1 for now
+    RegressionType type; // Type of regression to use
+    ModelConfig config;  // Configuration for the model
+    Matrix *X;           // Input matrix of NxM dimension
+    Matrix *y;           // Input matrix of 1xP dimension
+    Matrix *weights;     // Learned weights matrix of Nx1 dimension
+    Vector *bias;        // Learned bias matrix of 1xM dimension
+    Matrix *logits;      // Logits vector
+    Activation func;     // Activation function
+    int input_dim;       // number of features
+    int output_dim;      // 1 for now
+    int classes;         // Number of classes to use for classification
 } Model;
 
 int initModel(Model *model);

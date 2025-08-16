@@ -9,24 +9,82 @@
 #include "../header/matrix.h"
 
 /**
+ * @brief Clears a Matrix by making all values 0
+ *
+ * @param m Matrix to clear
+ *
+ * @return 0 on success and -1 on failure
+ */
+int clearMatrix(Matrix *m)
+{
+    if (!m || !m->data)
+    {
+        printf("Incompatible input to clearMatrix operation.\n");
+        return -1;
+    }
+
+    for (int r = 0; r < m->rows; ++r)
+    {
+        for (int c = 0; c < m->cols; ++c)
+        {
+            m->data[r * m->cols + c] = 0.0;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Copy a Matrix to another Matrix
+ *
+ * @param m Matrix to copy
+ * @param mc Matrix to get copied valeus
+ *
+ * @return 0 on success and -1 on failure
+ */
+int copyMatrix(Matrix m, Matrix *mc)
+{
+    if (!m.data || !mc || !mc->data)
+    {
+        printf("Incompatible input to copyMatrix operation.\n");
+        return -1;
+    }
+    if (m.rows != mc->rows || m.cols != mc->cols)
+    {
+        printf("Matrices are not the same shape. Cannot perform copy operation.\n");
+        return -1;
+    }
+
+    for (int r = 0; r < m.rows; ++r)
+    {
+        for (int c = 0; c < m.cols; ++c)
+        {
+            mc->data[r * mc->cols + c] = m.data[r * m.cols + c];
+        }
+    }
+
+    return 0;
+}
+
+/**
  * @brief Basic printing of a Matrix object
  *
  * @param m Matrix object to print
  *
  * @return None
  */
-void printMatrix(Matrix *m)
+void printMatrix(Matrix m)
 {
-    for (int r = 0; r < m->rows; ++r)
+    for (int r = 0; r < m.rows; ++r)
     {
         printf("[");
-        for (int c = 0; c < m->cols; ++c)
+        for (int c = 0; c < m.cols; ++c)
         {
-            int idx = r * m->cols + c;
+            int idx = r * m.cols + c;
 
-            printf("%.2lf", m->data[idx]);
+            printf("%.6lf", m.data[idx]);
 
-            if (c < m->cols - 1)
+            if (c < m.cols - 1)
                 printf(", ");
         }
         printf("]\n");
@@ -42,23 +100,12 @@ void printMatrix(Matrix *m)
  */
 void freeMatrix(Matrix *m)
 {
-    if (m && m->data)
+    if (m && m->data != NULL)
     {
         free(m->data);
         m->data = NULL;
     }
 }
-
-/**
- * @brief Function to set the value at an index of a Matrix
- *
- * @param m Pointer to Matrix object
- * @param row Row index
- * @param col Col index
- * @param value Value to set in Matrix m
- *
- * @return 0 if successful, -1 otherwise
- */
 
 /**
  * @brief Makes a Matrix object
@@ -150,6 +197,7 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
 {
     if (rows <= 0 || cols <= 0)
     {
+        printf("Input row or col value(s) was incompatible.\n");
         m->data = NULL;
         return -1;
     }
@@ -195,7 +243,7 @@ int deleteColMatrix(Matrix *m, int col)
         {
             if (c != col)
             {
-                ((double *)temp_array)[r * new_cols + col_counter] = ((double *)m->data)[r * m->cols + c];
+                temp_array[r * new_cols + col_counter] = m->data[r * m->cols + c];
                 ++col_counter;
             }
         }
@@ -204,6 +252,44 @@ int deleteColMatrix(Matrix *m, int col)
     // Free the old matrix data, then copy the new stuff over
     free(m->data);
     memcpy(m->data, temp_array, m->rows * new_cols * sizeof(double));
+    free(temp_array);
+
+    --m->cols;
+
+    return 0;
+}
+
+/**
+ * @brief Remove row from matrix
+ *
+ * @param m pointer to Matrix object to edit
+ * @param row to delete from Matrix m
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int deleteRowMatrix(Matrix *m, int row)
+{
+    if (!m || !m->data || row >= m->rows || row < 0)
+    {
+        printf("Error deleting row #%d from Matrix.\n", row);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    int new_rows = m->rows - 1;
+
+    double *temp_array = calloc(new_rows * m->cols, sizeof(double));
+    for (int r = 0; r < m->rows; ++r)
+    {
+        if (r != row)
+        {
+            temp_array[r * m->cols] = m->data[r * m->cols];
+        }
+    }
+
+    // Free the old matrix data, then copy the new stuff over
+    free(m->data);
+    memcpy(m->data, temp_array, new_rows * m->cols * sizeof(double));
     free(temp_array);
 
     --m->cols;

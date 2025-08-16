@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-// #include "../header/vector.h"
 
 typedef enum
 {
@@ -30,7 +29,17 @@ typedef struct
     double *data;
 } Matrix;
 
-void printMatrix(Matrix *m);
+#define initialized_matrix(m) \
+    ((m) && (m)->data != NULL && (m)->rows > 0 && (m)->cols > 0)
+
+#define initialized_vector(v) \
+    ((v) && (v)->data != NULL && (v)->size > 0)
+
+int clearMatrix(Matrix *m);
+
+int copyMatrix(Matrix m, Matrix *mc);
+
+void printMatrix(Matrix m);
 
 void freeMatrix(Matrix *m);
 

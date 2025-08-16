@@ -9,39 +9,96 @@
 #include "../header/vector.h"
 
 /**
+ * @brief Clears a Vector by making all values 0
+ *
+ * @param v Vector to clear
+ *
+ * @return 0 on success and -1 on failure
+ */
+int clearVector(Vector *v)
+{
+    if (!v || !v->data)
+    {
+        printf("Incompatible input to clearVector operation,\n");
+        return -1;
+    }
+
+    for (int i = 0; i < v->size; ++i)
+    {
+        v->data[i] = 0.0;
+    }
+
+    return 0;
+}
+
+/**
  * @brief Basic printing of a vector object
  *
  * @param v Vector object to print
  *
  * @return None
  */
-void printVector(Vector *v)
+void printVector(Vector v)
 {
     printf("[");
-    for (int i = 0; i < v->size; ++i)
+    for (int i = 0; i < v.size; ++i)
     {
-        printf("%.2lf", ((double *)v->data)[i]);
+        printf("%.6lf", ((double *)v.data)[i]);
 
-        if (i < v->size - 1)
+        if (i < v.size - 1)
             printf(", ");
     }
     printf("]\n");
 }
 
 /**
- * @brief Free Matrix and set poitner to NULL
+ * @brief Free Vector and set poitner to NULL
  *
- * @param m Matrix to free
+ * @param v Vector to free
  *
  * @return None
  */
 void freeVector(Vector *v)
 {
+    // Test inputs
     if (v && v->data)
     {
         free(v->data);
         v->data = NULL;
     }
+}
+
+/**
+ * @brief Copy Vector values from one to another
+ *
+ * @param v1 Vector to copy values FROM
+ * @param v2 Vector to copy values TO
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int copyVector(Vector v1, Vector *v2)
+{
+    if (!v1.data)
+    {
+        printf("Input vector V1 was not properly initialized.");
+        return -1;
+    }
+    if (!v2 || !v2->data)
+    {
+        printf("Input vector V2 was not properly initialized.");
+        return -1;
+    }
+    if (v1.size != v2->size)
+    {
+        printf("Input vector V1 and V2 do not have matching sizes.");
+        return -1;
+    }
+
+    for (int i = 0; i < v1.size; ++i)
+    {
+        v2->data[i] = v1.data[i];
+    }
+    return 0;
 }
 
 /**
@@ -56,6 +113,7 @@ void freeVector(Vector *v)
  */
 int makeVector(Vector *v, int size, void *data, DataType type)
 {
+    // Test inputs
     if (size <= 0)
     {
         v->data = NULL;
@@ -119,6 +177,7 @@ int makeVector(Vector *v, int size, void *data, DataType type)
  */
 int makeVectorZeros(Vector *v, int size)
 {
+    // Test inputs
     if (size <= 0)
     {
         printf("Size <= 0 when making this vector.\n");
@@ -129,6 +188,7 @@ int makeVectorZeros(Vector *v, int size)
     // Create vector and allocate memory the size of input array
     v->size = size;
 
+    // Use calloc to set memory size for Vector data and set values to 0.0
     v->data = calloc(size, sizeof(double));
     if (!v->data)
     {
@@ -149,6 +209,7 @@ int makeVectorZeros(Vector *v, int size)
  */
 int deleteElemVector(Vector *v, int elem)
 {
+    // Test inputs
     if (!v || !v->data || elem >= v->size || elem < 0)
     {
         printf("Error deleting element #%d from Vector", elem);
@@ -189,34 +250,82 @@ int deleteElemVector(Vector *v, int elem)
  *
  * @return 0 if successful, -1 otherwise
  */
-int getColMatrix(Matrix *m, int col, Vector *v)
+int getColMatrix(Matrix m, int col, Vector *v)
 {
-    if (!m || !m->data || col >= m->cols || col < 0 || !v || !v->data)
+    // Test inputs
+    if (!m.data || col >= m.cols || col < 0 || !v)
     {
         printf("Error getting column #%d from Matrix for Vector.\n", col);
         printf("Could not pass initial tests.\n");
         return -1;
     }
 
-    freeVector(v);
-    if (makeVectorZeros(v, m->rows) < 0)
+    if (!initialized_vector(v) || v->size <= 0)
     {
-        printf("Error initializing zero vector.\n");
+        if (makeVectorZeros(v, m.rows) < 0)
+        {
+            printf("Error initializing zero vector.\n");
+            return -1;
+        }
+    }
+    else
+    {
+        if (clearVector(v) < 0)
+        {
+            printf("Could not set Matrix object to all 0's\n");
+            return -1;
+        }
+    }
+
+    for (int r = 0; r < m.rows; ++r)
+    {
+        v->data[r] = m.data[r * m.cols + col];
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Get row from matrix and fill vector
+ *
+ * @param m Pointer to Matrix object
+ * @param row Row index
+ * @param v pointer to Vector object to fill
+ *
+ * @return Vector object containing row values from matrix
+ */
+int getRowMatrix(Matrix m, int row, Vector *v)
+{
+    // Test inputs
+    if (!m.data || row >= m.rows || row < 0 || !v)
+    {
+        printf("Error getting row #%d from Matrix for Vector.\n", row);
+        printf("Could not pass initial tests.\n");
         return -1;
     }
 
-    int elem_num = 0;
-
-    for (int r = 0; r < m->rows; ++r)
+    if (!initialized_vector(v) || v->size <= 0)
     {
-        for (int c = 0; c < m->cols; ++c)
+        if (makeVectorZeros(v, m.cols) < 0)
         {
-            if (c == col)
-            {
-                v->data[elem_num] = m->data[r * m->cols + c];
-                elem_num++;
-            }
+            printf("Error initializing zero vector.\n");
+            return -1;
         }
+    }
+    else
+    {
+        if (clearVector(v) < 0)
+        {
+            printf("Could not set Matrix object to all 0's\n");
+            return -1;
+        }
+    }
+
+    v->size = m.cols;
+
+    for (int i = 0; i < v->size; ++i)
+    {
+        v->data[i] = m.data[row * m.cols + i];
     }
 
     return 0;

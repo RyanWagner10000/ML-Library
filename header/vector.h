@@ -17,9 +17,16 @@ typedef struct
     double *data;
 } Vector;
 
-void printVector(Vector *v);
+#define initialized_vector(v) \
+    ((v) && (v)->data != NULL && (v)->size > 0)
+
+int clearVector(Vector *v);
+
+void printVector(Vector v);
 
 void freeVector(Vector *v);
+
+int copyVector(Vector v1, Vector *v2);
 
 int makeVector(Vector *v, int size, void *data, DataType type);
 
@@ -27,6 +34,8 @@ int makeVectorZeros(Vector *v, int size);
 
 int deleteElemVector(Vector *v, int elem);
 
-int getColMatrix(Matrix *m, int col, Vector *v);
+int getColMatrix(Matrix m, int col, Vector *v);
+
+int getRowMatrix(Matrix m, int row, Vector *v);
 
 #endif // VECTOR_H

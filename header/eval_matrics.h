@@ -15,7 +15,7 @@
 
 typedef struct
 {
-    Vector *y_lables; // Vector of predicted classes
+    Matrix *y_lables; // Vector of predicted classes
     double threshold; // Threshold value for comparison of real to predicted values
     int TP;           // True Positive value
     int FP;           // False Positive value
@@ -31,21 +31,21 @@ typedef struct
     double r2score;   // Coefficient of Determination, how well the model explains variance in the data
 } EvalMetrics;
 
-int initEvalMetrics(EvalMetrics *eval_metrics, Vector *y_pred);
-int getPredictedLabels(Vector *y_pred, Vector *y_labels, double threshold);
+int initEvalMetrics(EvalMetrics *eval_metrics, Matrix *y_pred);
+int getPredictedLabels(Matrix y_pred, Matrix *y_labels, double threshold);
 
-int computeConfusionMatrix(Vector *y_true, Vector *y_pred, int *TP, int *FP, int *TN, int *FN);
+int computeConfusionMatrix(Matrix y_true, Matrix y_pred, int *TP, int *FP, int *TN, int *FN);
 int computeAccuracy(int TP, int FP, int TN, int FN, double *accuracy);
 int computePrecision(int TP, int FP, double *precision);
 int computeRecall(int TP, int FN, double *recall);
 int computeF1(double precision, double recall, double *f1);
 
-int computeMSE(Vector *y_true, Vector *y_pred, double *mse);
-int computeRMSE(Vector *y_true, Vector *y_pred, double *rmse);
-int computeMAE(Vector *y_true, Vector *y_pred, double *mae);
-int computeR2Score(Vector *y_true, Vector *y_pred, double *r2score);
+int computeMSE(Matrix y_true, Matrix y_pred, double *mse);
+int computeRMSE(Matrix y_true, Matrix y_pred, double *rmse);
+int computeMAE(Matrix y_true, Matrix y_pred, double *mae);
+int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score);
 
-int calculateAllMetrics(Model *model, EvalMetrics *eval_metrics);
+int calculateAllMetrics(Model model, EvalMetrics *eval_metrics);
 int printMetrics(Model *model, EvalMetrics *eval_metrics);
 void freeEvalMetrics(EvalMetrics *em);
 
