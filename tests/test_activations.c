@@ -24,7 +24,7 @@ void test_sigmoid_neg(void)
 {
     double x_in = -10.0;
     double x_out = 0.0;
-    int status = sigmoid(&x_in, &x_out);
+    int status = sigmoid(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -33,7 +33,7 @@ void test_sigmoid_zero(void)
 {
     double x_in = 0.0;
     double x_out = 0.0;
-    int status = sigmoid(&x_in, &x_out);
+    int status = sigmoid(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.5, (float)x_out);
 }
@@ -42,7 +42,7 @@ void test_sigmoid_pos(void)
 {
     double x_in = 10.0;
     double x_out = 0.0;
-    int status = sigmoid(&x_in, &x_out);
+    int status = sigmoid(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0, (float)x_out);
 }
@@ -51,7 +51,7 @@ void test_sigmoid_dx_neg(void)
 {
     double x_in = -10.0;
     double x_out = 0.0;
-    int status = sigmoid_dx(&x_in, &x_out);
+    int status = sigmoid_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -60,7 +60,7 @@ void test_sigmoid_dx_zero(void)
 {
     double x_in = 0.0;
     double x_out = 0.0;
-    int status = sigmoid_dx(&x_in, &x_out);
+    int status = sigmoid_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.25, (float)x_out);
 }
@@ -69,7 +69,7 @@ void test_sigmoid_dx_pos(void)
 {
     double x_in = 10.0;
     double x_out = 0.0;
-    int status = sigmoid_dx(&x_in, &x_out);
+    int status = sigmoid_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -78,7 +78,7 @@ void test_relu_neg(void)
 {
     double x_in = -10.0;
     double x_out = 0.0;
-    int status = relu(&x_in, &x_out);
+    int status = relu(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -87,7 +87,7 @@ void test_relu_zero(void)
 {
     double x_in = 0.0;
     double x_out = 0.0;
-    int status = relu(&x_in, &x_out);
+    int status = relu(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -96,7 +96,7 @@ void test_relu_pos(void)
 {
     double x_in = 10.0;
     double x_out = 0.0;
-    int status = relu(&x_in, &x_out);
+    int status = relu(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 10.0, (float)x_out);
 }
@@ -105,7 +105,7 @@ void test_relu_dx_neg(void)
 {
     double x_in = -10.0;
     double x_out = 0.0;
-    int status = relu_dx(&x_in, &x_out);
+    int status = relu_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -114,7 +114,7 @@ void test_relu_dx_zero(void)
 {
     double x_in = 0.0;
     double x_out = 0.0;
-    int status = relu_dx(&x_in, &x_out);
+    int status = relu_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -123,7 +123,7 @@ void test_relu_dx_pos(void)
 {
     double x_in = 10.0;
     double x_out = 0.0;
-    int status = relu_dx(&x_in, &x_out);
+    int status = relu_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0, (float)x_out);
 }
@@ -153,7 +153,7 @@ void test_tanh_dx_neg(void)
 {
     double x_in = -10.0;
     double x_out = 0.0;
-    int status = tanh_dx(&x_in, &x_out);
+    int status = tanh_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -162,7 +162,7 @@ void test_tanh_dx_zero(void)
 {
     double x_in = 0.0;
     double x_out = 0.0;
-    int status = tanh_dx(&x_in, &x_out);
+    int status = tanh_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0, (float)x_out);
 }
@@ -171,7 +171,7 @@ void test_tanh_dx_pos(void)
 {
     double x_in = 10.0;
     double x_out = 0.0;
-    int status = tanh_dx(&x_in, &x_out);
+    int status = tanh_dx(x_in, &x_out);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0, (float)x_out);
 }
@@ -278,11 +278,12 @@ void test_apply_to_vector_tanh(void)
     status = makeVector(&ans, LEN(init_ans), init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    applyToVector(&a, TANH);
+    status = applyToVector(&a, TANH);
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init); ++i)
     {
-        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((float *)ans.data)[i], ((float *)a.data)[i]);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)a.data[i]);
     }
 }
 
@@ -414,7 +415,7 @@ void test_apply_to_matrix_tanh(void)
 
     for (int i = 0; i < LEN(init); ++i)
     {
-        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((float *)ans.data)[i], ((float *)a.data)[i]);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)a.data[i]);
     }
 }
 

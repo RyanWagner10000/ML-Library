@@ -41,7 +41,7 @@ void test_mat_vect_mult_zeros(void)
     status = makeVector(&ans, LEN(init_ans), &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_a); ++i)
@@ -73,7 +73,7 @@ void test_mat_vect_mult(void)
     status = makeVector(&ans, LEN(init_ans), &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_a); ++i)
@@ -105,7 +105,7 @@ void test_mat_vect_mult_neg_vector(void)
     status = makeVector(&ans, LEN(init_ans), &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_a); ++i)
@@ -137,7 +137,7 @@ void test_mat_vect_mult_neg_matrix(void)
     status = makeVector(&ans, LEN(init_ans), &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_a); ++i)
@@ -164,7 +164,7 @@ void test_mat_vect_mult_wrong_size_vector(void)
     status = makeMatrix(&A, 3, 3, &init_A, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(-1, status);
 }
 
@@ -186,7 +186,7 @@ void test_mat_vect_mult_wrong_size_matrix(void)
     status = makeMatrix(&A, 3, 2, &init_A, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = matvec_mult(&A, &a, &result);
+    status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(-1, status);
 }
 
