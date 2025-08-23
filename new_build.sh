@@ -14,4 +14,4 @@ cd build
 cmake ..
 
 # Make project
-make
+make -j4

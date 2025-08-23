@@ -1,5 +1,5 @@
 /*
- * file: test_mat_vect_mult,c
+ * file: test_mat_vect_mult.c
  * description: script to test the vector and matrix multiplication
  * author: Ryan Wagner
  * date: June 6, 2025

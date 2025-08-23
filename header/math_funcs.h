@@ -36,6 +36,8 @@
 #define vect_sub(a, b, c) _Generic((b), \
     double: vect_sub_double,            \
     Vector: vect_sub_vector)(a, b, c)
+#define vect_div(a, b, c) _Generic((b), \
+    double: vect_div_double)(a, b, c)
 
 typedef enum
 {
@@ -71,6 +73,8 @@ int vect_add_double(Vector A, double B, Vector *result);
 
 int vect_sub_vector(Vector A, Vector B, Vector *result);
 int vect_sub_double(Vector A, double B, Vector *result);
+
+int vect_div_double(Vector A, double B, Vector *result);
 
 int transpose(Matrix A, Matrix *A_t);
 int identity(Matrix *A, int size);

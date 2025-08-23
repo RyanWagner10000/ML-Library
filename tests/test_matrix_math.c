@@ -1,8 +1,8 @@
 /*
- * file: test_mat_vect_mult,c
- * description: script to test the vector and matrix multiplication
+ * file: test_matrix_math.c
+ * description: script to test the matrix multiplication, addition, subtraction, and division functions
  * author: Ryan Wagner
- * date: June 6, 2025
+ * date: August 22, 2025
  * notes:
  */
 
