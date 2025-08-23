@@ -38,6 +38,9 @@ void test_dot_product_zeros(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_different_length_arrays1(void)
@@ -59,6 +62,9 @@ void test_dot_product_different_length_arrays1(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_different_length_arrays2(void)
@@ -80,6 +86,9 @@ void test_dot_product_different_length_arrays2(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_arrays(void)
@@ -101,6 +110,9 @@ void test_dot_product_pos_arrays(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_neg_arrays1(void)
@@ -122,6 +134,9 @@ void test_dot_product_pos_neg_arrays1(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, -220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_neg_arrays2(void)
@@ -143,6 +158,9 @@ void test_dot_product_pos_neg_arrays2(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, -220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_neg_arrays(void)
@@ -164,6 +182,9 @@ void test_dot_product_neg_arrays(void)
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 int main(void)

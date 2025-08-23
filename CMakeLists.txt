@@ -23,6 +23,7 @@ add_executable(testDot tests/test_dot_product.c tests/unity.c)
 add_executable(testIden tests/test_identity.c tests/unity.c)
 add_executable(testMatVect tests/test_mat_vect_mult.c tests/unity.c)
 add_executable(testTrans tests/test_transpose.c tests/unity.c)
+add_executable(testMatMath tests/test_matrix_math.c tests/unity.c)
 
 # Link test executable with the library under test
 target_link_libraries(testActivation PRIVATE math_funcs m)
@@ -30,6 +31,7 @@ target_link_libraries(testDot PRIVATE math_funcs m)
 target_link_libraries(testIden PRIVATE math_funcs m)
 target_link_libraries(testMatVect PRIVATE math_funcs m)
 target_link_libraries(testTrans PRIVATE math_funcs m)
+target_link_libraries(testMatMath PRIVATE math_funcs m)
 target_link_libraries(main PRIVATE math_funcs m)
 
 add_compile_options(-Wall -Wextra -Wpedantic)

@@ -25,7 +25,7 @@
     double: mat_sub_double,            \
     Matrix: mat_sub_matrix)(a, b, c)
 #define mat_div(a, b, c) _Generic((b), \
-    Matrix: mat_sub_matrix)(a, b, c)
+    double: mat_div_double)(a, b, c)
 
 #define vect_mul(a, b, c) _Generic((b), \
     double: vect_mul_double,            \

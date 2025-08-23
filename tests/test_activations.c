@@ -196,6 +196,9 @@ void test_apply_to_vector_sigmoid(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_vector_sigmoid_dx(void)
@@ -218,6 +221,9 @@ void test_apply_to_vector_sigmoid_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_vector_relu(void)
@@ -240,6 +246,9 @@ void test_apply_to_vector_relu(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_vector_relu_dx(void)
@@ -262,6 +271,9 @@ void test_apply_to_vector_relu_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_vector_tanh(void)
@@ -285,6 +297,9 @@ void test_apply_to_vector_tanh(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)a.data[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_vector_tanh_dx(void)
@@ -307,6 +322,9 @@ void test_apply_to_vector_tanh_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeVector(&a);
+    freeVector(&ans);
 }
 
 void test_apply_to_matrix_sigmoid(void)
@@ -329,6 +347,9 @@ void test_apply_to_matrix_sigmoid(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 void test_apply_to_matrix_sigmoid_dx(void)
@@ -351,6 +372,9 @@ void test_apply_to_matrix_sigmoid_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 void test_apply_to_matrix_relu(void)
@@ -373,6 +397,9 @@ void test_apply_to_matrix_relu(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 void test_apply_to_matrix_relu_dx(void)
@@ -395,6 +422,9 @@ void test_apply_to_matrix_relu_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 void test_apply_to_matrix_tanh(void)
@@ -417,6 +447,9 @@ void test_apply_to_matrix_tanh(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, (float)ans.data[i], (float)a.data[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 void test_apply_to_matrix_tanh_dx(void)
@@ -439,6 +472,9 @@ void test_apply_to_matrix_tanh_dx(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)a.data)[i]);
     }
+
+    freeMatrix(&a);
+    freeMatrix(&ans);
 }
 
 int main(void)

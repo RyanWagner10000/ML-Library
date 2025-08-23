@@ -158,7 +158,7 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
             printf("Could not get row from Matrix A doing matrix multiplication.\n");
             return -1;
         }
-        
+
         for (int c = 0; c < B.cols; ++c)
         {
 
@@ -167,13 +167,13 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
                 printf("Could not get column from Matrix B doing matrix multiplication.\n");
                 return -1;
             }
-            
+
             if (dot_product(curr_row, curr_col, &temp_result) < 0)
             {
                 printf("Could not do dot product for row and column for matrix multiplication.\n");
                 return -1;
             }
-            
+
             int idx = r * result->cols + c;
             result->data[idx] = temp_result;
         }
@@ -268,7 +268,7 @@ int mat_add_matrix(Matrix A, Matrix B, Matrix *result)
     }
 
     // If sizes don't match, then exit on failure
-    if (A.cols != B.cols && A.rows != B.rows)
+    if (A.cols != B.cols || A.rows != B.rows)
     {
         printf("Matrix shapes do not match. Cannot perform matrix addition.\n");
         return -1;
@@ -395,7 +395,7 @@ int mat_sub_matrix(Matrix A, Matrix B, Matrix *result)
     }
 
     // If sizes don't match, then exit on failure
-    if (A.cols != B.cols && A.rows != B.rows)
+    if (A.cols != B.cols || A.rows != B.rows)
     {
         printf("Matrix shapes do not match. Cannot perform matrix subtraction.\n");
         return -1;
@@ -934,6 +934,54 @@ int vect_sub_double(Vector A, double B, Vector *result)
 }
 
 /**
+ * @brief Vector division: A/B
+ *
+ * @param A Vector to be divided element-wise
+ * @param B Double to divide element-wise to A
+ * @param result Calculated Vector of division process
+ *
+ * @return 0 on success and -1 on failure
+ */
+int vect_div_double(Vector A, double B, Vector *result)
+{
+    // Test inputs
+    if (!A.data || !B || !result)
+    {
+        printf("Input variables could not pass inital tests for vector division.\n");
+        return -1;
+    }
+
+    // Check if the resulting vector is initialized or has been inited to zero or less
+    if (!initialized_vector(result) || result->size <= 0)
+    {
+        if (makeVectorZeros(result, A.size) < 0)
+        {
+            printf("Error initializing zero output vector.\n");
+            return -1;
+        }
+    }
+    // Check if the input result vector is the right shape and if it's already inited
+    else if (result->size != A.size)
+    {
+        // Free and remake vector properly
+        freeVector(result);
+        if (makeVectorZeros(result, A.size) < 0)
+        {
+            printf("Error initializing zero output vector.\n");
+            return -1;
+        }
+    }
+
+    // Perform sum of products for rows in Matrix
+    for (int i = 0; i < A.size; ++i)
+    {
+        result->data[i] = A.data[i] / B;
+    }
+
+    return 0;
+}
+
+/**
  * @brief Performs the transpose of the input matrix
  *
  * @param A Matrix to be transposed
@@ -1122,7 +1170,7 @@ int softmax(double x_i, Vector x_j, double *x_out)
     {
         sum_x_j += exp(x_j.data[j] - maxx);
     }
-    
+
     *x_out = exp(x_i - maxx) / sum_x_j;
 
     return 0;

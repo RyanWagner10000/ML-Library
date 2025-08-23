@@ -48,6 +48,11 @@ void test_mat_vect_mult_zeros(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
+    freeVector(&ans);
 }
 
 void test_mat_vect_mult(void)
@@ -80,6 +85,11 @@ void test_mat_vect_mult(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
+    freeVector(&ans);
 }
 
 void test_mat_vect_mult_neg_vector(void)
@@ -87,7 +97,7 @@ void test_mat_vect_mult_neg_vector(void)
     int status = -1;
 
     Vector result;
-    status = makeVector(&result, 3, NULL, TYPE_DOUBLE);
+    status = makeVectorZeros(&result, 3);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     double init_a[] = {-1, 2, -3};
@@ -112,6 +122,11 @@ void test_mat_vect_mult_neg_vector(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
+    freeVector(&ans);
 }
 
 void test_mat_vect_mult_neg_matrix(void)
@@ -119,7 +134,7 @@ void test_mat_vect_mult_neg_matrix(void)
     int status = -1;
 
     Vector result;
-    status = makeVector(&result, 3, NULL, TYPE_DOUBLE);
+    status = makeVectorZeros(&result, 3);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     double init_a[] = {1, 2, 3};
@@ -144,6 +159,11 @@ void test_mat_vect_mult_neg_matrix(void)
     {
         TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
     }
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
+    freeVector(&ans);
 }
 
 void test_mat_vect_mult_wrong_size_vector(void)
@@ -166,6 +186,10 @@ void test_mat_vect_mult_wrong_size_vector(void)
 
     status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
 }
 
 void test_mat_vect_mult_wrong_size_matrix(void)
@@ -188,6 +212,10 @@ void test_mat_vect_mult_wrong_size_matrix(void)
 
     status = matvec_mult(A, a, &result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&result);
+    freeVector(&a);
+    freeMatrix(&A);
 }
 
 int main(void)

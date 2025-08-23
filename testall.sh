@@ -14,3 +14,6 @@ echo "---------- Test Matrix Vector Multiplication ----------"
 
 echo "---------- Test Transpose Functions ----------"
 ./testTrans
+
+echo "---------- Test Matrix Math Functions ----------"
+./testMatMath
