@@ -16,23 +16,46 @@
  *
  * @return 0 if successful, -1 if failure
  */
-int initEvalMetrics(EvalMetrics *eval_metrics, Matrix *y_pred)
+int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType type)
 {
+    // Copy the predicted values to the predicted labels Matrix
     eval_metrics->y_lables = malloc(sizeof(Matrix));
 
-    if (makeMatrixZeros(eval_metrics->y_lables, y_pred->rows, y_pred->cols) < 0)
+    if (makeMatrixZeros(eval_metrics->y_lables, y_pred.rows, y_pred.cols) < 0)
     {
         printf("Could not initialize y_labels Matrix for EvalMetrics object.\n");
         return -1;
     }
-
-    if (copyMatrix(*y_pred, eval_metrics->y_lables) < 0)
+    if (copyMatrix(y_pred, eval_metrics->y_lables) < 0)
     {
         printf("Could not copy y_pred to y_labels Matrix for EvalMetrics object.\n");
         return -1;
     }
 
-    eval_metrics->threshold = 0.5;
+    // Set the default threshold value appropriately based on the regression type
+    switch (type)
+    {
+    case LINEAR_REGRESSION:
+    {
+        eval_metrics->threshold = 1.0;
+        break;
+    }
+    case LOGISTIC_REGRESSION:
+    {
+        eval_metrics->threshold = 0.5;
+        break;
+    }
+    case SOFTMAX_REGRESSION:
+    {
+        eval_metrics->threshold = 0.5;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
+
     eval_metrics->TP = 0;
     eval_metrics->FP = 0;
     eval_metrics->TN = 0;
@@ -50,9 +73,9 @@ int initEvalMetrics(EvalMetrics *eval_metrics, Matrix *y_pred)
 }
 
 /**
- * @brief
+ * @brief Takes the predicted values and computes the labels based on a threshold value
  *
- * @param y_true Pointer to Matrix with predicted values
+ * @param y_true Matrix with predicted values
  * @param y_pred Pointer to Matrix for output of predicted classification values
  * @param threshold Threshold value for classification
  *
@@ -169,8 +192,7 @@ int computeAccuracy(int TP, int FP, int TN, int FN, double *accuracy)
 int computePrecision(int TP, int FP, double *precision)
 {
     double denom = TP + FP;
-    printf("denom = %.2lf\n", denom);
-    printf("abs(0.0 - denom) = %.4lf\n", fabs(0.0 - denom));
+
     if (abs(0.0 - denom) < 0.00001)
     {
         printf("Denominator value is too close to 0; will result in error.\n");
@@ -419,6 +441,57 @@ int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
     {
         // Logistic model gets confusion matrix, accuracy, precision, recall, and F1 score
 
+        // Turn the predicted values into respective labels given threshold
+        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
+        {
+            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
+            return -1;
+        }
+
+        // Confusion Matrix
+        if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
+        {
+            printf("Failure to compute Confusion Matrix.\n");
+            return -1;
+        }
+
+        // Accuracy
+        if (computeAccuracy(eval_metrics->TP, eval_metrics->FP, eval_metrics->TN, eval_metrics->FN, &eval_metrics->accuracy) < 0)
+        {
+            printf("Failure to compute Accuracy.\n");
+            return -1;
+        }
+
+        // Precision
+        if (computePrecision(eval_metrics->TP, eval_metrics->FP, &eval_metrics->precision) < 0)
+        {
+            printf("Failure to compute Precision.\n");
+            return -1;
+        }
+
+        // Recall
+        if (computeRecall(eval_metrics->TP, eval_metrics->FN, &eval_metrics->recall) < 0)
+        {
+            printf("Failure to compute Recall.\n");
+            return -1;
+        }
+
+        // F1 Score
+        if (computeF1(eval_metrics->precision, eval_metrics->recall, &eval_metrics->f1) < 0)
+        {
+            printf("Failure to compute F1 Score.\n");
+            return -1;
+        }
+    }
+    else if (model.type == SOFTMAX_REGRESSION)
+    {
+        // Turn the predicted values into respective labels given threshold
+        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
+        {
+            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
+            return -1;
+        }
+
         // Confusion Matrix
         if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
         {
@@ -460,6 +533,12 @@ int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
         return -1;
     }
 
+    if (printMetrics(model, *eval_metrics) < 0)
+    {
+        printf("Printing all performance metrics failed.\n");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -471,34 +550,34 @@ int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
  *
  * @return 0 if successful, -1 if failure
  */
-int printMetrics(Model *model, EvalMetrics *eval_metrics)
+int printMetrics(Model model, EvalMetrics eval_metrics)
 {
-    if (model == NULL || eval_metrics == NULL || model->y == NULL || model->y->data == NULL)
+    if (model.y == NULL || model.y->data == NULL)
     {
         printf("Input model or eval metrics object is incorrect.\n");
         return -1;
     }
 
-    if (model->type == LINEAR_REGRESSION)
+    if (model.type == LINEAR_REGRESSION)
     {
         printf("\n");
-        printf("     MSE = %.6lf\n", eval_metrics->mse);
-        printf("     RMSE = %.6lf\n", eval_metrics->rmse);
-        printf("     MAE = %.6lf\n", eval_metrics->mae);
-        printf("     R2 Score = %.6lf\n", eval_metrics->r2score);
+        printf("     MSE = %.6lf\n", eval_metrics.mse);
+        printf("     RMSE = %.6lf\n", eval_metrics.rmse);
+        printf("     MAE = %.6lf\n", eval_metrics.mae);
+        printf("     R2 Score = %.6lf\n", eval_metrics.r2score);
         printf("\n");
     }
-    else if (model->type == LOGISTIC_REGRESSION)
+    else if (model.type == LOGISTIC_REGRESSION || model.type == SOFTMAX_REGRESSION)
     {
         printf("\n");
-        printf("     TP = %d\n", eval_metrics->TP);
-        printf("     TN = %d\n", eval_metrics->TN);
-        printf("     FP = %d\n", eval_metrics->FP);
-        printf("     FN = %d\n", eval_metrics->FN);
-        printf("     Accuracy = %.6lf\n", eval_metrics->accuracy);
-        printf("     Precision = %.6lf\n", eval_metrics->precision);
-        printf("     Recall = %.6lf\n", eval_metrics->recall);
-        printf("     F1 Score = %.6lf\n", eval_metrics->f1);
+        printf("     TP = %d\n", eval_metrics.TP);
+        printf("     TN = %d\n", eval_metrics.TN);
+        printf("     FP = %d\n", eval_metrics.FP);
+        printf("     FN = %d\n", eval_metrics.FN);
+        printf("     Accuracy = %.6lf\n", eval_metrics.accuracy);
+        printf("     Precision = %.6lf\n", eval_metrics.precision);
+        printf("     Recall = %.6lf\n", eval_metrics.recall);
+        printf("     F1 Score = %.6lf\n", eval_metrics.f1);
         printf("\n");
     }
     else

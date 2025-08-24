@@ -127,6 +127,51 @@ int checkModel(Model *model)
 }
 
 /**
+ * @brief Computes the one-hot encoded form of a Matrix
+ *
+ * @param m Original matrix values
+ * @param m_encoded Matrix to get one-hot encoded values
+ * @param classes Number of classes for encoding
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int computeOneHotEncodedMatrix(Matrix m, Matrix *m_encoded, int classes)
+{
+    // Temp Matrix
+    Matrix temp_y = {0};
+    if (makeMatrixZeros(&temp_y, m.rows, classes) < 0)
+    {
+        printf("Could not initialize temp y matrix.\n");
+        return -1;
+    }
+
+    // Create one-hot encoded row in the matrix
+    for (int i = 0; i < temp_y.rows; ++i)
+    {
+        temp_y.data[i * temp_y.cols + (int)m.data[i]] = 1.0;
+    }
+
+    freeMatrix(m_encoded);
+
+    // Reallocate memory for bigger y matrix in one-hot encoded form
+    if (makeMatrixZeros(m_encoded, temp_y.rows, classes) < 0)
+    {
+        printf("Recreation of encoded matrix was unsuccessful.\n");
+        return -1;
+    }
+
+    // Copy contents of one-hot encoded form to y matrix
+    if (copyMatrix(temp_y, m_encoded) < 0)
+    {
+        printf("Copying of temp matrix in encoded matrix was unsuccessful.\n");
+        return -1;
+    }
+
+    freeMatrix(&temp_y);
+    return 0;
+}
+
+/**
  * @brief Computes logits and applies activation function based on regression type
  *
  * @param m Model object that holds all the Matrices and Vectors
@@ -545,37 +590,7 @@ int trainModel(Model *model)
     // Convert y matrix to one-hot encoded form if performing softmax regression
     if (model->type == SOFTMAX_REGRESSION)
     {
-        // Temp Matrix
-        Matrix temp_y = {0};
-        if (makeMatrixZeros(&temp_y, model->y->rows, model->classes) < 0)
-        {
-            printf("Could not initialize temp y matrix.\n");
-            return -1;
-        }
-
-        // Create one-hot encoded row in the matrix
-        for (int i = 0; i < temp_y.rows; ++i)
-        {
-            temp_y.data[i * temp_y.cols + (int)model->y->data[i]] = 1.0;
-        }
-
-        freeMatrix(model->y);
-
-        // Reallocate memory for bigger y matrix in one-hot encoded form
-        if (makeMatrixZeros(model->y, model->X->rows, model->classes) < 0)
-        {
-            printf("Recreation of y matrix in model was unsuccessful.\n");
-            return -1;
-        }
-
-        // Copy contents of one-hot encoded form to y matrix
-        if (copyMatrix(temp_y, model->y) < 0)
-        {
-            printf("Copying of temp matrix in y model was unsuccessful.\n");
-            return -1;
-        }
-
-        freeMatrix(&temp_y);
+        computeOneHotEncodedMatrix(*model->y, model->y, model->classes);
     }
 
     // Init weights gradient Vector and bias

@@ -31,7 +31,7 @@ typedef struct
     double r2score;   // Coefficient of Determination, how well the model explains variance in the data
 } EvalMetrics;
 
-int initEvalMetrics(EvalMetrics *eval_metrics, Matrix *y_pred);
+int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType type);
 int getPredictedLabels(Matrix y_pred, Matrix *y_labels, double threshold);
 
 int computeConfusionMatrix(Matrix y_true, Matrix y_pred, int *TP, int *FP, int *TN, int *FN);
@@ -46,7 +46,7 @@ int computeMAE(Matrix y_true, Matrix y_pred, double *mae);
 int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score);
 
 int calculateAllMetrics(Model model, EvalMetrics *eval_metrics);
-int printMetrics(Model *model, EvalMetrics *eval_metrics);
+int printMetrics(Model model, EvalMetrics eval_metrics);
 void freeEvalMetrics(EvalMetrics *em);
 
 #endif // EVAL_METRICS_H

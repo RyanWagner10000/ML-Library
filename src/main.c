@@ -8,8 +8,7 @@
 #include "../header/math_funcs.h"
 #include "../header/regression.h"
 #include "../header/file_handling.h"
-// #include "../header/eval_matrics.h"
-// #include "main.h"
+#include "../header/eval_matrics.h"
 
 int run_linear_regression_from_file()
 {
@@ -35,7 +34,7 @@ int run_linear_regression_from_file()
         printf("Reading CSV to Matrix was unsuccessful.\n");
         return -1;
     }
-    
+
     // Inputs: X = [[1.2], [1.4], [1.6], [...]]
     // Outputs: y = [39344.00, 46206.00, 37732.00, ...]
 
@@ -45,7 +44,7 @@ int run_linear_regression_from_file()
         printf("Column deletion unsuccessful.\n");
         return -1;
     }
-    
+
     // Copy the y-values from the matrix into a vector
     if (makeMatrixZeros(linear_model.y, linear_model.X->rows, 1) < 0)
     {
@@ -57,40 +56,40 @@ int run_linear_regression_from_file()
         printf("Couldn't get column from matrix.\n");
         return -1;
     }
-    
+
     linear_model.classes = 1;
-    
+
     // Delete y-values from Matrix
     if (deleteColMatrix(linear_model.X, 1) < 0)
     {
         printf("Column deletion unsuccessful.\n");
         return -1;
     }
-    
+
     if (makeMatrixZeros(linear_model.logits, linear_model.X->rows, linear_model.classes) < 0)
     {
         printf("Problem initializing logits Matrix\n");
         return -1;
     }
-    
+
     if (makeMatrixZeros(linear_model.weights, linear_model.X->cols, linear_model.classes) < 0)
     {
         printf("Problem initializing weight Matrix\n");
         return -1;
     }
-    
+
     if (makeVectorZeros(linear_model.bias, linear_model.classes) < 0)
     {
         printf("Problem initializing bias Matrix\n");
         return -1;
     }
     linear_model.func = ACT_NONE;
-    
+
     linear_model.config.learning_rate = 0.01;
     linear_model.config.epochs = 10000;
     linear_model.config.lambda = 0.01;
     linear_model.config.regularization = REG_L1;
-    
+
     if (trainModel(&linear_model) < 0)
     {
         printf("Error with training linear model.\n");
@@ -127,28 +126,22 @@ int run_linear_regression_from_file()
     printMatrix(y_new);
 
     // Perform evaluation metrics on the model
-    // EvalMetrics eval_metrics;
-    // if (initEvalMetrics(&eval_metrics, &y_new) < 0)
-    // {
-    //     printf("Initialization of evaluation metrics object failed.\n");
-    //     return -1;
-    // }
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, y_new, linear_model.type) < 0)
+    {
+        printf("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
 
-    // if (calculateAllMetrics(&linear_model, &eval_metrics) < 0)
-    // {
-    //     printf("Calculating all performance metrics failed.\n");
-    //     return -1;
-    // }
-
-    // if (printMetrics(&linear_model, &eval_metrics) < 0)
-    // {
-    //     printf("Printing all performance metrics failed.\n");
-    //     return -1;
-    // }
+    if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
+    {
+        printf("Calculating all performance metrics failed.\n");
+        return -1;
+    }
 
     freeModel(&linear_model);
     freeMatrix(&y_new);
-    // freeEvalMetrics(&eval_metrics);
+    freeEvalMetrics(&eval_metrics);
 
     return 0;
 }
@@ -247,28 +240,22 @@ int run_linear_regression_default()
     printMatrix(y_new);
 
     // Perform evaluation metrics on the model
-    // EvalMetrics eval_metrics;
-    // if (initEvalMetrics(&eval_metrics, &y_new) < 0)
-    // {
-    //     printf("Initialization of evaluation metrics object failed.\n");
-    //     return -1;
-    // }
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, y_new, linear_model.type) < 0)
+    {
+        printf("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
 
-    // if (calculateAllMetrics(&linear_model, &eval_metrics) < 0)
-    // {
-    //     printf("Calculating all performance metrics failed.\n");
-    //     return -1;
-    // }
-
-    // if (printMetrics(&linear_model, &eval_metrics) < 0)
-    // {
-    //     printf("Printing all performance metrics failed.\n");
-    //     return -1;
-    // }
+    if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
+    {
+        printf("Calculating all performance metrics failed.\n");
+        return -1;
+    }
 
     freeModel(&linear_model);
     freeMatrix(&y_new);
-    // freeEvalMetrics(&eval_metrics);
+    freeEvalMetrics(&eval_metrics);
 
     return 0;
 }
@@ -364,6 +351,7 @@ int run_logistic_regression_default()
     if (applyToMatrix(&y_new, SIGMOID) < 0)
     {
         printf("Applying sigmoid function was unsuccessful.\n");
+        return -1;
     }
 
     printf("y_old = \n");
@@ -372,24 +360,18 @@ int run_logistic_regression_default()
     printMatrix(y_new);
 
     // Perform evaluation metrics on the model
-    // EvalMetrics eval_metrics;
-    // if (initEvalMetrics(&eval_metrics, &y_labeled) < 0)
-    // {
-    //     printf("Initialization of evaluation metrics object failed.\n");
-    //     return -1;
-    // }
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, y_new, logistic_model.type) < 0)
+    {
+        printf("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
 
-    // if (calculateAllMetrics(&logistic_model, &eval_metrics) < 0)
-    // {
-    //     printf("Calculating all performance metrics failed.\n");
-    //     return -1;
-    // }
-
-    // if (printMetrics(&logistic_model, &eval_metrics) < 0)
-    // {
-    //     printf("Printing all performance metrics failed.\n");
-    //     return -1;
-    // }
+    if (calculateAllMetrics(logistic_model, &eval_metrics) < 0)
+    {
+        printf("Calculating all performance metrics failed.\n");
+        return -1;
+    }
 
     freeModel(&logistic_model);
     // freeEvalMetrics(&eval_metrics);
@@ -402,8 +384,6 @@ int run_softmax_regression_default()
     // Inputs: X
     // Outputs: y
 
-// Inputs: X
-    // Outputs: y
     double x_vals[] = {
         1.0, 0.5, 0.3, 0.0, 1.2,
         0.9, 0.4, 0.2, 0.1, 1.1,
@@ -491,7 +471,7 @@ int run_softmax_regression_default()
             y_new.data[index] += softmax_model.bias->data[c];
         }
     }
-    
+
     // // Make Vector to hold one row of matrix
     Vector temp_row = {0};
     if (makeVectorZeros(&temp_row, y_new.cols) < 0)
@@ -524,27 +504,22 @@ int run_softmax_regression_default()
     printMatrix(y_new);
 
     // Perform evaluation metrics on the model
-    // EvalMetrics eval_metrics;
-    // if (initEvalMetrics(&eval_metrics, &y_labeled) < 0)
-    // {
-    //     printf("Initialization of evaluation metrics object failed.\n");
-    //     return -1;
-    // }
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, y_new, softmax_model.type) < 0)
+    {
+        printf("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
 
-    // if (calculateAllMetrics(&softmax_model, &eval_metrics) < 0)
-    // {
-    //     printf("Calculating all performance metrics failed.\n");
-    //     return -1;
-    // }
-
-    // if (printMetrics(&softmax_model, &eval_metrics) < 0)
-    // {
-    //     printf("Printing all performance metrics failed.\n");
-    //     return -1;
-    // }
+    if (calculateAllMetrics(softmax_model, &eval_metrics) < 0)
+    {
+        printf("Calculating all performance metrics failed.\n");
+        return -1;
+    }
 
     freeModel(&softmax_model);
-    // freeEvalMetrics(&eval_metrics);
+    freeMatrix(&y_new);
+    freeEvalMetrics(&eval_metrics);
 
     return 0;
 }
