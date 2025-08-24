@@ -20,3 +20,6 @@ echo "---------- Test Matrix Math Functions ----------"
 
 echo "---------- Test Vector Math Functions ----------"
 ./testVectMath
+
+echo "---------- Test Random Permutation Function ----------"
+./testRandPerm

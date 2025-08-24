@@ -9,6 +9,7 @@
 
 #include "../header/regression.h"
 
+
 /**
  * @brief Initialize a Model object by malloc-ing the Matrix and Vector members
  *
@@ -25,6 +26,7 @@ int initModel(Model *model)
     model->logits = malloc(sizeof(Matrix));
 
     model->func = ACT_NONE;
+    model->batch_size = 64;
 
     return 0;
 }

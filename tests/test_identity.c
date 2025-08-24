@@ -20,6 +20,23 @@ void tearDown(void)
     // Optional: clean up after each test
 }
 
+void test_identity_wrong(void)
+{
+    int status = -1;
+
+    Matrix result = {0};
+    status = makeMatrixZeros(&result, 2, 2);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = identity(&result, 0);
+    TEST_ASSERT_EQUAL_INT(-1, status);
+
+    status = identity(&result, 3);
+    TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeMatrix(&result);
+}
+
 void test_identity_1d(void)
 {
     int status = -1;
@@ -132,6 +149,7 @@ int main(void)
 {
     UNITY_BEGIN();
 
+    RUN_TEST(test_identity_wrong);
     RUN_TEST(test_identity_1d);
     RUN_TEST(test_identity_2d);
     RUN_TEST(test_identity_3d);

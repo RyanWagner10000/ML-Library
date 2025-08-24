@@ -89,4 +89,6 @@ int softmax(double x_i, Vector x_j, double *x_out);
 int applyToVector(Vector *v, Activation func);
 int applyToMatrix(Matrix *m, Activation func);
 
+int generateRandomPermutation(int *arr, int n);
+
 #endif
