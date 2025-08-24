@@ -36,7 +36,7 @@ void test_transpose_1d(void)
     status = makeMatrix(&ans, 3, 1, &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = transpose(&A, &result);
+    status = transpose(A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)
@@ -67,7 +67,7 @@ void test_transpose_2d(void)
     status = makeMatrix(&ans, 3, 2, &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = transpose(&A, &result);
+    status = transpose(A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)
@@ -98,7 +98,7 @@ void test_transpose_3d(void)
     status = makeMatrix(&ans, 3, 3, &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = transpose(&A, &result);
+    status = transpose(A, &result);
     TEST_ASSERT_EQUAL_INT(0, status);
 
     for (int i = 0; i < LEN(init_A); ++i)

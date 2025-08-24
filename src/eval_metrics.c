@@ -12,25 +12,50 @@
  * @brief Fill a created EvalMetrics object with default values
  *
  * @param eval_metrics Pointer to EvalMetrics object
+ * @param y_pred Matrix pointer to predicted values from training
  *
  * @return 0 if successful, -1 if failure
  */
-int initEvalMetrics(EvalMetrics *eval_metrics, Vector *y_pred)
+int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType type)
 {
-    eval_metrics->y_lables = malloc(sizeof(Vector));
+    // Copy the predicted values to the predicted labels Matrix
+    eval_metrics->y_lables = malloc(sizeof(Matrix));
 
-    if (makeVectorZeros(eval_metrics->y_lables, y_pred->size) < 0)
+    if (makeMatrixZeros(eval_metrics->y_lables, y_pred.rows, y_pred.cols) < 0)
     {
-        printf("Could not initialize y_labels Vector for EvalMetrics object.\n");
+        printf("Could not initialize y_labels Matrix for EvalMetrics object.\n");
+        return -1;
+    }
+    if (copyMatrix(y_pred, eval_metrics->y_lables) < 0)
+    {
+        printf("Could not copy y_pred to y_labels Matrix for EvalMetrics object.\n");
         return -1;
     }
 
-    for (int i = 0; i < y_pred->size; ++i)
+    // Set the default threshold value appropriately based on the regression type
+    switch (type)
     {
-        eval_metrics->y_lables->data[i] = y_pred->data[i];
+    case LINEAR_REGRESSION:
+    {
+        eval_metrics->threshold = 1.0;
+        break;
+    }
+    case LOGISTIC_REGRESSION:
+    {
+        eval_metrics->threshold = 0.5;
+        break;
+    }
+    case SOFTMAX_REGRESSION:
+    {
+        eval_metrics->threshold = 0.5;
+        break;
+    }
+    default:
+    {
+        break;
+    }
     }
 
-    eval_metrics->threshold = 0.5;
     eval_metrics->TP = 0;
     eval_metrics->FP = 0;
     eval_metrics->TN = 0;
@@ -48,25 +73,29 @@ int initEvalMetrics(EvalMetrics *eval_metrics, Vector *y_pred)
 }
 
 /**
- * @brief
+ * @brief Takes the predicted values and computes the labels based on a threshold value
  *
- * @param y_true Pointer to Vector with predicted values
- * @param y_pred Pointer to Vector for output of predicted classification values
+ * @param y_true Matrix with predicted values
+ * @param y_pred Pointer to Matrix for output of predicted classification values
  * @param threshold Threshold value for classification
  *
  * @return 0 if successful, -1 if failure
  */
-int getPredictedLabels(Vector *y_pred, Vector *y_labels, double threshold)
+int getPredictedLabels(Matrix y_pred, Matrix *y_labels, double threshold)
 {
-    if (y_labels == NULL || y_pred == NULL || y_labels->data == NULL || y_pred->data == NULL || y_labels->size != y_pred->size)
+    if (y_labels == NULL || y_labels->data == NULL || y_pred.data == NULL || y_labels->rows != y_pred.rows || y_labels->cols != y_pred.cols)
     {
         printf("Failed to predict labels.\n");
         return -1;
     }
 
-    for (int i = 0; i < y_pred->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        y_labels->data[i] = (y_pred->data[i] >= threshold) ? 1 : 0;
+        for (int c = 0; c < y_pred.cols; ++c)
+        {
+            int idx = r * y_labels->cols + c;
+            y_labels->data[idx] = (y_pred.data[idx] >= threshold) ? 1 : 0;
+        }
     }
 
     return 0;
@@ -75,8 +104,8 @@ int getPredictedLabels(Vector *y_pred, Vector *y_labels, double threshold)
 /**
  * @brief
  *
- * @param y_true Pointer to Vector with real/known values
- * @param y_pred Pointer to Vector with predicted classification values
+ * @param y_true Pointer to Matrix with real/known values
+ * @param y_pred Pointer to Matrix with predicted classification values
  * @param TP Int pointer for True Positive
  * @param FP Int pointer for False Positive
  * @param TN Int pointer for True Negative
@@ -84,38 +113,42 @@ int getPredictedLabels(Vector *y_pred, Vector *y_labels, double threshold)
  *
  * @return 0 if successful, -1 if failure
  */
-int computeConfusionMatrix(Vector *y_true, Vector *y_pred, int *TP, int *FP, int *TN, int *FN)
+int computeConfusionMatrix(Matrix y_true, Matrix y_pred, int *TP, int *FP, int *TN, int *FN)
 {
-    if (y_true == NULL || y_pred == NULL || y_true->data == NULL || y_pred->data == NULL || y_true->size != y_pred->size)
+    if (y_true.data == NULL || y_pred.data == NULL || y_true.rows != y_pred.rows || y_true.cols != y_pred.cols)
     {
         printf("Failed to compute confusion matrix.\n");
         return -1;
     }
 
-    for (int i = 0; i < y_pred->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        if ((int)y_true->data[i] == 0 && (int)y_pred->data[i] == 0)
+        for (int c = 0; c < y_pred.cols; ++c)
         {
-            ++*TN;
-        }
-        else if ((int)y_true->data[i] == 0 && (int)y_pred->data[i] == 1)
-        {
-            ++*FP;
-        }
-        else if ((int)y_true->data[i] == 1 && (int)y_pred->data[i] == 0)
-        {
-            ++*FN;
-        }
-        else if ((int)y_true->data[i] == 1 && (int)y_pred->data[i] == 1)
-        {
-            ++*TP;
-        }
-        else
-        {
-            printf("Problem with computing confusing matrix at an index.\n");
-            printf(" y_true[%d] = %d", i, (int)y_true->data[i]);
-            printf(" y_pred[%d] = %d", i, (int)y_pred->data[i]);
-            return -1;
+            int idx = r + y_true.cols + c;
+            if ((int)y_true.data[idx] == 0 && (int)y_pred.data[idx] == 0)
+            {
+                ++*TN;
+            }
+            else if ((int)y_true.data[idx] == 0 && (int)y_pred.data[idx] == 1)
+            {
+                ++*FP;
+            }
+            else if ((int)y_true.data[idx] == 1 && (int)y_pred.data[idx] == 0)
+            {
+                ++*FN;
+            }
+            else if ((int)y_true.data[idx] == 1 && (int)y_pred.data[idx] == 1)
+            {
+                ++*TP;
+            }
+            else
+            {
+                printf("Problem with computing confusing matrix at an index.\n");
+                printf(" y_true[%d x %d] = %d", r, c, (int)y_true.data[idx]);
+                printf(" y_pred[%d x %d] = %d", r, c, (int)y_pred.data[idx]);
+                return -1;
+            }
         }
     }
 
@@ -159,8 +192,7 @@ int computeAccuracy(int TP, int FP, int TN, int FN, double *accuracy)
 int computePrecision(int TP, int FP, double *precision)
 {
     double denom = TP + FP;
-    printf("denom = %.2lf\n", denom);
-    printf("abs(0.0 - denom) = %.4lf\n", fabs(0.0 - denom));
+
     if (abs(0.0 - denom) < 0.00001)
     {
         printf("Denominator value is too close to 0; will result in error.\n");
@@ -202,6 +234,7 @@ int computeRecall(int TP, int FN, double *recall)
  *
  * @param precision Double with precision value
  * @param recall Double with recall value
+ * @param f1 Pointer to double for result of F1 operation
  *
  * @return 0 if successful, -1 if failure
  */
@@ -220,45 +253,49 @@ int computeF1(double precision, double recall, double *f1)
 }
 
 /**
- * @brief Function to calculate the Mean Squared Error of two Vectors
+ * @brief Function to calculate the Mean Squared Error of two matrices
  *
- * @param y_true Pointer to Vector object with true y values for model
- * @param y_pred Pointer to Vector object with predicted y values for model
+ * @param y_true Matrix object with true y values for model
+ * @param y_pred Matrix object with predicted y values for model
  * @param mse Pointer to double that will hold the mse value
  *
  * @return 0 if successful, -1 if failure
  */
-int computeMSE(Vector *y_true, Vector *y_pred, double *mse)
+int computeMSE(Matrix y_true, Matrix y_pred, double *mse)
 {
-    if (y_true == NULL || y_true->data == NULL || y_pred == NULL || y_pred->data == NULL)
+    if (y_true.data == NULL || y_pred.data == NULL || y_true.rows != y_pred.rows || y_true.cols != y_pred.cols)
     {
         printf("Problem with input paramters for computing MSE.\n");
         return -1;
     }
 
     double sum_square = 0.0;
-    for (int i = 0; i < y_true->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        sum_square += (y_true->data[i] - y_pred->data[i]) * (y_true->data[i] - y_pred->data[i]);
+        for (int c = 0; c < y_pred.cols; ++c)
+        {
+            int idx = r + y_pred.cols + c;
+            sum_square += (y_true.data[idx] - y_pred.data[idx]) * (y_true.data[idx] - y_pred.data[idx]);
+        }
     }
 
-    *mse = sum_square / (double)y_true->size;
+    *mse = sum_square / (double)y_true.rows;
 
     return 0;
 }
 
 /**
- * @brief Function to calculate the Root Mean Squared Error of two Vectors
+ * @brief Function to calculate the Root Mean Squared Error of two Matrices
  *
- * @param y_true Pointer to Vector object with true y values for model
- * @param y_pred Pointer to Vector object with predicted y values for model
+ * @param y_true Pointer to Matrix object with true y values for model
+ * @param y_pred Pointer to Matrix object with predicted y values for model
  * @param rmse Pointer to double that will hold the rmse value
  *
  * @return 0 if successful, -1 if failure
  */
-int computeRMSE(Vector *y_true, Vector *y_pred, double *rmse)
+int computeRMSE(Matrix y_true, Matrix y_pred, double *rmse)
 {
-    if (y_true == NULL || y_true->data == NULL || y_pred == NULL || y_pred->data == NULL)
+    if (y_true.data == NULL || y_pred.data == NULL || y_true.rows != y_pred.rows || y_true.cols != y_pred.cols)
     {
         printf("Problem with input paramters for computing RMSE.\n");
         return -1;
@@ -277,29 +314,33 @@ int computeRMSE(Vector *y_true, Vector *y_pred, double *rmse)
 }
 
 /**
- * @brief Function to calculate the Mean Sbsolute Error of two Vectors
+ * @brief Function to calculate the Mean Absolute Error of two matrices
  *
- * @param y_true Pointer to Vector object with true y values for model
- * @param y_pred Pointer to Vector object with predicted y values for model
+ * @param y_true Pointer to Matrix object with true y values for model
+ * @param y_pred Pointer to Matrix object with predicted y values for model
  * @param mae Pointer to double that will hold the mae value
  *
  * @return 0 if successful, -1 if failure
  */
-int computeMAE(Vector *y_true, Vector *y_pred, double *mae)
+int computeMAE(Matrix y_true, Matrix y_pred, double *mae)
 {
-    if (y_true == NULL || y_true->data == NULL || y_pred == NULL || y_pred->data == NULL)
+    if (y_true.data == NULL || y_pred.data == NULL || y_true.rows != y_pred.rows || y_true.cols != y_pred.cols)
     {
         printf("Problem with input paramters for computing MAE.\n");
         return -1;
     }
 
     double sum_absolute = 0.0;
-    for (int i = 0; i < y_true->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        sum_absolute += abs(y_true->data[i] - y_pred->data[i]);
+        for (int c = 0; c < y_pred.cols; ++c)
+        {
+            int idx = r * y_pred.cols + c;
+            sum_absolute += abs(y_true.data[idx] - y_pred.data[idx]);
+        }
     }
 
-    *mae = sum_absolute / (double)y_true->size;
+    *mae = sum_absolute / (double)y_true.rows;
 
     return 0;
 }
@@ -307,33 +348,41 @@ int computeMAE(Vector *y_true, Vector *y_pred, double *mae)
 /**
  * @brief Function to calculate the R^2 Score (Coefficient of Determination)
  *
- * @param y_true Pointer to Vector object with true y values for model
- * @param y_pred Pointer to Vector object with predicted y values for model
+ * @param y_true Pointer to Matrix object with true y values for model
+ * @param y_pred Pointer to Matrix object with predicted y values for model
  * @param r2score Pointer to double that will hold the r2score value
  *
  * @return 0 if successful, -1 if failure
  */
-int computeR2Score(Vector *y_true, Vector *y_pred, double *r2score)
+int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score)
 {
-    if (y_true == NULL || y_true->data == NULL || y_pred == NULL || y_pred->data == NULL)
+    if (y_true.data == NULL || y_pred.data == NULL || y_pred.rows != y_true.rows || y_pred.cols != y_true.cols)
     {
         printf("Problem with input paramters for computing MAE.\n");
         return -1;
     }
 
     double y_true_avg = 0.0;
-    for (int i = 0; i < y_true->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        y_true_avg += y_true->data[i];
+        for (int c = 0; c < y_pred.cols; ++c)
+        {
+            int idx = r * y_pred.cols + c;
+            y_true_avg += y_true.data[idx];
+        }
     }
-    y_true_avg /= (double)y_true->size;
+    y_true_avg /= (double)y_true.rows;
 
     double sum_numer = 0.0;
     double sum_denom = 0.0;
-    for (int i = 0; i < y_true->size; ++i)
+    for (int r = 0; r < y_pred.rows; ++r)
     {
-        sum_numer += (y_true->data[i] - y_pred->data[i]) * (y_true->data[i] - y_pred->data[i]);
-        sum_denom += (y_true->data[i] - y_true_avg) * (y_true->data[i] - y_true_avg);
+        for (int c = 0; c < y_pred.cols; ++c)
+        {
+            int idx = r * y_pred.cols + c;
+            sum_numer += (y_true.data[idx] - y_pred.data[idx]) * (y_true.data[idx] - y_pred.data[idx]);
+            sum_denom += (y_true.data[idx] - y_true_avg) * (y_true.data[idx] - y_true_avg);
+        }
     }
 
     *r2score = 1.0 - (sum_numer / sum_denom);
@@ -348,52 +397,103 @@ int computeR2Score(Vector *y_true, Vector *y_pred, double *r2score)
  *
  * @return 0 if successful, -1 if failure
  */
-int calculateAllMetrics(Model *model, EvalMetrics *eval_metrics)
+int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
 {
-    if (model == NULL || eval_metrics == NULL || model->y == NULL || model->y->data == NULL)
+    if (eval_metrics == NULL || model.y == NULL || model.y->data == NULL)
     {
         printf("Input model or eval metrics object is incorrect.\n");
         return -1;
     }
 
-    if (model->type == LINEAR)
+    if (model.type == LINEAR_REGRESSION)
     {
         // Linear model gets MSE, RMSE, MAE, and R2 Score
 
         // MSE
-        if (computeMSE(model->y, eval_metrics->y_lables, &eval_metrics->mse) < 0)
+        if (computeMSE(*model.y, *eval_metrics->y_lables, &eval_metrics->mse) < 0)
         {
             printf("Failure to compute MSE.\n");
             return -1;
         }
 
         // RMSE
-        if (computeRMSE(model->y, eval_metrics->y_lables, &eval_metrics->rmse) < 0)
+        if (computeRMSE(*model.y, *eval_metrics->y_lables, &eval_metrics->rmse) < 0)
         {
             printf("Failure to compute RMSE.\n");
             return -1;
         }
 
         // MAE
-        if (computeMAE(model->y, eval_metrics->y_lables, &eval_metrics->mae) < 0)
+        if (computeMAE(*model.y, *eval_metrics->y_lables, &eval_metrics->mae) < 0)
         {
             printf("Failure to compute MAE.\n");
             return -1;
         }
 
         // R2 Score
-        if (computeR2Score(model->y, eval_metrics->y_lables, &eval_metrics->r2score) < 0)
+        if (computeR2Score(*model.y, *eval_metrics->y_lables, &eval_metrics->r2score) < 0)
         {
             printf("Failure to compute R2 Score.\n");
             return -1;
         }
     }
-    else if (model->type == LOGISTIC)
+    else if (model.type == LOGISTIC_REGRESSION)
     {
         // Logistic model gets confusion matrix, accuracy, precision, recall, and F1 score
 
+        // Turn the predicted values into respective labels given threshold
+        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
+        {
+            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
+            return -1;
+        }
+
         // Confusion Matrix
-        if (computeConfusionMatrix(model->y, eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
+        if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
+        {
+            printf("Failure to compute Confusion Matrix.\n");
+            return -1;
+        }
+
+        // Accuracy
+        if (computeAccuracy(eval_metrics->TP, eval_metrics->FP, eval_metrics->TN, eval_metrics->FN, &eval_metrics->accuracy) < 0)
+        {
+            printf("Failure to compute Accuracy.\n");
+            return -1;
+        }
+
+        // Precision
+        if (computePrecision(eval_metrics->TP, eval_metrics->FP, &eval_metrics->precision) < 0)
+        {
+            printf("Failure to compute Precision.\n");
+            return -1;
+        }
+
+        // Recall
+        if (computeRecall(eval_metrics->TP, eval_metrics->FN, &eval_metrics->recall) < 0)
+        {
+            printf("Failure to compute Recall.\n");
+            return -1;
+        }
+
+        // F1 Score
+        if (computeF1(eval_metrics->precision, eval_metrics->recall, &eval_metrics->f1) < 0)
+        {
+            printf("Failure to compute F1 Score.\n");
+            return -1;
+        }
+    }
+    else if (model.type == SOFTMAX_REGRESSION)
+    {
+        // Turn the predicted values into respective labels given threshold
+        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
+        {
+            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
+            return -1;
+        }
+
+        // Confusion Matrix
+        if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
         {
             printf("Failure to compute Confusion Matrix.\n");
             return -1;
@@ -433,6 +533,12 @@ int calculateAllMetrics(Model *model, EvalMetrics *eval_metrics)
         return -1;
     }
 
+    if (printMetrics(model, *eval_metrics) < 0)
+    {
+        printf("Printing all performance metrics failed.\n");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -444,34 +550,34 @@ int calculateAllMetrics(Model *model, EvalMetrics *eval_metrics)
  *
  * @return 0 if successful, -1 if failure
  */
-int printMetrics(Model *model, EvalMetrics *eval_metrics)
+int printMetrics(Model model, EvalMetrics eval_metrics)
 {
-    if (model == NULL || eval_metrics == NULL || model->y == NULL || model->y->data == NULL)
+    if (model.y == NULL || model.y->data == NULL)
     {
         printf("Input model or eval metrics object is incorrect.\n");
         return -1;
     }
 
-    if (model->type == LINEAR)
+    if (model.type == LINEAR_REGRESSION)
     {
         printf("\n");
-        printf("     MSE = %.6lf\n", eval_metrics->mse);
-        printf("     RMSE = %.6lf\n", eval_metrics->rmse);
-        printf("     MAE = %.6lf\n", eval_metrics->mae);
-        printf("     R2 Score = %.6lf\n", eval_metrics->r2score);
+        printf("     MSE = %.6lf\n", eval_metrics.mse);
+        printf("     RMSE = %.6lf\n", eval_metrics.rmse);
+        printf("     MAE = %.6lf\n", eval_metrics.mae);
+        printf("     R2 Score = %.6lf\n", eval_metrics.r2score);
         printf("\n");
     }
-    else if (model->type == LOGISTIC)
+    else if (model.type == LOGISTIC_REGRESSION || model.type == SOFTMAX_REGRESSION)
     {
         printf("\n");
-        printf("     TP = %d\n", eval_metrics->TP);
-        printf("     TN = %d\n", eval_metrics->TN);
-        printf("     FP = %d\n", eval_metrics->FP);
-        printf("     FN = %d\n", eval_metrics->FN);
-        printf("     Accuracy = %.6lf\n", eval_metrics->accuracy);
-        printf("     Precision = %.6lf\n", eval_metrics->precision);
-        printf("     Recall = %.6lf\n", eval_metrics->recall);
-        printf("     F1 Score = %.6lf\n", eval_metrics->f1);
+        printf("     TP = %d\n", eval_metrics.TP);
+        printf("     TN = %d\n", eval_metrics.TN);
+        printf("     FP = %d\n", eval_metrics.FP);
+        printf("     FN = %d\n", eval_metrics.FN);
+        printf("     Accuracy = %.6lf\n", eval_metrics.accuracy);
+        printf("     Precision = %.6lf\n", eval_metrics.precision);
+        printf("     Recall = %.6lf\n", eval_metrics.recall);
+        printf("     F1 Score = %.6lf\n", eval_metrics.f1);
         printf("\n");
     }
     else

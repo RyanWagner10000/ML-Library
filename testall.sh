@@ -9,11 +9,14 @@ echo "---------- Test Dot Product Function ----------"
 echo "---------- Test Identity Function ----------"
 ./testIden
 
-# echo "---------- Test Linear Regression Function ----------"
-# ./testLinReg
-
 echo "---------- Test Matrix Vector Multiplication ----------"
 ./testMatVect
 
 echo "---------- Test Transpose Functions ----------"
 ./testTrans
+
+echo "---------- Test Matrix Math Functions ----------"
+./testMatMath
+
+echo "---------- Test Vector Math Functions ----------"
+./testVectMath

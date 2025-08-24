@@ -3,18 +3,20 @@
  * description: script to test the ability of the dot product funciton
  * author: Ryan Wagner
  * date: June 6, 2025
- * notes: 
+ * notes:
  */
 
 #include "unity.h"
 #include <stdio.h>
 #include "../header/math_funcs.h"
 
-void setUp(void) {
+void setUp(void)
+{
     // Optional: initialize stuff before each test
 }
 
-void tearDown(void) {
+void tearDown(void)
+{
     // Optional: clean up after each test
 }
 
@@ -32,10 +34,13 @@ void test_dot_product_zeros(void)
     status = makeVector(&b, LEN(init), &init, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = dot_product(&a, &b, &result);
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_different_length_arrays1(void)
@@ -52,11 +57,14 @@ void test_dot_product_different_length_arrays1(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_different_length_arrays2(void)
@@ -73,11 +81,14 @@ void test_dot_product_different_length_arrays2(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_arrays(void)
@@ -94,11 +105,14 @@ void test_dot_product_pos_arrays(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_neg_arrays1(void)
@@ -115,11 +129,14 @@ void test_dot_product_pos_neg_arrays1(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, -220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_pos_neg_arrays2(void)
@@ -136,11 +153,14 @@ void test_dot_product_pos_neg_arrays2(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, -220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 void test_dot_product_neg_arrays(void)
@@ -157,11 +177,14 @@ void test_dot_product_neg_arrays(void)
     Vector b;
     status = makeVector(&b, LEN(init_b), &init_b, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
-    
-    status = dot_product(&a, &b, &result);
+
+    status = dot_product(a, b, &result);
 
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 220.0f, (float)result);
     TEST_ASSERT_EQUAL_INT(0, status);
+
+    freeVector(&a);
+    freeVector(&b);
 }
 
 int main(void)
