@@ -7,6 +7,8 @@
  */
 
 #include "../header/math_funcs.h"
+#include <stdlib.h>
+#include <time.h>
 
 /**
  * @brief Performs the dot product of two vectors
@@ -1023,13 +1025,37 @@ int identity(Matrix *A, int size)
 {
     if (size < 1)
     {
+        printf("Incorrect size passed into identity function.\n");
+        return -1;
+    }
+    else if (A->rows != A->cols)
+    {
+        printf("Input matrix dimensions do NOT match. Freeing and resetting.\n");
+        freeMatrix(A);
+
+        if (makeMatrixZeros(A, size, size) < 0)
+        {
+            printf("Remaking input matrix to identity function was unsuccessful.\n");
+            return -1;
+        }
+    }
+    else if (!A->data)
+    {
+        printf("Input matrix data was NULL, reallocating.\n");
+        freeMatrix(A);
+
+        if (makeMatrixZeros(A, size, size) < 0)
+        {
+            printf("Remaking input matrix to identity function was unsuccessful.\n");
+            return -1;
+        }
+    }
+    else if (size != A->rows || size != A->cols)
+    {
+        printf("Input size passed into identity function did NOT match matrix size.\n");
         return -1;
     }
 
-    A->cols = size;
-    A->rows = size;
-
-    A->data = calloc(size * size, sizeof(double));
     for (int i = 0; i < size; ++i)
     {
         A->data[i * size + i] = 1.0;
@@ -1180,9 +1206,9 @@ int softmax(double x_i, Vector x_j, double *x_out)
  * @brief Function to apply an activation function to a Vector
  *
  * @param v Vector pointer to apply activation function to
- * @param func Activation functino to apply
+ * @param func Activation function to apply
  *
- * @return None
+ * @return 0 if successful, -1 if failure
  */
 int applyToVector(Vector *v, Activation func)
 {
@@ -1272,9 +1298,9 @@ int applyToVector(Vector *v, Activation func)
  * @brief Function to apply an activation function to a Matrix
  *
  * @param m Matrix to apply activation function to
- * @param func Activation functino to apply
+ * @param func Activation function to apply
  *
- * @return None
+ * @return 0 if successful, -1 if failure
  */
 int applyToMatrix(Matrix *m, Activation func)
 {
@@ -1360,6 +1386,49 @@ int applyToMatrix(Matrix *m, Activation func)
             }
             }
         }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Function to generate a random permutation of an array
+ *
+ * @param arr Integer array to be randomized
+ * @param n Length of array arr
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int generateRandomPermutation(int *arr, int n)
+{
+    int j = 0;
+    int temp = 0;
+    // Check input variables
+    if (!arr || n <= 0)
+    {
+        printf("Input variables to generate random array permutation were not correct.\n");
+        return -1;
+    }
+
+    // Fill the input arr with values from 0 to n-1
+    for (int i = 0; i < n; ++i)
+    {
+        arr[i] = i;
+    }
+
+    // Seed the random number generator
+    srand(time(NULL));
+
+    // Fisher-Yates shuffle
+    for (int i = n - 1; i > 0; i--)
+    {
+        // Generate a random index j between 0 and i (inclusive)
+        j = rand() % (i + 1);
+
+        // Swap arr[i] with arr[j]
+        temp = arr[j];
+        arr[j] = arr[i];
+        arr[i] = temp;
     }
 
     return 0;

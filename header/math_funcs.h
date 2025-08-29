@@ -15,6 +15,8 @@
 #define MATH_FUNCS_H
 
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define mat_mul(a, b, c) _Generic((b), \
     double: mat_mul_double,            \
     Matrix: mat_mul_matrix)(a, b, c)
@@ -88,5 +90,7 @@ int tanh_dx(double x, double *x_out);
 int softmax(double x_i, Vector x_j, double *x_out);
 int applyToVector(Vector *v, Activation func);
 int applyToMatrix(Matrix *m, Activation func);
+
+int generateRandomPermutation(int *arr, int n);
 
 #endif

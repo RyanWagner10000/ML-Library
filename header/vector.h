@@ -47,4 +47,7 @@ int getColMatrix_m(Matrix m, int col, Matrix *mf);
 int getRowMatrix_v(Matrix m, int row, Vector *v);
 int getRowMatrix_m(Matrix m, int row, Matrix *mf);
 
+int setColMatrix(Matrix *m, int col, Vector v);
+int setRowMatrix(Matrix *m, int row, Vector v);
+
 #endif // VECTOR_H

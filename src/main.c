@@ -58,6 +58,7 @@ int run_linear_regression_from_file()
     }
 
     linear_model.classes = 1;
+    linear_model.batch_size = 5;
 
     // Delete y-values from Matrix
     if (deleteColMatrix(linear_model.X, 1) < 0)
@@ -66,29 +67,12 @@ int run_linear_regression_from_file()
         return -1;
     }
 
-    if (makeMatrixZeros(linear_model.logits, linear_model.X->rows, linear_model.classes) < 0)
-    {
-        printf("Problem initializing logits Matrix\n");
-        return -1;
-    }
-
-    if (makeMatrixZeros(linear_model.weights, linear_model.X->cols, linear_model.classes) < 0)
-    {
-        printf("Problem initializing weight Matrix\n");
-        return -1;
-    }
-
-    if (makeVectorZeros(linear_model.bias, linear_model.classes) < 0)
-    {
-        printf("Problem initializing bias Matrix\n");
-        return -1;
-    }
     linear_model.func = ACT_NONE;
 
     linear_model.config.learning_rate = 0.01;
-    linear_model.config.epochs = 10000;
+    linear_model.config.epochs = 2000;
     linear_model.config.lambda = 0.01;
-    linear_model.config.regularization = REG_L1;
+    linear_model.config.regularization = REG_L2;
 
     if (trainModel(&linear_model) < 0)
     {
@@ -120,10 +104,10 @@ int run_linear_regression_from_file()
         return -1;
     }
 
-    printf("y_old = \n");
-    printMatrix(*linear_model.y);
-    printf("y_new = \n");
-    printMatrix(y_new);
+    // printf("y_old = \n");
+    // printMatrix(*linear_model.y);
+    // printf("y_new = \n");
+    // printMatrix(y_new);
 
     // Perform evaluation metrics on the model
     EvalMetrics eval_metrics;
@@ -533,11 +517,11 @@ int run_softmax_regression_default()
  */
 int main(void)
 {
-    // printf("\n---------------File Linear Regression---------------\n");
-    // if (run_linear_regression_from_file() < 0)
-    // {
-    //     printf("CSV File Linear Regression test was unsuccessful.\n");
-    // }
+    printf("\n---------------File Linear Regression---------------\n");
+    if (run_linear_regression_from_file() < 0)
+    {
+        printf("CSV File Linear Regression test was unsuccessful.\n");
+    }
 
     // printf("\n---------------Default Linear Regression---------------\n");
     // if (run_linear_regression_default() < 0)

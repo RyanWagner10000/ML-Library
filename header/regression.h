@@ -43,8 +43,7 @@ typedef struct
     Vector *bias;        // Learned bias matrix of 1xM dimension
     Matrix *logits;      // Logits vector
     Activation func;     // Activation function
-    int input_dim;       // number of features
-    int output_dim;      // 1 for now
+    int batch_size;      // Batch size for regression computation
     int classes;         // Number of classes to use for classification
 } Model;
 

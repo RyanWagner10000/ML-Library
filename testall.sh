@@ -16,7 +16,10 @@ echo "---------- Test Transpose Functions ----------"
 ./testTrans
 
 echo "---------- Test Matrix Math Functions ----------"
-./testMatMath
+./testMatOps
 
 echo "---------- Test Vector Math Functions ----------"
-./testVectMath
+./testVectOps
+
+echo "---------- Test Random Permutation Function ----------"
+./testRandPerm

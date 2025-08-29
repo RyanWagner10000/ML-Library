@@ -25,6 +25,7 @@ int initModel(Model *model)
     model->logits = malloc(sizeof(Matrix));
 
     model->func = ACT_NONE;
+    model->batch_size = -1;
 
     return 0;
 }
@@ -66,26 +67,24 @@ int checkModel(Model *model)
         return -1;
     }
 
-    // Check if logits has been set
-    if (model->logits->data == NULL)
+    // // Check if logits has been set
+    // if (model->logits->data == NULL)
+    // {
+    //     printf("Logits Matrix is NULL and unset.\n");
+    //     return -1;
+    // }
+
+    // Check if batch size has been set
+    if (model->batch_size < 1)
     {
-        printf("Logits Matrix is NULL and unset.\n");
-        return -1;
+        printf("Batch size was invalid or unset. Setting automatically based on input size.\n");
+        int batch_size = 1;
+        while (batch_size < (int)model->X->rows / 2)
+        {
+            batch_size *= 2;
+        }
+        model->batch_size = batch_size / 2;
     }
-
-    // Check if input dimensions has been set
-    // if (model->input_dim <= 0)
-    // {
-    //     printf("Model input dimensions is <= 0. Setting to number of columns in X matrix.\n");
-    //     model->input_dim = model->X.cols;
-    // }
-
-    // Check if output dimensions has been set
-    // if (model->output_dim <= 0)
-    // {
-    //     printf("Model output dimensions is <= 0. Setting to number of columns in X matrix.\n");
-    //     model->output_dim = model->X.cols;
-    // }
 
     // Check if regression type has been set
     if (model->type < 0 || model->type > 2)
@@ -172,38 +171,89 @@ int computeOneHotEncodedMatrix(Matrix m, Matrix *m_encoded, int classes)
 }
 
 /**
- * @brief Computes logits and applies activation function based on regression type
+ * @brief Computes the one-hot encoded form of a Matrix
  *
- * @param m Model object that holds all the Matrices and Vectors
+ * @param m Original matrix
+ * @param mini Matrix to receive mini-batch
+ * @param perm_arr Integer array of random permutation
+ * @param batch_idx Batch number
+ * @param size Size of the batch
  *
  * @return 0 if successful, -1 if failure
  */
-static int computeLogits(Model *m)
+int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int size)
+{
+    if (!m.data || !mini->data || !perm_arr || batch_idx < 0)
+    {
+        printf("Parameters input into mini batch function were not correct.\n");
+        return -1;
+    }
+
+    int start_idx = batch_idx * mini->rows;
+    int row = 0;
+    Vector v = {0};
+    if (makeVectorZeros(&v, m.cols) < 0)
+    {
+        printf("Making of default row vector was unsuccessful.\n");
+        return -1;
+    }
+
+    for (int r = 0; r < size; ++r)
+    {
+        // Get random row number from permutation array
+        row = perm_arr[start_idx + r];
+
+        // Get row from original matrix
+        if (getRowMatrix_v(m, row, &v) < 0)
+        {
+            printf("Getting row vector from X matrix was unsuccessful.\n");
+            return -1;
+        }
+
+        // Set the row in the new matrix
+        if (setRowMatrix(mini, r, v) < 0)
+        {
+            printf("Setting row vector in mini matrix was unsuccessful.\n");
+            return -1;
+        }
+    }
+    freeVector(&v);
+
+    return 0;
+}
+
+/**
+ * @brief Computes logits and applies activation function based on regression type
+ *
+ * @param x_inputs Matrix of inputs
+ * @param model Model object
+ *
+ * @return 0 if successful, -1 if failure
+ */
+static int computeLogits(Matrix x_inputs, Model *model)
 {
     // Calculate X * weights
-    if (mat_mul(*m->X, *m->weights, m->logits) < 0)
+    if (mat_mul(x_inputs, *model->weights, model->logits) < 0)
     {
         printf("Matrix multiplication in logits computation was unsuccessful.\n");
         return -1;
     }
 
     // Add bias row-wise
-    for (int r = 0; r < m->logits->rows; ++r)
+    for (int r = 0; r < model->logits->rows; ++r)
     {
-        for (int c = 0; c < m->logits->cols; ++c)
+        for (int c = 0; c < model->logits->cols; ++c)
         {
-            m->logits->data[r * m->logits->cols + c] += m->bias->data[c];
+            model->logits->data[r * model->logits->cols + c] += model->bias->data[c];
         }
     }
 
-    // printf("logits pre softmax =\n");
-    // printMatrix(*m->logits);
-    switch (m->type)
+    switch (model->type)
     {
     case LOGISTIC_REGRESSION:
     {
         // Element-wise sigmoid
-        if (applyToMatrix(m->logits, m->func) < 0)
+        if (applyToMatrix(model->logits, model->func) < 0)
         {
             printf("Applying function to each member in logits matrix was unsuccessful.\n");
             return -1;
@@ -215,25 +265,25 @@ static int computeLogits(Model *m)
     {
         // Make Vector to hold one row of matrix
         Vector temp_row = {0};
-        if (makeVectorZeros(&temp_row, m->logits->cols) < 0)
+        if (makeVectorZeros(&temp_row, model->logits->cols) < 0)
         {
             printf("Making temp row variable was unsuccessful.\n");
             return -1;
         }
 
         // Row-wise softmax
-        for (int r = 0; r < m->logits->rows; ++r)
+        for (int r = 0; r < model->logits->rows; ++r)
         {
-            if (getRowMatrix(*m->logits, r, &temp_row))
+            if (getRowMatrix(*model->logits, r, &temp_row) < 0)
             {
                 printf("Getting row %d from Matrix m for computing Logits was unsuccessful.\n", r);
                 return -1;
             }
 
-            for (int j = 0; j < m->logits->cols; ++j)
+            for (int j = 0; j < model->logits->cols; ++j)
             {
-                int index = r * m->logits->cols + j;
-                if (softmax(m->logits->data[index], temp_row, &m->logits->data[index]) < 0)
+                int index = r * model->logits->cols + j;
+                if (softmax(model->logits->data[index], temp_row, &model->logits->data[index]) < 0)
                 {
                     printf("Softmax function was unsuccessful when computing logits.\n");
                     freeVector(&temp_row);
@@ -251,8 +301,6 @@ static int computeLogits(Model *m)
         break;
     }
     }
-    // printf("logits post softmax =\n");
-    // printMatrix(*m->logits);
 
     return 0;
 }
@@ -260,12 +308,13 @@ static int computeLogits(Model *m)
 /**
  * @brief Compute the loss of the current epoch with MSE and L2 Regularization with lambda
  *
- * @param model Model object that holds all the Matrices and Vectors
+ * @param y_real Matrix object holding real values
+ * @param model Model object
  * @param loss Resulting Vector of losses
  *
  * @return 0 if successful, -1 if failure
  */
-static int computeLoss(Model *model, double *loss)
+static int computeLoss(Matrix y_real, Model *model, double *loss)
 {
     double y_pred = 0;
     *loss = 0;
@@ -285,7 +334,7 @@ static int computeLoss(Model *model, double *loss)
                 index = r * model->logits->cols + c;
 
                 double y_pred = model->logits->data[index];
-                double diff = model->y->data[index] - y_pred;
+                double diff = y_real.data[index] - y_pred;
 
                 error += diff * diff;
             }
@@ -304,7 +353,7 @@ static int computeLoss(Model *model, double *loss)
 
                 double y_pred = model->logits->data[index];
 
-                error += model->y->data[index] * log(y_pred) + (1 - model->y->data[index]) * log(1 - y_pred);
+                error += y_real.data[index] * log(y_pred) + (1 - y_real.data[index]) * log(1 - y_pred);
             }
         }
         *loss = -1 * error / model->logits->rows;
@@ -323,7 +372,7 @@ static int computeLoss(Model *model, double *loss)
 
                 double y_pred = model->logits->data[index];
 
-                error += model->y->data[index] * log(y_pred);
+                error += y_real.data[index] * log(y_pred);
             }
         }
         *loss = -1 * error / model->logits->rows;
@@ -369,16 +418,18 @@ static int computeLoss(Model *model, double *loss)
 /**
  * @brief Computes the gradient descent as it solves the problem
  *
- * @param model Model object that holds all the Matrices and Vectors
+ * @param x_inputs Matrix of inputs
+ * @param y_real Matrix object holding real values
+ * @param model Model object
  * @param grad_w Vector pointer of the gradient of the weights
  * @param grad_b Vector pointer of the gradient of the bias(es)
  *
  * @return 0 if successful, -1 if failure
  */
-static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
+static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix *grad_w, Vector *grad_b)
 {
     Matrix dZ = {0};
-    if (makeMatrixZeros(&dZ, model->X->rows, model->classes) < 0)
+    if (makeMatrixZeros(&dZ, x_inputs.rows, model->classes) < 0)
     {
         printf("Creation of delta Z matrix from computation of gradients was unsuccessful.\n");
         return -1;
@@ -387,7 +438,7 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
     if (model->type == LINEAR_REGRESSION)
     {
         // Calculate dZ matrix
-        if (mat_sub(*model->y, *model->logits, &dZ) < 0)
+        if (mat_sub(y_real, *model->logits, &dZ) < 0)
         {
             printf("Matrix subtraction was unsuccessful.");
         }
@@ -402,7 +453,7 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
 
         // Init transpose of X matrix
         Matrix X_T = {0};
-        if (makeMatrixZeros(&X_T, model->X->cols, model->X->rows) < 0)
+        if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
             printf("Initialization of transpose matrix unsuccessful.\n");
             freeMatrix(&X_T);
@@ -410,7 +461,7 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
         }
 
         // Calculate transpose of X matrix
-        if (transpose(*model->X, &X_T) < 0)
+        if (transpose(x_inputs, &X_T) < 0)
         {
             printf("Transpose operation was unsuccessful in compute gradients.\n");
             freeMatrix(&X_T);
@@ -435,7 +486,7 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
     else if (model->type == LOGISTIC_REGRESSION)
     {
         // Calculate dZ matrix
-        if (mat_sub(*model->logits, *model->y, &dZ) < 0)
+        if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
             printf("Matrix subtraction was undsuccessful.");
         }
@@ -450,14 +501,14 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
 
         // Init transpose of X matrix
         Matrix X_T = {0};
-        if (makeMatrixZeros(&X_T, model->X->cols, model->X->rows) < 0)
+        if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
             printf("Initialization of transpose matrix unsuccessful.\n");
             return -1;
         }
 
         // Calculate transpose of X matrix
-        if (transpose(*model->X, &X_T) < 0)
+        if (transpose(x_inputs, &X_T) < 0)
         {
             printf("Transpose operation was unsuccessful in compute gradients.\n");
             return -1;
@@ -480,21 +531,21 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
     else if (model->type == SOFTMAX_REGRESSION)
     {
         // Calculate dZ matrix
-        if (mat_sub(*model->logits, *model->y, &dZ) < 0)
+        if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
             printf("Matrix subtraction was undsuccessful.");
         }
 
         // Init transpose of X matrix
         Matrix X_T = {0};
-        if (makeMatrixZeros(&X_T, model->X->cols, model->X->rows) < 0)
+        if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
             printf("Initialization of transpose matrix unsuccessful.\n");
             return -1;
         }
 
         // Calculate transpose of X matrix
-        if (transpose(*model->X, &X_T) < 0)
+        if (transpose(x_inputs, &X_T) < 0)
         {
             printf("Transpose operation was unsuccessful in compute gradients.\n");
             return -1;
@@ -540,12 +591,12 @@ static int computeGradients(Model *model, Matrix *grad_w, Vector *grad_b)
 /**
  * @brief Computes regularization based on regularization type
  *
- * @param m Model object that holds all the Matrices and Vectors
+ * @param model Model object
  * @param grad_w Pointer to gradient of weights matrix
  *
  * @return 0 if successful, -1 if failure
  */
-static int computeRegularization(Model m, Matrix *grad_w)
+static int computeRegularization(Model model, Matrix *grad_w)
 {
     for (int r = 0; r < grad_w->rows; ++r)
     {
@@ -553,18 +604,18 @@ static int computeRegularization(Model m, Matrix *grad_w)
         {
             int idx = r * grad_w->cols + c;
             // Add regularization gradient
-            if (m.config.regularization == REG_NONE)
+            if (model.config.regularization == REG_NONE)
             {
                 return 0;
             }
-            else if (m.config.regularization == REG_L1)
+            else if (model.config.regularization == REG_L1)
             {
-                grad_w->data[idx] += m.config.lambda * ((m.weights->data[idx] > 0) ? 1.0 : (m.weights->data[idx] < 0) ? -1.0
-                                                                                                                      : 0.0);
+                grad_w->data[idx] += model.config.lambda * ((model.weights->data[idx] > 0) ? 1.0 : (model.weights->data[idx] < 0) ? -1.0
+                                                                                                                                  : 0.0);
             }
-            else if (m.config.regularization == REG_L2)
+            else if (model.config.regularization == REG_L2)
             {
-                grad_w->data[idx] += 2 * m.config.lambda * m.weights->data[idx];
+                grad_w->data[idx] += 2 * model.config.lambda * model.weights->data[idx];
             }
         }
     }
@@ -580,6 +631,18 @@ static int computeRegularization(Model m, Matrix *grad_w)
  */
 int trainModel(Model *model)
 {
+    // Init weights matrix and bias vector
+    if (makeMatrixZeros(model->weights, model->X->cols, model->classes) < 0)
+    {
+        printf("Problem initializing weight Matrix\n");
+        return -1;
+    }
+    if (makeVectorZeros(model->bias, model->classes) < 0)
+    {
+        printf("Problem initializing bias Matrix\n");
+        return -1;
+    }
+
     // Check that the model has been setup correctly before trying to train
     if (checkModel(model) < 0)
     {
@@ -622,110 +685,157 @@ int trainModel(Model *model)
         division_factor = 500;
     }
 
-    // Iterate through N-number of epochs adjusting the weights and bias
+    // Init reused variables, build batch sizing
     double loss = 0;
+    int *perm_arr = (int *)calloc(model->X->rows, sizeof(int));
+    int batches = (int)ceil(model->X->rows / (double)model->batch_size);
+    int mini_batch_idx = 0;
+    int batch_size = 0;
+
+    // Iterate through N-number of epochs adjusting the weights and bias
     for (int epoch = 0; epoch < model->config.epochs; ++epoch)
     {
-        loss = 0;
-        // --- FORWARD PASS ---
+        // --- SHUFFLE DATASET ---
 
-        // printf("X = \n");
-        // printMatrix(*model->X);
-        // printf("Initial Weights = \n");
-        // printMatrix(*model->weights);
-
-        // Compute logits and apply activation function
-        if (computeLogits(model) < 0)
+        // Create a random permutation of the number of samples in the dataset
+        if (generateRandomPermutation(perm_arr, model->X->rows) < 0)
         {
-            printf("Computation of logits was unsuccessful while training model.\n");
+            printf("Creating random permutation for input shuffling was unsuccessful.\n");
             return -1;
         }
 
-        // printf("Logits = \n");
-        // printMatrix(*model->logits);
-
-        // Compute loss
-        if (computeLoss(model, &loss) < 0)
+        // Iterate through forward and backward pass for each mini-batch matrix
+        for (int b = 0; b < batches; ++b)
         {
-            printf("Computation of Loss was unsuccessful while training model.\n");
-            return -1;
+            if (model->X->rows - mini_batch_idx < model->batch_size)
+            {
+                batch_size = model->X->rows - mini_batch_idx;
+            }
+            else
+            {
+                batch_size = model->batch_size;
+            }
+
+            // Make Logits matrix
+            if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
+            {
+                printf("Problem initializing logits Matrix\n");
+                return -1;
+            }
+
+            // Get mini-batch of X
+            Matrix mini_X = {0};
+            if (makeMatrixZeros(&mini_X, batch_size, model->X->cols) < 0)
+            {
+                printf("Creation of empty mini-batch X matrix was unsuccessful.\n");
+                return -1;
+            }
+            if (makeMiniMatrix(*model->X, &mini_X, perm_arr, b, batch_size) < 0)
+            {
+                printf("Creation of mini-batch X matrix was unsuccessful.\n");
+                return -1;
+            }
+
+            // Get mini-batch of y
+            Matrix mini_y = {0};
+            if (makeMatrixZeros(&mini_y, batch_size, model->y->cols) < 0)
+            {
+                printf("Creation of empty mini-batch y matrix was unsuccessful.\n");
+                return -1;
+            }
+            if (makeMiniMatrix(*model->y, &mini_y, perm_arr, b, batch_size) < 0)
+            {
+                printf("Creation of mini-batch X matrix was unsuccessful.\n");
+                return -1;
+            }
+
+            loss = 0;
+            // --- FORWARD PASS ---
+
+            // Compute logits and apply activation function
+            if (computeLogits(mini_X, model) < 0)
+            {
+                printf("Computation of logits was unsuccessful while training model.\n");
+                return -1;
+            }
+
+            // Compute loss
+            if (computeLoss(mini_y, model, &loss) < 0)
+            {
+                printf("Computation of Loss was unsuccessful while training model.\n");
+                return -1;
+            }
+
+            // --- BACKWARD PASS (GRADIENTS) ---
+
+            if (clearMatrix(&grad_w) < 0)
+            {
+                printf("Clearing gradient weights matrix was unsuccessful.\n");
+                return -1;
+            }
+            if (clearVector(&grad_b) < 0)
+            {
+                printf("Clearing gradient bias vector was unsuccessful.\n");
+                return -1;
+            }
+
+            // Compute gradients
+            if (computeGradients(mini_X, mini_y, model, &grad_w, &grad_b) < 0)
+            {
+                printf("Computation of Gradient was unsuccessful while training model.\n");
+                return -1;
+            }
+
+            // Optional regularization
+            if (computeRegularization(*model, &grad_w) < 0)
+            {
+                printf("Computation of Regularization was unsuccessful while training model.\n");
+                return -1;
+            }
+
+            // Gradient descent update
+            if (mat_mul(grad_w, model->config.learning_rate, &grad_w) < 0)
+            {
+                printf("Weights gradient descent update with learning rate was not successful.\n");
+                return -1;
+            }
+
+            if (mat_sub(*model->weights, grad_w, model->weights) < 0)
+            {
+                printf("Weights update with gradient weights was not successful.\n");
+                return -1;
+            }
+
+            if (vect_mul(grad_b, model->config.learning_rate, &grad_b) < 0)
+            {
+                printf("Bias gradient descent update with learning rate was not successful.\n");
+                return -1;
+            }
+
+            if (vect_sub(*model->bias, grad_b, model->bias) < 0)
+            {
+                printf("Bias update with gradient bias was not successful.\n");
+                return -1;
+            }
+
+            // Purely for user to see progress over time/epoch
+            if (epoch % division_factor == 0 || epoch == model->config.epochs - 1)
+            {
+                printf("Epoch %d | Loss %.6f\n", epoch, loss);
+            }
+
+            mini_batch_idx += batch_size;
+            freeMatrix(&mini_X);
+            freeMatrix(&mini_y);
+            freeMatrix(model->logits);
         }
-
-        // --- BACKWARD PASS (GRADIENTS) ---
-
-        if (clearMatrix(&grad_w) < 0)
-        {
-            printf("Clearing gradient weights matrix was unsuccessful.\n");
-            return -1;
-        }
-        if (clearVector(&grad_b) < 0)
-        {
-            printf("Clearing gradient bias vector was unsuccessful.\n");
-            return -1;
-        }
-
-        // Compute gradients
-        if (computeGradients(model, &grad_w, &grad_b) < 0)
-        {
-            printf("Computation of Gradient was unsuccessful while training model.\n");
-            return -1;
-        }
-
-        // printf("grad_w = \n");
-        // printMatrix(grad_w);
-
-        // printf("grad_b = \n");
-        // printVector(grad_b);
-
-        // Optional regularization
-        if (computeRegularization(*model, &grad_w) < 0)
-        {
-            printf("Computation of Regularization was unsuccessful while training model.\n");
-            return -1;
-        }
-
-        // Gradient descent update
-        if (mat_mul(grad_w, model->config.learning_rate, &grad_w) < 0)
-        {
-            printf("Weights gradient descent update with learning rate was not successful.\n");
-            return -1;
-        }
-
-        if (mat_sub(*model->weights, grad_w, model->weights) < 0)
-        {
-            printf("Weights update with gradient weights was not successful.\n");
-            return -1;
-        }
-
-        if (vect_mul(grad_b, model->config.learning_rate, &grad_b) < 0)
-        {
-            printf("Bias gradient descent update with learning rate was not successful.\n");
-            return -1;
-        }
-
-        if (vect_sub(*model->bias, grad_b, model->bias) < 0)
-        {
-            printf("Bias update with gradient bias was not successful.\n");
-            return -1;
-        }
-
-        // printf("Weights =\n");
-        // printMatrix(*model->weights);
-
-        // printf("Bias =\n");
-        // printVector(*model->bias);
-        // printf("\n");
-
-        // Purely for user to see progress over time/epoch
-        if (epoch % division_factor == 0 || epoch == model->config.epochs - 1)
-        {
-            printf("Epoch %d | Loss %.6f\n", epoch, loss);
-        }
+        mini_batch_idx = 0;
     }
     printf("\n");
 
     freeMatrix(&grad_w);
     freeVector(&grad_b);
+    free(perm_arr);
     return 0;
 }
 
