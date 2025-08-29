@@ -49,4 +49,6 @@ int makeMatrixZeros(Matrix *m, int rows, int cols);
 
 int deleteColMatrix(Matrix *m, int col);
 
+int deleteRowMatrix(Matrix *m, int row);
+
 #endif // MATRIX_H

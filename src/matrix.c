@@ -37,7 +37,7 @@ int clearMatrix(Matrix *m)
 /**
  * @brief Copy a Matrix to another Matrix
  *
- * @param m Matrix to copy
+ * @param m Matrix with values to copy
  * @param mc Matrix to get copied valeus
  *
  * @return 0 on success and -1 on failure
@@ -197,7 +197,7 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
 {
     if (rows <= 0 || cols <= 0)
     {
-        printf("Input row or col value(s) was incompatible.\n");
+        printf("Input row {%d} or col {%d} value(s) was incompatible.\n", rows, cols);
         m->data = NULL;
         return -1;
     }
@@ -279,20 +279,26 @@ int deleteRowMatrix(Matrix *m, int row)
     int new_rows = m->rows - 1;
 
     double *temp_array = calloc(new_rows * m->cols, sizeof(double));
+    int array_row = 0;
     for (int r = 0; r < m->rows; ++r)
     {
         if (r != row)
         {
-            temp_array[r * m->cols] = m->data[r * m->cols];
+            for (int c = 0; c < m->cols; ++c)
+            {
+                temp_array[array_row * m->cols + c] = m->data[r * m->cols + c];
+            }
+            array_row++;
         }
     }
 
     // Free the old matrix data, then copy the new stuff over
     free(m->data);
+    m->data = malloc(new_rows * m->cols * sizeof(double));
     memcpy(m->data, temp_array, new_rows * m->cols * sizeof(double));
     free(temp_array);
 
-    --m->cols;
+    --m->rows;
 
     return 0;
 }

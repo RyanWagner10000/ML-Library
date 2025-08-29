@@ -28,6 +28,8 @@ void test_create_perm_wrong(void)
 
     status = generateRandomPermutation(arr, 0);
     TEST_ASSERT_EQUAL_INT(-1, status);
+
+    free(arr);
 }
 
 void test_create_perm(void)
@@ -49,6 +51,8 @@ void test_create_perm(void)
     //     printf("%d, ", arr[i]);
     // }
     // printf("]\n");
+
+    free(arr);
 }
 
 int main(void)

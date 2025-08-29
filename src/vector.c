@@ -80,17 +80,17 @@ int copyVector(Vector v1, Vector *v2)
 {
     if (!v1.data)
     {
-        printf("Input vector V1 was not properly initialized.");
+        printf("Input vector V1 was not properly initialized.\n");
         return -1;
     }
     if (!v2 || !v2->data)
     {
-        printf("Input vector V2 was not properly initialized.");
+        printf("Input vector V2 was not properly initialized.\n");
         return -1;
     }
     if (v1.size != v2->size)
     {
-        printf("Input vector V1 and V2 do not have matching sizes.");
+        printf("Input vector V1 and V2 do not have matching sizes.\n");
         return -1;
     }
 
@@ -212,7 +212,7 @@ int deleteElemVector(Vector *v, int elem)
     // Test inputs
     if (!v || !v->data || elem >= v->size || elem < 0)
     {
-        printf("Error deleting element #%d from Vector", elem);
+        printf("Error deleting element #%d from Vector.\n", elem);
         return -1;
     }
 
@@ -226,13 +226,14 @@ int deleteElemVector(Vector *v, int elem)
     {
         if (e != elem)
         {
-            temp_array[elem_counter] = v->data[elem_counter];
+            temp_array[elem_counter] = v->data[e];
             ++elem_counter;
         }
     }
 
     // Free the old vector data, then copy the new stuff over
     free(v->data);
+    v->data = malloc(new_size * sizeof(double));
     memcpy(v->data, temp_array, new_size * sizeof(double));
     free(temp_array);
 
@@ -395,7 +396,61 @@ int getRowMatrix_m(Matrix m, int row, Matrix *mf)
 
     for (int c = 0; c < m.cols; ++c)
     {
-        mf->data[row * m.cols + c] = m.data[row * m.cols + c];
+        mf->data[c] = m.data[row * m.cols + c];
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Set column in matrix with vector values
+ *
+ * @param m Matrix object to edit
+ * @param col Column index
+ * @param v Pointer to Vector object with values
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int setColMatrix(Matrix *m, int col, Vector v)
+{
+    // Test inputs
+    if (!m->data || col >= m->cols || col < 0 || !v.data || v.size != m->rows)
+    {
+        printf("Error setting column #%d in Matrix with Vector.\n", col);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    for (int r = 0; r < m->rows; ++r)
+    {
+        m->data[r * m->cols + col] = v.data[r];
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Set row in matrix with vector values
+ *
+ * @param m Matrix object to edit
+ * @param row Row index
+ * @param v Pointer to Vector object with values
+ *
+ * @return 0 if successful, -1 otherwise
+ */
+int setRowMatrix(Matrix *m, int row, Vector v)
+{
+    // Test inputs
+    if (!m->data || row >= m->rows || row < 0 || !v.data || v.size != m->cols)
+    {
+        printf("Error setting row #%d from Matrix for Vector.\n", row);
+        printf("Could not pass initial tests.\n");
+        return -1;
+    }
+
+    for (int c = 0; c < m->cols; ++c)
+    {
+        m->data[row * m->cols + c] = v.data[c];
     }
 
     return 0;

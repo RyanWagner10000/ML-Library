@@ -1410,6 +1410,12 @@ int generateRandomPermutation(int *arr, int n)
         return -1;
     }
 
+    // Fill the input arr with values from 0 to n-1
+    for (int i = 0; i < n; ++i)
+    {
+        arr[i] = i;
+    }
+
     // Seed the random number generator
     srand(time(NULL));
 

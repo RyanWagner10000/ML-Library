@@ -15,6 +15,8 @@
 #define MATH_FUNCS_H
 
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define mat_mul(a, b, c) _Generic((b), \
     double: mat_mul_double,            \
     Matrix: mat_mul_matrix)(a, b, c)
