@@ -75,7 +75,45 @@ int copyMatrix(Matrix m, Matrix *mc)
  */
 void printMatrix(Matrix m)
 {
+    if (!m.data)
+    {
+        printf("Printing Matrix m was unsuccessful.\n");
+        return;
+    }
+
     for (int r = 0; r < m.rows; ++r)
+    {
+        printf("[");
+        for (int c = 0; c < m.cols; ++c)
+        {
+            int idx = r * m.cols + c;
+
+            printf("%.6lf", m.data[idx]);
+
+            if (c < m.cols - 1)
+                printf(", ");
+        }
+        printf("]\n");
+    }
+}
+
+/**
+ * @brief Printing N-rows of a Matrix object
+ *
+ * @param m Matrix object to print
+ * @param rows Number of rows to print of matrix
+ *
+ * @return None
+ */
+void printMatrixHead(Matrix m, int rows)
+{
+    if (rows <= 0 || !m.data)
+    {
+        printf("Printing %d rows of Matrix m was unsuccessful.\n", rows);
+        return;
+    }
+
+    for (int r = 0; r < rows; ++r)
     {
         printf("[");
         for (int c = 0; c < m.cols; ++c)
@@ -110,8 +148,9 @@ void freeMatrix(Matrix *m)
 /**
  * @brief Makes a Matrix object
  *
- * @param rows for matrix
- * @param cols for matrix
+ * @param m Pointer to Matrix object to make
+ * @param rows Number of rows of matrix
+ * @param cols Number of columns of matrix
  * @param data Optional data to input into Matrix, NULL otherwise
  * @param type DataType enum of input data
  *
@@ -187,9 +226,9 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
 /**
  * @brief Makes a Matrix object of 0's given a size
  *
- * @param m pointer to Matrix object to make
- * @param rows for matrix
- * @param cols for matrix
+ * @param m Pointer to Matrix object to make
+ * @param rows Number of rows of matrix
+ * @param cols Number of columns of matrix
  *
  * @return 0 if successful, -1 otherwise
  */
@@ -218,8 +257,8 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
 /**
  * @brief Remove column from matrix
  *
- * @param m pointer to Matrix object to edit
- * @param col to delete from Matrix m
+ * @param m Pointer to Matrix object to edit
+ * @param col Column index to delete from Matrix m
  *
  * @return 0 if successful, -1 otherwise
  */
@@ -235,7 +274,7 @@ int deleteColMatrix(Matrix *m, int col)
     int new_cols = m->cols - 1;
     int col_counter = 0;
 
-    double *temp_array = calloc((m->cols - 1) * m->rows, sizeof(double));
+    double *temp_array = calloc(new_cols * m->rows, sizeof(double));
     for (int r = 0; r < m->rows; ++r)
     {
         col_counter = 0;
@@ -251,6 +290,7 @@ int deleteColMatrix(Matrix *m, int col)
 
     // Free the old matrix data, then copy the new stuff over
     free(m->data);
+    m->data = calloc(new_cols * m->rows, sizeof(double));
     memcpy(m->data, temp_array, m->rows * new_cols * sizeof(double));
     free(temp_array);
 
@@ -262,8 +302,8 @@ int deleteColMatrix(Matrix *m, int col)
 /**
  * @brief Remove row from matrix
  *
- * @param m pointer to Matrix object to edit
- * @param row to delete from Matrix m
+ * @param m Pointer to Matrix object to edit
+ * @param row Row to delete from Matrix m
  *
  * @return 0 if successful, -1 otherwise
  */

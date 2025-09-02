@@ -12,9 +12,13 @@ include_directories(header tests)
 
 # Add main source files as a library
 add_library(math_funcs STATIC src/math_funcs.c src/matrix.c src/vector.c)
+add_library(progress_bar STATIC src/progressbar.c)
 
 # Add the executable using source files
 add_executable(main src/main.c src/regression.c src/file_handling.c src/eval_metrics.c)
+add_executable(default_lin_reg src/default_lin_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
+add_executable(default_log_reg src/default_log_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
+add_executable(default_soft_reg src/default_soft_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
 
 # Add test executable
 add_executable(testActivation tests/test_activations.c tests/unity.c)
@@ -35,7 +39,10 @@ target_link_libraries(testTrans PRIVATE math_funcs m)
 target_link_libraries(testMatOps PRIVATE math_funcs m)
 target_link_libraries(testVectOps PRIVATE math_funcs m)
 target_link_libraries(testRandPerm PRIVATE math_funcs m)
-target_link_libraries(main PRIVATE math_funcs m)
+target_link_libraries(main PRIVATE math_funcs progress_bar m)
+target_link_libraries(default_lin_reg PRIVATE math_funcs progress_bar m)
+target_link_libraries(default_log_reg PRIVATE math_funcs progress_bar m)
+target_link_libraries(default_soft_reg PRIVATE math_funcs progress_bar m)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
