@@ -41,6 +41,8 @@ int copyMatrix(Matrix m, Matrix *mc);
 
 void printMatrix(Matrix m);
 
+void printMatrixHead(Matrix m, int rows);
+
 void freeMatrix(Matrix *m);
 
 int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type);

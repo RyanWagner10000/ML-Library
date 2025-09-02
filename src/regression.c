@@ -8,6 +8,7 @@
  */
 
 #include "../header/regression.h"
+#include "../header/progressbar.h"
 
 /**
  * @brief Initialize a Model object by malloc-ing the Matrix and Vector members
@@ -670,30 +671,18 @@ int trainModel(Model *model)
         return -1;
     }
 
-    // Set a division factor for printing the loss over epochs
-    int division_factor = 10.0;
-    if (model->config.epochs >= 1000)
-    {
-        division_factor = 100;
-    }
-    if (model->config.epochs >= 5000)
-    {
-        division_factor = 250;
-    }
-    if (model->config.epochs >= 10000)
-    {
-        division_factor = 500;
-    }
-
     // Init reused variables, build batch sizing
     double loss = 0;
     int *perm_arr = (int *)calloc(model->X->rows, sizeof(int));
     int batches = (int)ceil(model->X->rows / (double)model->batch_size);
     int mini_batch_idx = 0;
     int batch_size = 0;
+    PBD progress_bar;
+    initProgressBar(&progress_bar, 75, '[', ']', '#', '.');
+    drawProgressBar(&progress_bar);
 
     // Iterate through N-number of epochs adjusting the weights and bias
-    for (int epoch = 0; epoch < model->config.epochs; ++epoch)
+    for (int epoch = 1; epoch <= model->config.epochs; ++epoch)
     {
         // --- SHUFFLE DATASET ---
 
@@ -818,18 +807,18 @@ int trainModel(Model *model)
                 return -1;
             }
 
-            // Purely for user to see progress over time/epoch
-            if (epoch % division_factor == 0 || epoch == model->config.epochs - 1)
-            {
-                printf("Epoch %d | Loss %.6f\n", epoch, loss);
-            }
-
             mini_batch_idx += batch_size;
             freeMatrix(&mini_X);
             freeMatrix(&mini_y);
             freeMatrix(model->logits);
         }
         mini_batch_idx = 0;
+
+        // Progress over time/epoch
+        progress_bar.nCurLen = (epoch * progress_bar.nMaxLen) / model->config.epochs;
+        progress_bar.Loss = loss;
+        progress_bar.Progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
+        drawProgressBar(&progress_bar);
     }
     printf("\n");
 

@@ -74,7 +74,7 @@ int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
     }
 
     // Buffer to hold line
-    char line[2048];
+    char line[4096];
     int counter = 0;
 
     if (has_header == 1)
@@ -107,8 +107,3 @@ int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
 
     return 1;
 }
-
-// Vector loadCSVtoVector(const char *filename, int col_idx, int has_header)
-// {
-//     return;
-// }
