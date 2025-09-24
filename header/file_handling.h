@@ -13,6 +13,6 @@
 
 int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m);
 
-// Vector loadCSVtoVector(const char *filename, int  col_idx, int has_header);
+int normalizeMatrix(Matrix *m);
 
 #endif // FILE_HANDLING_H

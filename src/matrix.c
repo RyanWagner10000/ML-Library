@@ -170,8 +170,7 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
     }
 
     // Assign values to matrix if given
-    int idx_m = 0;
-    int idx_d = 0;
+    int idx = 0;
     if (data != NULL)
     {
         switch (type)
@@ -182,9 +181,8 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx_m = r * cols + c;
-                    m->data[idx_m] = (double)((int *)data)[idx_d];
-                    idx_d++;
+                    idx = r * cols + c;
+                    m->data[idx] = (double)((int *)data)[idx];
                 }
             }
             break;
@@ -195,9 +193,8 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx_m = r * cols + c;
-                    m->data[idx_m] = (double)((float *)data)[idx_d];
-                    idx_d++;
+                    idx = r * cols + c;
+                    m->data[idx] = (double)((float *)data)[idx];
                 }
             }
             break;
@@ -208,9 +205,8 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
             {
                 for (int c = 0; c < cols; ++c)
                 {
-                    idx_m = r * cols + c;
-                    m->data[idx_m] = ((double *)data)[idx_d];
-                    idx_d++;
+                    idx = r * cols + c;
+                    m->data[idx] = (double)((double *)data)[idx];
                 }
             }
             break;

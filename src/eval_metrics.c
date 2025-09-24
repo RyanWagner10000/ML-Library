@@ -145,8 +145,8 @@ int computeConfusionMatrix(Matrix y_true, Matrix y_pred, int *TP, int *FP, int *
             else
             {
                 printf("Problem with computing confusing matrix at an index.\n");
-                printf(" y_true[%d x %d] = %d", r, c, (int)y_true.data[idx]);
-                printf(" y_pred[%d x %d] = %d", r, c, (int)y_pred.data[idx]);
+                printf(" y_true[%d x %d] = %d\n", r, c, (int)y_true.data[idx]);
+                printf(" y_pred[%d x %d] = %d\n", r, c, (int)y_pred.data[idx]);
                 return -1;
             }
         }
@@ -247,7 +247,7 @@ int computeF1(double precision, double recall, double *f1)
         return -1;
     }
 
-    *f1 = 2 * (precision * recall) / denom;
+    *f1 = 2.0 * (precision * recall) / denom;
 
     return 0;
 }

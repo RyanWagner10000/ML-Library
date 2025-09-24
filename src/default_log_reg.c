@@ -7,7 +7,6 @@
  */
 #include "../header/math_funcs.h"
 #include "../header/regression.h"
-#include "../header/file_handling.h"
 #include "../header/eval_matrics.h"
 
 int run_logistic_regression_default()
@@ -108,7 +107,8 @@ int run_logistic_regression_default()
     }
 
     freeModel(&logistic_model);
-    // freeEvalMetrics(&eval_metrics);
+    freeMatrix(&y_new);
+    freeEvalMetrics(&eval_metrics);
 
     return 0;
 }

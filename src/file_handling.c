@@ -10,6 +10,16 @@
 
 #include "../header/file_handling.h"
 
+/**
+ * @brief Function to get the number of rows and columns in a file
+ *
+ * @param filename relative or abolsute path to the file
+ * @param has_header if the file has a header or not
+ * @param rows number of rows in input dataset
+ * @param cols number of columns in input dataset
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int getColandRowNum(const char *filename, bool has_header, int *rows, int *cols)
 {
     // Open file and check for success
@@ -52,6 +62,15 @@ int getColandRowNum(const char *filename, bool has_header, int *rows, int *cols)
     return 0;
 }
 
+/**
+ * @brief Function to put the data in a CSV file into a Matrix object
+ *
+ * @param filename relative or abolsute path to the file
+ * @param has_header if the file has a header or not
+ * @param m Matrix object
+ *
+ * @return 0 if successful, -1 if failure
+ */
 int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
 {
     int rows = 0;
@@ -106,4 +125,80 @@ int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
     fclose(file);
 
     return 1;
+}
+
+/**
+ * @brief Function to normalize the data in a Matrix object column-wise
+ *
+ * @param m Matrix object
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int normalizeMatrix(Matrix *m)
+{
+    if (!m || !m->data)
+    {
+        printf("Input matrix for normalization was not compatible.\n");
+        return -1;
+    }
+
+    double sum = 0.0;
+    double mean = 0.0;
+    double sum_squares = 0.0;
+    double std_dev = 0.0;
+    double element = 0.0;
+    int loop_idx = 0;
+
+    int idx = 0;
+    // Calculate mean
+    for (int c = 0; c < m->cols; ++c)
+    {
+
+        for (int r = 0; r < m->rows; ++r)
+        {
+            idx = r * m->cols + c;
+            element = m->data[idx];
+
+            if (loop_idx == 0)
+            {
+                // Update Mean values
+                sum += element;
+            }
+            else if (loop_idx == 1)
+            {
+                // Calculate standard deviation
+                sum_squares += ((element - mean) * (element - mean));
+            }
+            else
+            {
+                // Apply normalization
+                m->data[idx] = (m->data[idx] - mean) / std_dev;
+            }
+        }
+
+        loop_idx++;
+
+        if (loop_idx == 1)
+        {
+            // Calculate Mean
+            mean = sum / m->rows;
+            --c;
+        }
+        else if (loop_idx == 2)
+        {
+            // Calculate standard deviation
+            std_dev = sqrt(sum_squares / m->rows);
+            --c;
+        }
+        else
+        {
+            loop_idx = 0;
+            sum = 0.0;
+            mean = 0.0;
+            sum_squares = 0.0;
+            std_dev = 0.0;
+        }
+    }
+
+    return 0;
 }
