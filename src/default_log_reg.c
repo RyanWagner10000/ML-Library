@@ -100,11 +100,11 @@ int run_logistic_regression_default()
         return -1;
     }
 
-    if (calculateAllMetrics(logistic_model, &eval_metrics) < 0)
-    {
-        printf("Calculating all performance metrics failed.\n");
-        return -1;
-    }
+    // if (calculateAllMetrics(logistic_model, &eval_metrics) < 0)
+    // {
+    //     printf("Calculating all performance metrics failed.\n");
+    //     return -1;
+    // }
 
     freeModel(&logistic_model);
     freeMatrix(&y_new);

@@ -7,7 +7,6 @@
  */
 
 #include "../header/math_funcs.h"
-#include <stdlib.h>
 #include <time.h>
 
 /**
@@ -246,6 +245,78 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
         {
             result->data[i * A.cols + j] = A.data[i * A.cols + j] * B;
         }
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Matrix addition: A + B
+ *
+ * @param A Matrix of size MxN of Matrix type
+ * @param B Vector to add row-element-wise to A
+ * @param result Calculated Matrix of addition process
+ *
+ * @return 0 on success and -1 on failure
+ */
+int mat_add_vector(Matrix A, Vector B, Matrix *result)
+{
+    // Test inputs
+    if (!A.data || !B.data || !result)
+    {
+        printf("Input variables could not pass inital tests for matrix addition.\n");
+        return -1;
+    }
+
+    // Check if the resulting matrix is initialized or has been inited to zero or less
+    if (!initialized_matrix(result) || result->cols <= 0 || result->rows <= 0)
+    {
+        if (makeMatrixZeros(result, A.rows, 1) < 0)
+        {
+            printf("Error initializing zero output matrix.\n");
+            return -1;
+        }
+    }
+    // Check if the input result matrix is the right shape if it's already inited
+    else if (result->cols != 1 || result->rows != A.rows)
+    {
+        // Free and remake matrix properly
+        freeMatrix(result);
+        if (makeMatrixZeros(result, A.rows, 1) < 0)
+        {
+            printf("Error initializing zero output matrix.\n");
+            return -1;
+        }
+    }
+
+    if (B.size == 1)
+    {
+        // Perform element-wise addition for Matrix
+        for (int r = 0; r < A.rows; ++r)
+        {
+            for (int c = 0; c < A.cols; ++c)
+            {
+                result->data[r * A.cols + c] = A.data[r * A.cols + c] + B.data[0];
+            }
+        }
+    }
+    else if (B.size == A.rows)
+    {
+        // Perform element-wise addition for Matrix
+        for (int r = 0; r < A.rows; ++r)
+        {
+            for (int c = 0; c < A.cols; ++c)
+            {
+                result->data[r * A.cols + c] = A.data[r * A.cols + c] + B.data[r];
+            }
+        }
+    }
+    else
+    {
+        printf("The size of the input B Vector does not meet cases to apply to row-wise element addition.\n");
+        printf("Matrix A shape = [%d, %d]\n", A.rows, A.cols);
+        printf("Vector B shape = [%d, 1]\n", B.size);
+        return -1;
     }
 
     return 0;
@@ -1392,6 +1463,58 @@ int applyToMatrix(Matrix *m, Activation func)
 }
 
 /**
+ * @brief
+ *
+ * @param m Original matrix
+ * @param mini Matrix to receive mini-batch
+ * @param perm_arr Integer array of random permutation
+ * @param batch_idx Batch number
+ * @param size Size of the batch
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int size)
+{
+    if (!m.data || !mini->data || !perm_arr || batch_idx < 0)
+    {
+        printf("Parameters input into mini batch function were not correct.\n");
+        return -1;
+    }
+
+    int start_idx = batch_idx * mini->rows;
+    int row = 0;
+    Vector v = {0};
+    if (makeVectorZeros(&v, m.cols) < 0)
+    {
+        printf("Making of default row vector was unsuccessful.\n");
+        return -1;
+    }
+
+    for (int r = 0; r < size; ++r)
+    {
+        // Get random row number from permutation array
+        row = perm_arr[start_idx + r];
+
+        // Get row from original matrix
+        if (getRowMatrix_v(m, row, &v) < 0)
+        {
+            printf("Getting row vector from X matrix was unsuccessful.\n");
+            return -1;
+        }
+
+        // Set the row in the new matrix
+        if (setRowMatrix(mini, r, v) < 0)
+        {
+            printf("Setting row vector in mini matrix was unsuccessful.\n");
+            return -1;
+        }
+    }
+    freeVector(&v);
+
+    return 0;
+}
+
+/**
  * @brief Function to generate a random permutation of an array
  *
  * @param arr Integer array to be randomized
@@ -1430,6 +1553,238 @@ int generateRandomPermutation(int *arr, int n)
         arr[j] = arr[i];
         arr[i] = temp;
     }
+
+    return 0;
+}
+
+/**
+ * @brief Function to initiate a SplitData object
+ *
+ * @return SplitData object
+ */
+SplitData makeDefaultSplitData(void)
+{
+    SplitData splitdata;
+    splitdata.train_features = makeMatrixEmpty();
+    splitdata.train_labels = makeMatrixEmpty();
+    splitdata.test_features = makeMatrixEmpty();
+    splitdata.test_labels = makeMatrixEmpty();
+    splitdata.valid_features = makeMatrixEmpty();
+    splitdata.valid_labels = makeMatrixEmpty();
+
+    return splitdata;
+}
+
+/**
+ * @brief Function to free a SplitData object
+ *
+ * @return None
+ */
+void freeSplitData(SplitData *splitdata)
+{
+    free(splitdata->train_features.data);
+    splitdata->train_features.data = NULL;
+    free(splitdata->train_labels.data);
+    splitdata->train_labels.data = NULL;
+    free(splitdata->test_features.data);
+    splitdata->test_features.data = NULL;
+    free(splitdata->test_features.data);
+    splitdata->test_features.data = NULL;
+    free(splitdata->valid_features.data);
+    splitdata->valid_features.data = NULL;
+    free(splitdata->valid_features.data);
+    splitdata->valid_features.data = NULL;
+
+    return;
+}
+
+/**
+ * @brief Function to normalize the data in a Matrix object column-wise
+ *
+ * @param input Input data Matrix object
+ * @param labels Input labels Matrix object
+ * @param train_per Percentage of the input data that is for training
+ * @param test_per Percentage of the input data that is for testing
+ * @param valid_per Percentage of the input data that is for validation
+ * @param splitdata SplitData object
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int splitData(Matrix input, Matrix labels, int train_per, int test_per, int valid_per, SplitData *splitdata)
+{
+    // Check input data
+    if (!input.data || !labels.data || input.rows != labels.rows)
+    {
+        printf("Input or labels matrices could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check train features inputs
+    if (!splitdata->train_features.data)
+    {
+        printf("Train input variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check test features inputs
+    if (!splitdata->test_features.data)
+    {
+        printf("Test input variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check valid features inputs
+    if (!splitdata->valid_features.data)
+    {
+        printf("Validate input variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check train labels inputs
+    if (!splitdata->train_labels.data)
+    {
+        printf("Train labels variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check test labels inputs
+    if (!splitdata->test_labels.data)
+    {
+        printf("Test labels variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check valid labels inputs
+    if (!splitdata->valid_labels.data)
+    {
+        printf("Validate labels variables could not pass inital tests for splitting data.\n");
+        return -1;
+    }
+
+    // Check if the input percentages are less than 0
+    if (train_per <= 0 || test_per <= 0 || valid_per < 0)
+    {
+        printf("Invalid value(s) put for test, train, or valid percentages.\n");
+        return -1;
+    }
+
+    // Check for percentages math
+    if (train_per + test_per + valid_per != 100)
+    {
+        printf("Input percentages for Training, Testing, and Validation did not add to 100%%.\n");
+        return -1;
+    }
+
+    // Generate a random permutation of the number of rows in the dataset
+    int *perm_arr = (int *)calloc(input.rows, sizeof(int));
+    if (generateRandomPermutation(perm_arr, input.rows) < 0)
+    {
+        printf("Creating random permutation for test, train, validate splitting was unsuccessful.\n");
+        return -1;
+    }
+
+    // Calculate the number of rows for each matrix
+    int train_rows = (int)round(((double)train_per / 100.0) * (double)input.rows);
+    int test_rows = (int)round(((double)test_per / 100.0) * (double)input.rows);
+    int valid_rows = (int)round(((double)valid_per / 100.0) * (double)input.rows);
+
+    // Free all the old matrices data
+    freeMatrix(&splitdata->train_features);
+    freeMatrix(&splitdata->train_labels);
+    freeMatrix(&splitdata->test_features);
+    freeMatrix(&splitdata->test_labels);
+    freeMatrix(&splitdata->valid_features);
+    freeMatrix(&splitdata->valid_labels);
+
+    // Remake the matrices data for the new row calculations
+    if (train_rows > 0)
+    {
+        splitdata->train_features.data = (double *)calloc(train_rows * input.cols, sizeof(double));
+        splitdata->train_labels.data = (double *)calloc(train_rows, sizeof(double));
+        splitdata->train_features.rows = train_rows;
+        splitdata->train_labels.rows = train_rows;
+        splitdata->train_features.cols = input.cols;
+        splitdata->train_labels.cols = 1;
+    }
+    else
+    {
+        printf("Number of train rows was calculated to 0.\n");
+        return -1;
+    }
+    if (test_rows > 0)
+    {
+        splitdata->test_features.data = (double *)calloc(test_rows * input.cols, sizeof(double));
+        splitdata->test_labels.data = (double *)calloc(test_rows, sizeof(double));
+        splitdata->test_features.rows = test_rows;
+        splitdata->test_labels.rows = test_rows;
+        splitdata->test_features.cols = input.cols;
+        splitdata->test_labels.cols = 1;
+    }
+    else
+    {
+        printf("Number of test rows was calculated to 0.\n");
+        return -1;
+    }
+    if (valid_rows > 0)
+    {
+        splitdata->valid_features.data = (double *)calloc(valid_rows * input.cols, sizeof(double));
+        splitdata->valid_labels.data = (double *)calloc(valid_rows, sizeof(double));
+        splitdata->valid_features.rows = valid_rows;
+        splitdata->valid_labels.rows = valid_rows;
+        splitdata->valid_features.cols = input.cols;
+        splitdata->valid_labels.cols = 1;
+    }
+
+    int idx = 0;
+    int idx_train_f = 0;
+    int idx_test_f = 0;
+    int idx_test_l = 0;
+    int idx_valid_f = 0;
+    int idx_valid_l = 0;
+
+    for (int r = 0; r < input.rows; ++r)
+    {
+        int perm_row = perm_arr[r];
+
+        // Populate train, test, valid labels matrices
+        if (r < train_rows)
+        {
+            splitdata->train_labels.data[r] = labels.data[perm_row];
+        }
+        else if (r >= train_rows && r < train_rows + test_rows)
+        {
+            splitdata->test_labels.data[idx_test_l] = labels.data[perm_row];
+            idx_test_l++;
+        }
+        else
+        {
+            splitdata->valid_labels.data[idx_valid_l] = labels.data[perm_row];
+            idx_valid_l++;
+        }
+
+        // Populate train, test, valid features matrices
+        for (int c = 0; c < input.cols; ++c)
+        {
+            idx = perm_row * input.cols + c;
+            if (r < train_rows)
+            {
+                splitdata->train_features.data[idx_train_f] = input.data[idx];
+                idx_train_f++;
+            }
+            else if (r >= train_rows && r < train_rows + test_rows)
+            {
+                splitdata->test_features.data[idx_test_f] = input.data[idx];
+                idx_test_f++;
+            }
+            else
+            {
+                splitdata->valid_features.data[idx_valid_f] = input.data[idx];
+                idx_valid_f++;
+            }
+        }
+    }
+
+    free(perm_arr);
 
     return 0;
 }

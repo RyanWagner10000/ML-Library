@@ -32,7 +32,7 @@ typedef struct
 } EvalMetrics;
 
 int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType type);
-int getPredictedLabels(Matrix y_pred, Matrix *y_labels, double threshold);
+int applyLabelThreshold(Matrix y_pred, Matrix *y_labels, double threshold);
 
 int computeConfusionMatrix(Matrix y_true, Matrix y_pred, int *TP, int *FP, int *TN, int *FN);
 int computeAccuracy(int TP, int FP, int TN, int FN, double *accuracy);
@@ -45,8 +45,8 @@ int computeRMSE(Matrix y_true, Matrix y_pred, double *rmse);
 int computeMAE(Matrix y_true, Matrix y_pred, double *mae);
 int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score);
 
-int calculateAllMetrics(Model model, EvalMetrics *eval_metrics);
-int printMetrics(Model model, EvalMetrics eval_metrics);
+int calculateAllMetrics(EvalMetrics *eval_metrics, RegressionType model_type, Matrix true_labels);
+int printMetrics(EvalMetrics eval_metrics, RegressionType model_type);
 void freeEvalMetrics(EvalMetrics *em);
 
 #endif // EVAL_METRICS_H

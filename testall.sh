@@ -25,4 +25,4 @@ echo "---------- Test Random Permutation Function ----------"
 ./testRandPerm
 
 echo "---------- Test Z Score Normalization Function ----------"
-./testZScoreNorm
+./testDataManip

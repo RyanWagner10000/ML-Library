@@ -117,11 +117,7 @@ int run_salary_dataset()
         return -1;
     }
 
-    if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
-    {
-        printf("Calculating all performance metrics failed.\n");
-        return -1;
-    }
+    // TODO calculate eval metrics
 
     freeModel(&linear_model);
     freeMatrix(&y_new);
@@ -228,11 +224,7 @@ int run_wine_quality_dataset()
         return -1;
     }
 
-    if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
-    {
-        printf("Calculating all performance metrics failed.\n");
-        return -1;
-    }
+    // TODO calculate eval metrics
 
     freeModel(&linear_model);
     freeMatrix(&y_new);
@@ -267,13 +259,6 @@ int run_heart_disease_dataset()
         return -1;
     }
 
-    // Z-Score Normalize the input data for better results
-    if (normalizeMatrix(&logistic_model.X) < 0)
-    {
-        printf("Reading CSV to Matrix was unsuccessful.\n");
-        return -1;
-    }
-
     // Copy the y-values from the matrix into a vector
     if (makeMatrixZeros(logistic_model.y, logistic_model.X->rows, 1) < 0)
     {
@@ -286,9 +271,6 @@ int run_heart_disease_dataset()
         return -1;
     }
 
-    logistic_model.classes = 1;
-    logistic_model.batch_size = 256;
-
     // Delete y-values from Matrix
     if (deleteColMatrix(logistic_model.X, 0) < 0)
     {
@@ -296,12 +278,28 @@ int run_heart_disease_dataset()
         return -1;
     }
 
+    // Z-Score Normalize the input data for better results
+    if (normalizeMatrix(logistic_model.X) < 0)
+    {
+        printf("Reading CSV to Matrix was unsuccessful.\n");
+        return -1;
+    }
+
+    // Split the data into 80/20 Train/Test
+    if (splitData(*logistic_model.X, *logistic_model.y, 80, 20, 0, &logistic_model.splitdata) < 0)
+    {
+        printf("Splitting input data was unsuccessful.\n");
+        return -1;
+    }
+
+    logistic_model.classes = 1;
+    logistic_model.batch_size = 64;
     logistic_model.func = SIGMOID;
 
     logistic_model.config.learning_rate = 0.01;
-    logistic_model.config.epochs = 10;
-    logistic_model.config.lambda = 0.0001;
-    logistic_model.config.regularization = REG_NONE;
+    logistic_model.config.epochs = 2000;
+    logistic_model.config.lambda = 0.01;
+    logistic_model.config.regularization = REG_L2;
 
     if (trainModel(&logistic_model) < 0)
     {
@@ -309,58 +307,35 @@ int run_heart_disease_dataset()
         return -1;
     }
 
-    printf("Weight factor = \n");
-    printMatrix(*logistic_model.weights);
-    printf("Bias factor = \n");
-    printVector(*logistic_model.bias);
+    // printf("Weight factor = \n");
+    // printMatrix(*logistic_model.weights);
+    // printf("Bias factor = \n");
+    // printVector(*logistic_model.bias);
 
-    Matrix y_new = {0};
-    if (makeMatrixZeros(&y_new, logistic_model.y->rows, logistic_model.y->cols) < 0)
+    // Calculate the predicted labels
+    Matrix computed_labels = makeMatrixEmpty();
+    if (comptueLabels(logistic_model.splitdata.test_features, *logistic_model.weights, *logistic_model.bias, &computed_labels, logistic_model.func) < 0)
     {
-        printf("Problem initializing output predictions\n");
+        printf("Computing labels after training was unsuccessful.\n");
         return -1;
     }
-
-    if (mat_mul(*logistic_model.X, *logistic_model.weights, &y_new) < 0)
-    {
-        printf("Error with matrix multiplication.\n");
-        return -1;
-    }
-
-    if (mat_add(y_new, logistic_model.bias->data[0], &y_new) < 0)
-    {
-        printf("Error with matrix addition.\n");
-        return -1;
-    }
-    printf("y_new = \n");
-    printMatrixHead(y_new, 7);
-    if (applyToMatrix(&y_new, SIGMOID) < 0)
-    {
-        printf("Applying sigmoid function was unsuccessful.\n");
-        return -1;
-    }
-
-    printf("y_old = \n");
-    printMatrixHead(*logistic_model.y, 7);
-    printf("y_new = \n");
-    printMatrixHead(y_new, 7);
-
+    
     // Perform evaluation metrics on the model
     EvalMetrics eval_metrics;
-    if (initEvalMetrics(&eval_metrics, y_new, logistic_model.type) < 0)
+    if (initEvalMetrics(&eval_metrics, computed_labels, logistic_model.type) < 0)
     {
         printf("Initialization of evaluation metrics object failed.\n");
         return -1;
     }
+    freeMatrix(&computed_labels);
 
-    if (calculateAllMetrics(logistic_model, &eval_metrics) < 0)
+    if (calculateAllMetrics(&eval_metrics, logistic_model.type, logistic_model.splitdata.test_labels) < 0)
     {
         printf("Calculating all performance metrics failed.\n");
         return -1;
     }
 
     freeModel(&logistic_model);
-    freeMatrix(&y_new);
     freeEvalMetrics(&eval_metrics);
 
     return 0;
@@ -390,7 +365,7 @@ int main(void)
     printf("\n---------------File Heart Disease Logistic Regression---------------\n");
     if (run_heart_disease_dataset() < 0)
     {
-        printf("Wine Quality Dataset linear regression was unsuccessful.\n");
+        printf("Heart Disease Dataset Logistic regression was unsuccessful.\n");
     }
 
     return 0;

@@ -251,6 +251,28 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
 }
 
 /**
+ * @brief Makes an empty Matrix object of row, col, and size of 1
+ *
+ * @return Matrix object
+ */
+Matrix makeMatrixEmpty()
+{
+    // Create Matrix and assign basic members
+    Matrix m;
+    m.rows = 1;
+    m.cols = 1;
+    m.data = calloc(1, sizeof(double));
+    if (!m.data)
+    {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
+    m.data[0] = 0.0;
+
+    return m;
+}
+
+/**
  * @brief Remove column from matrix
  *
  * @param m Pointer to Matrix object to edit

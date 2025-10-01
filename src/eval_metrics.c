@@ -13,6 +13,7 @@
  *
  * @param eval_metrics Pointer to EvalMetrics object
  * @param y_pred Matrix pointer to predicted values from training
+ * @param type RegressionType enum of the trained models regression type
  *
  * @return 0 if successful, -1 if failure
  */
@@ -81,7 +82,7 @@ int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType typ
  *
  * @return 0 if successful, -1 if failure
  */
-int getPredictedLabels(Matrix y_pred, Matrix *y_labels, double threshold)
+int applyLabelThreshold(Matrix y_pred, Matrix *y_labels, double threshold)
 {
     if (y_labels == NULL || y_labels->data == NULL || y_pred.data == NULL || y_labels->rows != y_pred.rows || y_labels->cols != y_pred.cols)
     {
@@ -171,8 +172,9 @@ int computeAccuracy(int TP, int FP, int TN, int FN, double *accuracy)
     double denom = TP + TN + FP + FN;
     if (fabs(0.0 - denom) < 0.00001)
     {
-        printf("Denominator value is too close to 0; will result in error.\n");
-        return -1;
+        printf("Denominator value is too close to 0; would result in error. Setting accuracy to 0.\n");
+        *accuracy = 0.0;
+        return 0;
     }
 
     *accuracy = (double)(TP + TN) / denom;
@@ -193,10 +195,10 @@ int computePrecision(int TP, int FP, double *precision)
 {
     double denom = TP + FP;
 
-    if (abs(0.0 - denom) < 0.00001)
+    if (fabs(0.0 - denom) < 0.00001)
     {
-        printf("Denominator value is too close to 0; will result in error.\n");
-        return -1;
+        printf("Denominator value is too close to 0; would result in error. Setting Precision to 0.\n");
+        *precision = 0.0;
     }
 
     *precision = (double)TP / (TP + FP);
@@ -216,12 +218,11 @@ int computePrecision(int TP, int FP, double *precision)
 int computeRecall(int TP, int FN, double *recall)
 {
     double denom = TP + FN;
-    // printf("denom = %.2lf\n", denom);
-    // printf("abs(0.0 - denom) = %.4lf\n", fabs(0.0 - denom));
-    if (abs(0.0 - denom) < 0.00001)
+    if (fabs(0.0 - denom) < 0.00001)
     {
-        printf("Denominator value is too close to 0; will result in error.\n");
-        return -1;
+        printf("Denominator value is too close to 0; would result in error. Setting Recall to 0.\n");
+        *recall = 0;
+        return 0;
     }
 
     *recall = (double)TP / denom;
@@ -241,10 +242,11 @@ int computeRecall(int TP, int FN, double *recall)
 int computeF1(double precision, double recall, double *f1)
 {
     double denom = precision + recall;
-    if (abs(0.0 - denom) < 0.00001)
+    if (fabs(0.0 - denom) < 0.00001)
     {
-        printf("Denominator value is too close to 0; will result in error.\n");
-        return -1;
+        printf("Denominator value (%.4lf) is too close to 0; would result in error. Setting F1 to 0.\n", denom);
+        *f1 = 0.0;
+        return 0;
     }
 
     *f1 = 2.0 * (precision * recall) / denom;
@@ -336,7 +338,7 @@ int computeMAE(Matrix y_true, Matrix y_pred, double *mae)
         for (int c = 0; c < y_pred.cols; ++c)
         {
             int idx = r * y_pred.cols + c;
-            sum_absolute += abs(y_true.data[idx] - y_pred.data[idx]);
+            sum_absolute += fabs(y_true.data[idx] - y_pred.data[idx]);
         }
     }
 
@@ -392,108 +394,65 @@ int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score)
 /**
  * @brief Function to calculate all the metrics given the models type. Initialize EvalMetrics object prior to calulating metrics.
  *
- * @param model Pointer to solved/trained Model object
- * @param eval_metrics Pointer to initialized, but empty, EvalMetrics object
+ * @param eval_metrics Pointer to initialized EvalMetrics object with predicted labels for testing
+ * @param model_type RegressionType enum of the model type
+ * @param true_labels Matrix of the true labels or test labels
  *
  * @return 0 if successful, -1 if failure
  */
-int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
+int calculateAllMetrics(EvalMetrics *eval_metrics, RegressionType model_type, Matrix true_labels)
 {
-    if (eval_metrics == NULL || model.y == NULL || model.y->data == NULL)
+    if (!eval_metrics || !eval_metrics->y_lables || !eval_metrics->y_lables->data || !true_labels.data)
     {
-        printf("Input model or eval metrics object is incorrect.\n");
+        printf("Eval Metrics object or predicted labels Matrix object is undefined.\n");
         return -1;
     }
 
-    if (model.type == LINEAR_REGRESSION)
+    if (model_type == LINEAR_REGRESSION)
     {
         // Linear model gets MSE, RMSE, MAE, and R2 Score
 
         // MSE
-        if (computeMSE(*model.y, *eval_metrics->y_lables, &eval_metrics->mse) < 0)
+        if (computeMSE(true_labels, *eval_metrics->y_lables, &eval_metrics->mse) < 0)
         {
             printf("Failure to compute MSE.\n");
             return -1;
         }
 
         // RMSE
-        if (computeRMSE(*model.y, *eval_metrics->y_lables, &eval_metrics->rmse) < 0)
+        if (computeRMSE(true_labels, *eval_metrics->y_lables, &eval_metrics->rmse) < 0)
         {
             printf("Failure to compute RMSE.\n");
             return -1;
         }
 
         // MAE
-        if (computeMAE(*model.y, *eval_metrics->y_lables, &eval_metrics->mae) < 0)
+        if (computeMAE(true_labels, *eval_metrics->y_lables, &eval_metrics->mae) < 0)
         {
             printf("Failure to compute MAE.\n");
             return -1;
         }
 
         // R2 Score
-        if (computeR2Score(*model.y, *eval_metrics->y_lables, &eval_metrics->r2score) < 0)
+        if (computeR2Score(true_labels, *eval_metrics->y_lables, &eval_metrics->r2score) < 0)
         {
             printf("Failure to compute R2 Score.\n");
             return -1;
         }
     }
-    else if (model.type == LOGISTIC_REGRESSION)
+    else if (model_type == LOGISTIC_REGRESSION || model_type == SOFTMAX_REGRESSION)
     {
         // Logistic model gets confusion matrix, accuracy, precision, recall, and F1 score
 
         // Turn the predicted values into respective labels given threshold
-        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
+        if (applyLabelThreshold(*eval_metrics->y_lables, eval_metrics->y_lables, eval_metrics->threshold) < 0)
         {
-            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
+            printf("Operation to predict labels for Logistic or Softmax Regression was unsuccessful.\n");
             return -1;
         }
 
         // Confusion Matrix
-        if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
-        {
-            printf("Failure to compute Confusion Matrix.\n");
-            return -1;
-        }
-
-        // Accuracy
-        if (computeAccuracy(eval_metrics->TP, eval_metrics->FP, eval_metrics->TN, eval_metrics->FN, &eval_metrics->accuracy) < 0)
-        {
-            printf("Failure to compute Accuracy.\n");
-            return -1;
-        }
-
-        // Precision
-        if (computePrecision(eval_metrics->TP, eval_metrics->FP, &eval_metrics->precision) < 0)
-        {
-            printf("Failure to compute Precision.\n");
-            return -1;
-        }
-
-        // Recall
-        if (computeRecall(eval_metrics->TP, eval_metrics->FN, &eval_metrics->recall) < 0)
-        {
-            printf("Failure to compute Recall.\n");
-            return -1;
-        }
-
-        // F1 Score
-        if (computeF1(eval_metrics->precision, eval_metrics->recall, &eval_metrics->f1) < 0)
-        {
-            printf("Failure to compute F1 Score.\n");
-            return -1;
-        }
-    }
-    else if (model.type == SOFTMAX_REGRESSION)
-    {
-        // Turn the predicted values into respective labels given threshold
-        if (getPredictedLabels(*model.y, eval_metrics->y_lables, eval_metrics->threshold) < 0)
-        {
-            printf("Operation to predict labels for Logistc Regression was unsuccessful.\n");
-            return -1;
-        }
-
-        // Confusion Matrix
-        if (computeConfusionMatrix(*model.y, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
+        if (computeConfusionMatrix(true_labels, *eval_metrics->y_lables, &eval_metrics->TP, &eval_metrics->FP, &eval_metrics->TN, &eval_metrics->FN) < 0)
         {
             printf("Failure to compute Confusion Matrix.\n");
             return -1;
@@ -533,7 +492,7 @@ int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
         return -1;
     }
 
-    if (printMetrics(model, *eval_metrics) < 0)
+    if (printMetrics(*eval_metrics, model_type) < 0)
     {
         printf("Printing all performance metrics failed.\n");
         return -1;
@@ -545,20 +504,15 @@ int calculateAllMetrics(Model model, EvalMetrics *eval_metrics)
 /**
  * @brief Function to print all metrics for a model
  *
- * @param model Pointer to solved/trained Model object
- * @param eval_metrics Pointer to initialized, but empty, EvalMetrics object
+ * @param eval_metrics EvalMetrics object
+ * @param model_type RegressionType enum of the model type
+ * @param predicted_labels Matrix of the predicted labels
  *
  * @return 0 if successful, -1 if failure
  */
-int printMetrics(Model model, EvalMetrics eval_metrics)
+int printMetrics(EvalMetrics eval_metrics, RegressionType model_type)
 {
-    if (model.y == NULL || model.y->data == NULL)
-    {
-        printf("Input model or eval metrics object is incorrect.\n");
-        return -1;
-    }
-
-    if (model.type == LINEAR_REGRESSION)
+    if (model_type == LINEAR_REGRESSION)
     {
         printf("\n");
         printf("     MSE = %.6lf\n", eval_metrics.mse);
@@ -567,7 +521,7 @@ int printMetrics(Model model, EvalMetrics eval_metrics)
         printf("     R2 Score = %.6lf\n", eval_metrics.r2score);
         printf("\n");
     }
-    else if (model.type == LOGISTIC_REGRESSION || model.type == SOFTMAX_REGRESSION)
+    else if (model_type == LOGISTIC_REGRESSION || model_type == SOFTMAX_REGRESSION)
     {
         printf("\n");
         printf("     TP = %d\n", eval_metrics.TP);

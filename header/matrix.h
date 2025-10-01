@@ -49,6 +49,8 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type);
 
 int makeMatrixZeros(Matrix *m, int rows, int cols);
 
+Matrix makeMatrixEmpty();
+
 int deleteColMatrix(Matrix *m, int col);
 
 int deleteRowMatrix(Matrix *m, int row);

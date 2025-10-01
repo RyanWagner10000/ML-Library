@@ -25,6 +25,8 @@ int initModel(Model *model)
     model->bias = malloc(sizeof(Vector));
     model->logits = malloc(sizeof(Matrix));
 
+    model->splitdata = makeDefaultSplitData();
+
     model->func = ACT_NONE;
     model->batch_size = -1;
 
@@ -41,14 +43,14 @@ int initModel(Model *model)
 int checkModel(Model *model)
 {
     // Check if X has been set
-    if (model->X->data == NULL)
+    if (model->splitdata.train_features.data == NULL)
     {
         printf("X Matrix is NULL and unset.\n");
         return -1;
     }
 
     // Check if y has been set
-    if (model->y->data == NULL)
+    if (model->splitdata.train_labels.data == NULL)
     {
         printf("y Matrix is NULL and unset.\n");
         return -1;
@@ -80,7 +82,7 @@ int checkModel(Model *model)
     {
         printf("Batch size was invalid or unset. Setting automatically based on input size.\n");
         int batch_size = 1;
-        while (batch_size < (int)model->X->rows / 2)
+        while (batch_size < (int)model->splitdata.train_features.rows / 2)
         {
             batch_size *= 2;
         }
@@ -172,53 +174,109 @@ int computeOneHotEncodedMatrix(Matrix m, Matrix *m_encoded, int classes)
 }
 
 /**
- * @brief Computes the one-hot encoded form of a Matrix
+ * @brief Computes the labels with the following formula: activation(weights * features + biases)
  *
- * @param m Original matrix
- * @param mini Matrix to receive mini-batch
- * @param perm_arr Integer array of random permutation
- * @param batch_idx Batch number
- * @param size Size of the batch
+ * @param X Input Matrix of features
+ * @param weights Input Matrix of trained weights
+ * @param biases Input Vector of trained biases
+ * @param labels Output Matrix of predicted labels
+ * @param activation Activation function to apply to predicted labels
  *
  * @return 0 if successful, -1 if failure
  */
-int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int size)
+int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activation activation)
 {
-    if (!m.data || !mini->data || !perm_arr || batch_idx < 0)
+    if (!X.data || !weights.data || !biases.data || !labels->data)
     {
-        printf("Parameters input into mini batch function were not correct.\n");
+        printf("Input variables int computeLabels were not sucessfully setup.\n");
         return -1;
     }
 
-    int start_idx = batch_idx * mini->rows;
-    int row = 0;
-    Vector v = {0};
-    if (makeVectorZeros(&v, m.cols) < 0)
+    if (labels->rows != X.rows)
     {
-        printf("Making of default row vector was unsuccessful.\n");
+        labels->rows = X.rows;
+    }
+    if (labels->cols != weights.cols)
+    {
+        labels->cols = weights.cols;
+    }
+
+    freeMatrix(labels);
+    labels->data = calloc(labels->rows * labels->cols, sizeof(double));
+
+    if (mat_mul(X, weights, labels) < 0)
+    {
+        printf("Matrix multiplication in computeLabels was unsuccessful.\n");
+        return -1;
+    }
+    printf("multiplied here\n");
+
+    if (mat_add(*labels, biases, labels) < 0)
+    {
+        printf("Error with matrix addition.\n");
         return -1;
     }
 
-    for (int r = 0; r < size; ++r)
+    switch (activation)
     {
-        // Get random row number from permutation array
-        row = perm_arr[start_idx + r];
-
-        // Get row from original matrix
-        if (getRowMatrix_v(m, row, &v) < 0)
+    case SIGMOID:
+    {
+        if (applyToMatrix(labels, SIGMOID) < 0)
         {
-            printf("Getting row vector from X matrix was unsuccessful.\n");
+            printf("Applying activation function was unsuccessful.\n");
             return -1;
         }
-
-        // Set the row in the new matrix
-        if (setRowMatrix(mini, r, v) < 0)
-        {
-            printf("Setting row vector in mini matrix was unsuccessful.\n");
-            return -1;
-        }
+        break;
     }
-    freeVector(&v);
+    case SIGMOID_DX:
+    {
+        if (applyToMatrix(labels, SIGMOID_DX) < 0)
+        {
+            printf("Applying activation function was unsuccessful.\n");
+            return -1;
+        }
+        break;
+    }
+    case RELU:
+    {
+        if (applyToMatrix(labels, RELU) < 0)
+        {
+            printf("Applying activation function was unsuccessful.\n");
+            return -1;
+        }
+        break;
+    }
+    case RELU_DX:
+    {
+        if (applyToMatrix(labels, RELU_DX) < 0)
+        {
+            printf("Applying activation function was unsuccessful.\n");
+            return -1;
+        }
+        break;
+    }
+    case TANH:
+    {
+        if (applyToMatrix(labels, TANH) < 0)
+        {
+            printf("Applying activation function was unsuccessful.\n");
+            return -1;
+        }
+        break;
+    }
+    case TANH_DX:
+    {
+        if (applyToMatrix(labels, TANH_DX) < 0)
+        {
+            printf("Applying activation function was unsuccessful.\n");
+            return -1;
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
 
     return 0;
 }
@@ -633,7 +691,7 @@ static int computeRegularization(Model model, Matrix *grad_w)
 int trainModel(Model *model)
 {
     // Init weights matrix and bias vector
-    if (makeMatrixZeros(model->weights, model->X->cols, model->classes) < 0)
+    if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
     {
         printf("Problem initializing weight Matrix\n");
         return -1;
@@ -673,8 +731,8 @@ int trainModel(Model *model)
 
     // Init reused variables, build batch sizing
     double loss = 0;
-    int *perm_arr = (int *)calloc(model->X->rows, sizeof(int));
-    int batches = (int)ceil(model->X->rows / (double)model->batch_size);
+    int *perm_arr = (int *)calloc(model->splitdata.train_features.rows, sizeof(int));
+    int batches = (int)ceil(model->splitdata.train_features.rows / (double)model->batch_size);
     int mini_batch_idx = 0;
     int batch_size = 0;
     PBD progress_bar;
@@ -687,7 +745,7 @@ int trainModel(Model *model)
         // --- SHUFFLE DATASET ---
 
         // Create a random permutation of the number of samples in the dataset
-        if (generateRandomPermutation(perm_arr, model->X->rows) < 0)
+        if (generateRandomPermutation(perm_arr, model->splitdata.train_features.rows) < 0)
         {
             printf("Creating random permutation for input shuffling was unsuccessful.\n");
             return -1;
@@ -696,9 +754,9 @@ int trainModel(Model *model)
         // Iterate through forward and backward pass for each mini-batch matrix
         for (int b = 0; b < batches; ++b)
         {
-            if (model->X->rows - mini_batch_idx < model->batch_size)
+            if (model->splitdata.train_features.rows - mini_batch_idx < model->batch_size)
             {
-                batch_size = model->X->rows - mini_batch_idx;
+                batch_size = model->splitdata.train_features.rows - mini_batch_idx;
             }
             else
             {
@@ -714,7 +772,7 @@ int trainModel(Model *model)
 
             // Get mini-batch of X
             Matrix mini_X = {0};
-            if (makeMatrixZeros(&mini_X, batch_size, model->X->cols) < 0)
+            if (makeMatrixZeros(&mini_X, batch_size, model->splitdata.train_features.cols) < 0)
             {
                 printf("Creation of empty mini-batch X matrix was unsuccessful.\n");
                 return -1;
@@ -727,7 +785,7 @@ int trainModel(Model *model)
 
             // Get mini-batch of y
             Matrix mini_y = {0};
-            if (makeMatrixZeros(&mini_y, batch_size, model->y->cols) < 0)
+            if (makeMatrixZeros(&mini_y, batch_size, model->splitdata.train_labels.cols) < 0)
             {
                 printf("Creation of empty mini-batch y matrix was unsuccessful.\n");
                 return -1;
@@ -837,6 +895,12 @@ int trainModel(Model *model)
  */
 void freeModel(Model *model)
 {
+    // Free SplitData object
+    if (model && model->splitdata.test_features.data && model->splitdata.test_labels.data && model->splitdata.train_features.data && model->splitdata.train_labels.data && model->splitdata.valid_features.data && model->splitdata.valid_labels.data)
+    {
+        freeSplitData(&model->splitdata);
+    }
+
     // Free X input matrix
     if (model && model->X->data)
     {

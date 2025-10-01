@@ -22,6 +22,7 @@
     Matrix: mat_mul_matrix)(a, b, c)
 #define mat_add(a, b, c) _Generic((b), \
     double: mat_add_double,            \
+    Vector: mat_add_vector,            \
     Matrix: mat_add_matrix)(a, b, c)
 #define mat_sub(a, b, c) _Generic((b), \
     double: mat_sub_double,            \
@@ -53,6 +54,16 @@ typedef enum
     SOFTMAX
 } Activation;
 
+typedef struct
+{
+    Matrix train_features; // Matrix that holds the training features
+    Matrix test_features;  // Matrix that holds the testing features
+    Matrix valid_features; // Matrix that holds the validation features
+    Matrix train_labels;   // Matrix that holds the training features
+    Matrix test_labels;    // Matrix that holds the testing features
+    Matrix valid_labels;   // Matrix that holds the validation features
+} SplitData;
+
 int dot_product(Vector x, Vector y, double *result);
 int matvec_mult(Matrix A, Vector y, Vector *result);
 
@@ -60,6 +71,7 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result);
 int mat_mul_double(Matrix A, double B, Matrix *result);
 
 int mat_add_matrix(Matrix A, Matrix B, Matrix *result);
+int mat_add_vector(Matrix A, Vector B, Matrix *result);
 int mat_add_double(Matrix A, double B, Matrix *result);
 
 int mat_sub_matrix(Matrix A, Matrix B, Matrix *result);
@@ -91,6 +103,11 @@ int softmax(double x_i, Vector x_j, double *x_out);
 int applyToVector(Vector *v, Activation func);
 int applyToMatrix(Matrix *m, Activation func);
 
+int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int size);
 int generateRandomPermutation(int *arr, int n);
+
+SplitData makeDefaultSplitData();
+void freeSplitData(SplitData *splitdata);
+int splitData(Matrix input, Matrix labels, int train_per, int test_per, int valid_per, SplitData *splitdata);
 
 #endif

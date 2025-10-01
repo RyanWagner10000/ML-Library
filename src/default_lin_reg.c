@@ -94,11 +94,11 @@ int run_linear_regression_default()
         return -1;
     }
 
-    if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
-    {
-        printf("Calculating all performance metrics failed.\n");
-        return -1;
-    }
+    // if (calculateAllMetrics(linear_model, &eval_metrics) < 0)
+    // {
+    //     printf("Calculating all performance metrics failed.\n");
+    //     return -1;
+    // }
 
     freeModel(&linear_model);
     freeMatrix(&y_new);
