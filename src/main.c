@@ -69,7 +69,7 @@ int run_salary_dataset()
 
     linear_model.func = ACT_NONE;
 
-    linear_model.config.learning_rate = 0.01;
+    // linear_model.config.learning_rate = 0.01;
     linear_model.config.epochs = 2000;
     linear_model.config.lambda = 0.01;
     linear_model.config.regularization = REG_L2;
@@ -176,7 +176,7 @@ int run_wine_quality_dataset()
 
     linear_model.func = ACT_NONE;
 
-    linear_model.config.learning_rate = 0.0002;
+    // linear_model.config.learning_rate = 0.0002;
     linear_model.config.epochs = 20000;
     linear_model.config.lambda = 0.0001;
     linear_model.config.regularization = REG_L2;
@@ -258,7 +258,7 @@ int run_heart_disease_dataset()
         printf("Reading CSV to Matrix was unsuccessful.\n");
         return -1;
     }
-
+    
     // Copy the y-values from the matrix into a vector
     if (makeMatrixZeros(logistic_model.y, logistic_model.X->rows, 1) < 0)
     {
@@ -286,20 +286,24 @@ int run_heart_disease_dataset()
     }
 
     // Split the data into 80/20 Train/Test
-    if (splitData(*logistic_model.X, *logistic_model.y, 80, 20, 0, &logistic_model.splitdata) < 0)
+    if (splitData(*logistic_model.X, *logistic_model.y, 10, 90, 0, &logistic_model.splitdata) < 0)
     {
         printf("Splitting input data was unsuccessful.\n");
         return -1;
     }
 
     logistic_model.classes = 1;
-    logistic_model.batch_size = 64;
+    logistic_model.batch_size = 512;
     logistic_model.func = SIGMOID;
 
-    logistic_model.config.learning_rate = 0.01;
-    logistic_model.config.epochs = 2000;
-    logistic_model.config.lambda = 0.01;
+    logistic_model.config.epochs = 100;
+    logistic_model.config.lambda = 0.0001;
     logistic_model.config.regularization = REG_L2;
+    logistic_model.config.learning_rate.init_learning_rate = 0.01;
+    logistic_model.config.learning_rate.decay_type = EXPONENTIAL_DECAY;
+    logistic_model.config.learning_rate.decay_constant = 0.1;
+    // logistic_model.config.learning_rate.min_learning_rate = 0.0001;
+    // logistic_model.config.learning_rate.max_epoch_cycle = 0.1 * logistic_model.config.epochs;
 
     if (trainModel(&logistic_model) < 0)
     {
@@ -319,7 +323,7 @@ int run_heart_disease_dataset()
         printf("Computing labels after training was unsuccessful.\n");
         return -1;
     }
-    
+
     // Perform evaluation metrics on the model
     EvalMetrics eval_metrics;
     if (initEvalMetrics(&eval_metrics, computed_labels, logistic_model.type) < 0)

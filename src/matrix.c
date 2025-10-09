@@ -98,6 +98,18 @@ void printMatrix(Matrix m)
 }
 
 /**
+ * @brief Basic printing of a Matrix object shape, rows x cols
+ *
+ * @param m Matrix object to print
+ *
+ * @return None
+ */
+void printMatrixShape(Matrix m)
+{
+    printf("[%d x %d]\n", m.rows, m.cols);
+}
+
+/**
  * @brief Printing N-rows of a Matrix object
  *
  * @param m Matrix object to print
