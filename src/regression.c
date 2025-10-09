@@ -27,10 +27,34 @@ int initModel(Model *model)
 
     model->splitdata = makeDefaultSplitData();
 
+    model->config = makeDefaultConfig();
+
     model->func = ACT_NONE;
     model->batch_size = -1;
+    model->classes = 1;
 
     return 0;
+}
+
+/**
+ * @brief Make a default model configuration
+ *
+ * @return ModelConfig object
+ */
+ModelConfig makeDefaultConfig()
+{
+    ModelConfig config;
+    config.epochs = 1000;
+    config.lambda = 0;
+    config.regularization = REG_NONE;
+
+    LearningRate lr;
+    config.learning_rate.decay_constant = 0;
+    config.learning_rate.decay_step = 1;
+    config.learning_rate.decay_type = EXPONENTIAL_DECAY;
+    config.learning_rate.init_learning_rate = 0.01;
+    config.learning_rate.min_learning_rate = 0.01;
+    return config;
 }
 
 /**
@@ -96,12 +120,20 @@ int checkModel(Model *model)
         return -1;
     }
 
-    // Check if model config has been set
     // Check if model config learning rate has been set, default to 0.01
-    if (model->config.learning_rate <= 0)
+    if (model->config.learning_rate.init_learning_rate <= 0)
     {
-        printf("Learning rate is <= 0 or unset. Setting to default 0.01\n");
-        model->config.learning_rate = 0.01;
+        printf("Learning rate is <= 0 or unset. Setting to default 0.01.\n");
+        model->config.learning_rate.init_learning_rate = 0.01;
+    }
+
+    // Check if model config learning rate has been set, default to 0.01
+    if (model->config.learning_rate.decay_type < 0)
+    {
+        printf("Decay type is < 0 or unset. Setting to default Exponential Decay.\n");
+        model->config.learning_rate.decay_type = EXPONENTIAL_DECAY;
+        model->config.learning_rate.init_learning_rate = 0.01;
+        model->config.learning_rate.curr_learning_rate = 0.01;
     }
 
     // Check if model config epochs has been set, default to 1
@@ -209,7 +241,6 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
         printf("Matrix multiplication in computeLabels was unsuccessful.\n");
         return -1;
     }
-    printf("multiplied here\n");
 
     if (mat_add(*labels, biases, labels) < 0)
     {
@@ -682,6 +713,68 @@ static int computeRegularization(Model model, Matrix *grad_w)
 }
 
 /**
+ * @brief Updates the learning rate of the model given the type of learning function
+ *
+ * @param model Model object
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int updateLearningRate(Model *model, int epoch)
+{
+    if (!model)
+    {
+        printf("Input model for learning rate was not accepted.\n");
+        return -1;
+    }
+    else if (!model->config.learning_rate.init_learning_rate)
+    {
+        printf("Input learning rate information was not accepted.\n");
+        return -1;
+    }
+
+    --epoch;
+
+    switch (model->config.learning_rate.decay_type)
+    {
+    case CONSTANT:
+    {
+        model->config.learning_rate.curr_learning_rate = model->config.learning_rate.init_learning_rate;
+        break;
+    }
+    case LINEAR_DECAY:
+    {
+        model->config.learning_rate.curr_learning_rate = model->config.learning_rate.init_learning_rate * (1.0 - (double)epoch / (double)model->config.epochs);
+        break;
+    }
+    case EXPONENTIAL_DECAY:
+    {
+        model->config.learning_rate.curr_learning_rate = model->config.learning_rate.init_learning_rate * exp(-1.0 * model->config.learning_rate.decay_constant * epoch);
+        break;
+    }
+    case STEP_DECAY:
+    {
+        model->config.learning_rate.curr_learning_rate = model->config.learning_rate.init_learning_rate * pow(model->config.learning_rate.decay_constant, ((double)epoch / model->config.learning_rate.decay_step));
+        break;
+    }
+    case COSINE_ANNEALING:
+    {
+        double a = model->config.learning_rate.min_learning_rate;
+        double b = 0.5 * (model->config.learning_rate.init_learning_rate - a);
+        double c = 1.0 + cos(((double)epoch * 3.141592 / model->config.learning_rate.max_epoch_cycle));
+        model->config.learning_rate.curr_learning_rate = a + b * c;
+        break;
+    }
+
+    default:
+    {
+        break;
+    }
+    }
+
+    return 0;
+}
+
+/**
  * @brief
  *
  * @param model Model object that holds the configuration, matrices, and vectors to run
@@ -841,7 +934,7 @@ int trainModel(Model *model)
             }
 
             // Gradient descent update
-            if (mat_mul(grad_w, model->config.learning_rate, &grad_w) < 0)
+            if (mat_mul(grad_w, model->config.learning_rate.curr_learning_rate, &grad_w) < 0)
             {
                 printf("Weights gradient descent update with learning rate was not successful.\n");
                 return -1;
@@ -853,7 +946,7 @@ int trainModel(Model *model)
                 return -1;
             }
 
-            if (vect_mul(grad_b, model->config.learning_rate, &grad_b) < 0)
+            if (vect_mul(grad_b, model->config.learning_rate.curr_learning_rate, &grad_b) < 0)
             {
                 printf("Bias gradient descent update with learning rate was not successful.\n");
                 return -1;
@@ -871,6 +964,17 @@ int trainModel(Model *model)
             freeMatrix(model->logits);
         }
         mini_batch_idx = 0;
+
+        // Update learning rate
+        if (updateLearningRate(model, epoch) < 0)
+        {
+            printf("Bias update with gradient bias was not successful.\n");
+            return -1;
+        }
+        else
+        {
+            printf("Current Learning Rate = %.4lf\n", model->config.learning_rate.curr_learning_rate);
+        }
 
         // Progress over time/epoch
         progress_bar.nCurLen = (epoch * progress_bar.nMaxLen) / model->config.epochs;

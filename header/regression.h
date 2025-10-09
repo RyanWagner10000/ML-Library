@@ -25,12 +25,32 @@ typedef enum
     SOFTMAX_REGRESSION
 } RegressionType;
 
+typedef enum
+{
+    CONSTANT,
+    LINEAR_DECAY,
+    EXPONENTIAL_DECAY,
+    STEP_DECAY,
+    COSINE_ANNEALING
+} DecayType;
+
 typedef struct
 {
-    double learning_rate;              // Learning rate of the regression
+    double init_learning_rate; // Initial learning rate of the regression
+    double min_learning_rate;  // Minimum learning rate used for Cosine Annealing
+    double curr_learning_rate; // Current learning rate used for all functions
+    double max_epoch_cycle;         // Maximum Epochs in cycle for Cosine Annealing
+    DecayType decay_type;      // Learning rate decay type
+    int decay_step;            // Learning rate step decay value
+    float decay_constant;      // Exponential learning rate decay rate
+} LearningRate;
+
+typedef struct
+{
     int epochs;                        // Number of iterations to train the model
     double lambda;                     // Effect of the regularization every iteration
     RegularizationType regularization; // Regularization type
+    LearningRate learning_rate;        // Learning rate information
 } ModelConfig;
 
 typedef struct
@@ -47,6 +67,8 @@ typedef struct
     int batch_size;      // Batch size for regression computation
     int classes;         // Number of classes to use for classification
 } Model;
+
+ModelConfig makeDefaultConfig();
 
 int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activation activation);
 
