@@ -713,6 +713,120 @@ static int computeRegularization(Model model, Matrix *grad_w)
 }
 
 /**
+ * @brief Computes velocity matrix (velocity) for weights Matrix
+ *
+ * @param v_t Matrix object of velocity values
+ * @param beta Double that is the velocity constant
+ * @param grad_w Matrix object of model Weights
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int computeVelocityWeights(Matrix *v_t, double beta, Matrix grad_w)
+{
+    // Check current velocity matrix
+    if (!v_t || !v_t->data || v_t->rows <= 0 || v_t->cols <= 0)
+    {
+        printf("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
+        return -1;
+    }
+    
+    // Check weight matrix
+    if (!grad_w.data || grad_w.rows <= 0 || grad_w.cols <= 0)
+    {
+        printf("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
+        return -1;
+    }
+
+    // Check beta is greater than zero
+    if (beta <= 0)
+    {
+        printf("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
+        beta = 0.0000001;
+    }
+
+    Matrix temp_left = {0};
+    if (makeMatrixZeros(&temp_left, grad_w.rows, grad_w.cols) < 0)
+    {
+        printf("Unsuccessful initialization of temp Matrix in Momentum computation.\n");
+        return -1;
+    }
+
+    if (mat_mul(*v_t, beta, &temp_left) < 0)
+    {
+        printf("Matrix multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
+        freeMatrix(&temp_left);
+        return -1;
+    }
+
+    if (mat_add(temp_left, grad_w, v_t) < 0)
+    {
+        printf("Matrix addition of part [beta * m_t-1] and [(1 - beta) * weights] in Momentum calculation was unsuccessful.\n");
+        freeMatrix(&temp_left);
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Computes velocity matrix (velocity) for bias Vector
+ *
+ * @param mt Vector object of velocity values
+ * @param beta Double that is the velocity constant
+ * @param grad_b Vector object of model bias(es)
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int computeVelocityBias(Vector *mt, double beta, Vector grad_b)
+{
+    // Check current velocity matrix
+    if (!mt || !mt->data || mt->size <= 0)
+    {
+        printf("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
+        return -1;
+    }
+    
+    // Check weight matrix
+    if (!grad_b.data || grad_b.size <= 0)
+    {
+        printf("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
+        return -1;
+    }
+
+    // Check beta is greater than zero
+    if (beta <= 0)
+    {
+        printf("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
+        beta = 0.0000001;
+    }
+
+    Vector temp_left = {0};
+    if (makeVectorZeros(&temp_left, grad_b.size) < 0)
+    {
+        printf("Unsuccessful initialization of temp Vector in Momentum computation.\n");
+        return -1;
+    }
+
+    if (vect_mul(*mt, beta, &temp_left) < 0)
+    {
+        printf("Vector multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
+        freeVector(&temp_left);
+        return -1;
+    }
+
+    if (vect_add(temp_left, grad_b, mt) < 0)
+    {
+        printf("Vector addition of part [beta * m_t-1] and [(1 - beta) * bias] in Momentum calculation was unsuccessful.\n");
+        freeVector(&temp_left);
+        return -1;
+    }
+
+    freeVector(&temp_left);
+
+    return 0;
+}
+
+/**
  * @brief Updates the learning rate of the model given the type of learning function
  *
  * @param model Model object
@@ -808,17 +922,29 @@ int trainModel(Model *model)
         computeOneHotEncodedMatrix(*model->y, model->y, model->classes);
     }
 
-    // Init weights gradient Vector and bias
+    // Init gradient weight Matrix, bias Vector, and velocity Matrix
     Matrix grad_w = {0};
     if (makeMatrixZeros(&grad_w, model->weights->rows, model->weights->cols) < 0)
     {
-        printf("Unsuccessful initialization of gradient weights Matrix in model training\n");
+        printf("Unsuccessful initialization of gradient weights Matrix in model training.\n");
         return -1;
     }
     Vector grad_b = {0};
     if (makeVectorZeros(&grad_b, model->bias->size) < 0)
     {
-        printf("Unsuccessful initialization of gradient bias Vector in model training\n");
+        printf("Unsuccessful initialization of gradient bias Vector in model training.\n");
+        return -1;
+    }
+    Matrix velocity_weights = {0};
+    if (makeMatrixZeros(&velocity_weights, model->weights->rows, model->weights->cols) < 0)
+    {
+        printf("Unsuccessful initialization of velocity weights Matrix in model training.\n");
+        return -1;
+    }
+    Vector velocity_bias = {0};
+    if (makeVectorZeros(&velocity_bias, model->bias->size) < 0)
+    {
+        printf("Unsuccessful initialization of velocity bias Vector in model training.\n");
         return -1;
     }
 
@@ -829,7 +955,7 @@ int trainModel(Model *model)
     int mini_batch_idx = 0;
     int batch_size = 0;
     PBD progress_bar;
-    initProgressBar(&progress_bar, 75, '[', ']', '#', '.');
+    initProgressBar(&progress_bar, 90, '[', ']', '#', '.');
     drawProgressBar(&progress_bar);
 
     // Iterate through N-number of epochs adjusting the weights and bias
@@ -933,26 +1059,39 @@ int trainModel(Model *model)
                 return -1;
             }
 
-            // Gradient descent update
-            if (mat_mul(grad_w, model->config.learning_rate.curr_learning_rate, &grad_w) < 0)
+            // Calculate weights velocity matrix
+            if (computeVelocityWeights(&velocity_weights, model->beta, grad_w))
+            {
+                printf("Computation of Weights Momentum was unsuccessful while training model.\n");
+                return -1;
+            }
+            // Calculate biases velocity vector
+            if (computeVelocityBias(&velocity_bias, model->beta, grad_b))
+            {
+                printf("Computation of Biases Momentum was unsuccessful while training model.\n");
+                return -1;
+            }
+
+            // Gradient descent update with momentum
+            if (mat_mul(velocity_weights, model->config.learning_rate.curr_learning_rate, &velocity_weights) < 0)
             {
                 printf("Weights gradient descent update with learning rate was not successful.\n");
                 return -1;
             }
 
-            if (mat_sub(*model->weights, grad_w, model->weights) < 0)
+            if (mat_sub(*model->weights, velocity_weights, model->weights) < 0)
             {
                 printf("Weights update with gradient weights was not successful.\n");
                 return -1;
             }
 
-            if (vect_mul(grad_b, model->config.learning_rate.curr_learning_rate, &grad_b) < 0)
+            if (vect_mul(velocity_bias, model->config.learning_rate.curr_learning_rate, &velocity_bias) < 0)
             {
                 printf("Bias gradient descent update with learning rate was not successful.\n");
                 return -1;
             }
 
-            if (vect_sub(*model->bias, grad_b, model->bias) < 0)
+            if (vect_sub(*model->bias, velocity_bias, model->bias) < 0)
             {
                 printf("Bias update with gradient bias was not successful.\n");
                 return -1;
@@ -971,10 +1110,6 @@ int trainModel(Model *model)
             printf("Bias update with gradient bias was not successful.\n");
             return -1;
         }
-        else
-        {
-            printf("Current Learning Rate = %.4lf\n", model->config.learning_rate.curr_learning_rate);
-        }
 
         // Progress over time/epoch
         progress_bar.nCurLen = (epoch * progress_bar.nMaxLen) / model->config.epochs;
@@ -985,7 +1120,9 @@ int trainModel(Model *model)
     printf("\n");
 
     freeMatrix(&grad_w);
+    freeMatrix(&velocity_weights);
     freeVector(&grad_b);
+    freeVector(&velocity_bias);
     free(perm_arr);
     return 0;
 }
