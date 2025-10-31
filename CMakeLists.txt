@@ -48,7 +48,7 @@ target_link_libraries(main PRIVATE math_funcs progress_bar m)
 # target_link_libraries(default_log_reg PRIVATE math_funcs progress_bar m)
 # target_link_libraries(default_soft_reg PRIVATE math_funcs progress_bar m)
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 # Add a test target for CTest
 # enable_testing()

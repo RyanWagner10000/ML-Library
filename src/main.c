@@ -286,22 +286,23 @@ int run_heart_disease_dataset()
     }
 
     // Split the data into 80/20 Train/Test
-    if (splitData(*logistic_model.X, *logistic_model.y, 10, 90, 0, &logistic_model.splitdata) < 0)
+    if (splitData(*logistic_model.X, *logistic_model.y, 95, 5, 0, &logistic_model.splitdata) < 0)
     {
         printf("Splitting input data was unsuccessful.\n");
         return -1;
     }
 
     logistic_model.classes = 1;
-    logistic_model.batch_size = 512;
+    logistic_model.batch_size = 256;
     logistic_model.func = SIGMOID;
-
-    logistic_model.config.epochs = 100;
-    logistic_model.config.lambda = 0.0001;
+    logistic_model.beta = 0.70;
+    
+    logistic_model.config.epochs = 300;
+    logistic_model.config.lambda = 0.1;
     logistic_model.config.regularization = REG_L2;
-    logistic_model.config.learning_rate.init_learning_rate = 0.01;
-    logistic_model.config.learning_rate.decay_type = EXPONENTIAL_DECAY;
-    logistic_model.config.learning_rate.decay_constant = 0.1;
+    logistic_model.config.learning_rate.init_learning_rate = 0.0003;
+    logistic_model.config.learning_rate.decay_type = LINEAR_DECAY;
+    // logistic_model.config.learning_rate.decay_constant = 0.0001;
     // logistic_model.config.learning_rate.min_learning_rate = 0.0001;
     // logistic_model.config.learning_rate.max_epoch_cycle = 0.1 * logistic_model.config.epochs;
 
@@ -332,6 +333,8 @@ int run_heart_disease_dataset()
         return -1;
     }
     freeMatrix(&computed_labels);
+
+    eval_metrics.threshold = 0.2;
 
     if (calculateAllMetrics(&eval_metrics, logistic_model.type, logistic_model.splitdata.test_labels) < 0)
     {

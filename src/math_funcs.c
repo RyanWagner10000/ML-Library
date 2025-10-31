@@ -228,16 +228,7 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
-
+    
     // Perform element-wise multiplication for Matrix
     for (int i = 0; i < A.rows; ++i)
     {

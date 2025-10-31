@@ -75,5 +75,5 @@ void drawProgressBar(PBD *p)
     printf(" [%%%3.2lf]", p->Progress);
 
     // Print the loss
-    // printf(" [Loss: %.4lf]", p->Loss);
+    printf(" [Loss: %.4lf]", p->Loss);
 }

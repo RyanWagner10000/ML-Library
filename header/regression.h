@@ -39,7 +39,7 @@ typedef struct
     double init_learning_rate; // Initial learning rate of the regression
     double min_learning_rate;  // Minimum learning rate used for Cosine Annealing
     double curr_learning_rate; // Current learning rate used for all functions
-    double max_epoch_cycle;         // Maximum Epochs in cycle for Cosine Annealing
+    double max_epoch_cycle;    // Maximum Epochs in cycle for Cosine Annealing
     DecayType decay_type;      // Learning rate decay type
     int decay_step;            // Learning rate step decay value
     float decay_constant;      // Exponential learning rate decay rate
@@ -66,6 +66,7 @@ typedef struct
     Activation func;     // Activation function
     int batch_size;      // Batch size for regression computation
     int classes;         // Number of classes to use for classification
+    double beta;         // Number to control momentum
 } Model;
 
 ModelConfig makeDefaultConfig();
