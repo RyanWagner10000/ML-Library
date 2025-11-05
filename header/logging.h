@@ -1,0 +1,60 @@
+/*
+ * file: logging.h
+ * description: header file that gives access to all the logging funcitons
+ * author: Ryan Wagner
+ * date: October 31, 2025
+ * notes:
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <time.h>
+#include <stdarg.h>
+
+// Convenience macros for easier use
+
+// Source: https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+#define LOG_TRACE(config, fmt, ...) log_message(config, TRACE, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(config, fmt, ...) log_message(config, DEBUG, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(config, fmt, ...) log_message(config, INFO, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_WARN(config, fmt, ...) log_message(config, WARN, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(config, fmt, ...) log_message(config, ERROR, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_FATAL(config, fmt, ...) log_message(config, FATAL, __FILENAME__, __LINE__, fmt, ##__VA_ARGS__)
+
+#define LOG_DATE_TIME_SIZE 64
+#define RESET_COLOR "\x1b[0m"
+#define PATH_MAX 4096
+#define PATH_TO_LOGS "/home/ryan/ML-Library/logs/"
+
+typedef enum
+{
+    TRACE, // Very detailed, for deep debugging
+    DEBUG, // Debug information
+    INFO,  // General information
+    WARN,  // Warnings
+    ERROR, // Errors
+    FATAL  // Fatal errors
+} LogLevel;
+
+typedef struct
+{
+    LogLevel min_level;     // Minimum level to log
+    bool log_to_file;       // Whether to log to file
+    bool log_to_console;    // Whether to log to console
+    char *log_filename;     // Filename if logging to file
+    char *log_filepath;     // Filepath if logging to file
+    bool use_colors;        // Use ANSI colors in console
+    bool include_file_info; // Include file information
+    bool include_line_info; // Include line information
+    bool include_date;      // Include date when logging
+    bool include_time;      // Include time when logging
+} LogConfig;
+
+int initLogger(LogConfig *config, LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console);
+char *build_formatted_message(LogConfig config, const char *timestamp, const char *level, const char *file, int line, const char *color, const char *message);
+int log_message(LogConfig config, int level, const char *file, int line, const char *format, ...);
+void freeLogger(LogConfig *log);

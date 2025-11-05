@@ -7,7 +7,6 @@
  */
 
 #include "../header/math_funcs.h"
-#include <time.h>
 
 /**
  * @brief Performs the dot product of two vectors

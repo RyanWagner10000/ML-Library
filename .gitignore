@@ -55,6 +55,7 @@ build/
 # IDE folders/files
 .vscode
 
-# Datasets
+# Custom
 /datasets
 /src/legacy
+/logs
