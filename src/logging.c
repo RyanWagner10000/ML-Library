@@ -8,6 +8,8 @@
 
 #include "../header/logging.h"
 
+LogConfig GLOBAL_LOGGING;
+
 /**
  * @brief Basic printing of a Matrix object
  *
@@ -57,38 +59,42 @@ const char *getLevelString(int level)
     {
     case 0:
     {
-        return "TRACE";
+        return "TEST";
     }
     case 1:
     {
-        return "DEBUG";
+        return "TRACE";
     }
     case 2:
     {
-        return "INFO";
+        return "DEBUG";
     }
     case 3:
     {
-        return "WARN";
+        return "INFO";
     }
     case 4:
     {
-        return "ERROR";
+        return "WARN";
     }
     case 5:
+    {
+        return "ERROR";
+    }
+    case 6:
     {
         return "FATAL";
     }
     default:
     {
-        printf("Level given to getLevelString was not valid.\n");
-        return "INVALID";
+        perror("Level given to getLevelString was not valid.");
+        return NULL;
     }
     }
 }
 
 /**
- * @brief Basic printing of a Matrix object
+ * @brief Get color code for specific level of logging
  *
  * @param level Level enum of LogLevel for logging
  *
@@ -100,31 +106,35 @@ const char *getColorCode(int level)
     {
     case 0:
     {
-        return "\x1b[1;37m"; // White
+        return RESET_COLOR;
     }
     case 1:
     {
-        return "\x1b[1;36m"; // Cyan
+        return "\x1b[1;37m"; // White
     }
     case 2:
     {
-        return "\x1b[1;32m"; // Green
+        return "\x1b[1;36m"; // Cyan
     }
     case 3:
     {
-        return "\x1b[1;33m"; // Yellow
+        return "\x1b[1;32m"; // Green
     }
     case 4:
     {
-        return "\x1b[1;31m"; // Red
+        return "\x1b[1;33m"; // Yellow
     }
     case 5:
+    {
+        return "\x1b[1;31m"; // Red
+    }
+    case 6:
     {
         return "\x1b[1;35m"; // Magenta
     }
     default:
     {
-        printf("Level given to getLevelString was not valid.\n");
+        perror("Level given to getLevelString was not valid.");
         return "";
     }
     }
@@ -137,53 +147,67 @@ const char *getColorCode(int level)
  *
  * @return 0 if successful, -1 if failure
  */
-int initLogger(LogConfig *config, LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console)
+int initLogger(LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console)
 {
     // Set all options
-    config->include_file_info = include_file_info;
-    config->include_line_info = include_line_info;
-    config->include_date = include_date;
-    config->include_time = include_time;
-    config->log_to_console = log_to_console;
-    config->log_to_file = log_to_file;
+    GLOBAL_LOGGING.include_file_info = include_file_info;
+    GLOBAL_LOGGING.include_line_info = include_line_info;
+    GLOBAL_LOGGING.include_date = include_date;
+    GLOBAL_LOGGING.include_time = include_time;
+    GLOBAL_LOGGING.log_to_console = log_to_console;
+    GLOBAL_LOGGING.log_to_file = log_to_file;
 
     // Check if input config options are valid
-    if (min_level < TRACE || min_level > FATAL)
+    if (min_level < TEST || min_level > FATAL)
     {
-        printf("Minimum level of logging configuration is invalid.\n");
+        perror("Minimum level of logging configuration is invalid.");
         return -1;
     }
-    config->min_level = min_level;
+    GLOBAL_LOGGING.min_level = min_level;
 
-    // If the user wants to log to a file
-    if (log_to_file)
+    char *output_filename;
+
+    if (GLOBAL_LOGGING.min_level == 0)
+    {
+        GLOBAL_LOGGING.log_to_console = false;
+        GLOBAL_LOGGING.log_to_file = true;
+
+        output_filename = TEST_FILENAME;
+    }
+    else
     {
         // If the filename is not valid
         if (filename == NULL || strlen(filename) < 1)
         {
-            printf("Minimum filename length of 1 was not met.\n");
+            perror("Minimum filename length of 1 was not met.");
             return -1;
         }
+        output_filename = (char *)filename;
+    }
+
+    // If the user wants to log to a file
+    if (GLOBAL_LOGGING.log_to_file)
+    {
 
         // Build absolute path to log file
         size_t relative_path_size = strlen(PATH_TO_LOGS);
-        size_t filename_size = strlen(filename);
+        size_t filename_size = strlen(output_filename);
 
         // Copy absolute_path into log_filepath
-        config->log_filepath = (char *)malloc(relative_path_size + filename_size + 1);
-        strcpy(config->log_filepath, PATH_TO_LOGS);
-        strcat(config->log_filepath, filename);
-        // Copy filename into log_filename
-        config->log_filename = (char *)malloc(filename_size + 1);
-        strcpy(config->log_filename, filename);
+        GLOBAL_LOGGING.log_filepath = (char *)malloc(relative_path_size + filename_size + 1);
+        strcpy(GLOBAL_LOGGING.log_filepath, PATH_TO_LOGS);
+        strcat(GLOBAL_LOGGING.log_filepath, output_filename);
+        // Copy output_filename into log_filename
+        GLOBAL_LOGGING.log_filename = (char *)malloc(filename_size + 1);
+        strcpy(GLOBAL_LOGGING.log_filename, output_filename);
 
         FILE *fptr;
 
-        fptr = fopen(config->log_filepath, "w");
+        fptr = fopen(GLOBAL_LOGGING.log_filepath, "w");
 
         if (fptr == NULL)
         {
-            printf("Error: Logging file could not be opened.\n");
+            perror("Error: Logging file could not be opened.");
             return -1;
         }
 
@@ -191,8 +215,9 @@ int initLogger(LogConfig *config, LogLevel min_level, const char *filename, bool
     }
     else
     {
-        config->log_filename = NULL;
-        config->log_filepath = NULL;
+        freeLogger();
+        GLOBAL_LOGGING.log_filename = NULL;
+        GLOBAL_LOGGING.log_filepath = NULL;
     }
 
     return 0;
@@ -213,7 +238,7 @@ int countDigits(int n)
 }
 
 /**
- * @brief Basic printing of a Matrix object
+ * @brief Assembling all parts of a log message to be printed to the console
  *
  * @param timestamp Timestamp string
  * @param level Level enum of LogLevel
@@ -222,9 +247,9 @@ int countDigits(int n)
  * @param color Color associated to level of message
  * @param message Message to print
  *
- * @return Color format with respect to logging level
+ * @return Char array of assembled and formatted log message
  */
-char *build_formatted_message(LogConfig config, const char *timestamp, const char *level, const char *file, int line, const char *color, const char *message)
+char *buildConsoleFormattedMessage(const char *timestamp, const char *level, const char *file, int line, const char *color, const char *message)
 {
     // Calculate length of prefix strings with formatting, including colon, dash, and spaces
     int msg_length = strlen(timestamp) +
@@ -234,7 +259,7 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
                      strlen(message);
 
     // Format: timestamp (file, line) - color level reset: message
-    if (config.include_file_info && !config.include_line_info)
+    if (GLOBAL_LOGGING.include_file_info && !GLOBAL_LOGGING.include_line_info)
     {
         msg_length += strlen(file) + 10;
 
@@ -242,28 +267,28 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
 
         if (msg == NULL)
         {
-            printf("Allocation of prefix to log was unsuccessful.\n");
+            perror("Allocation of prefix to log was unsuccessful.");
             return "";
         }
 
         snprintf(msg, msg_length, "%s (%s) - %s%s%s: %s\n", timestamp, file, color, level, RESET_COLOR, message);
         return msg;
     }
-    else if (config.include_line_info && !config.include_file_info)
+    else if (GLOBAL_LOGGING.include_line_info && !GLOBAL_LOGGING.include_file_info)
     {
         msg_length += countDigits(line) + 10;
         char *msg = (char *)malloc(msg_length + 1);
 
         if (msg == NULL)
         {
-            printf("Allocation of prefix to log was unsuccessful.\n");
+            perror("Allocation of prefix to log was unsuccessful.");
             return "";
         }
 
         snprintf(msg, msg_length, "%s (%d) - %s%s%s: %s\n", timestamp, line, color, level, RESET_COLOR, message);
         return msg;
     }
-    else if (config.include_file_info && config.include_line_info)
+    else if (GLOBAL_LOGGING.include_file_info && GLOBAL_LOGGING.include_line_info)
     {
         msg_length += strlen(file) + countDigits(line) + 12;
 
@@ -271,7 +296,7 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
 
         if (msg == NULL)
         {
-            printf("Allocation of prefix to log was unsuccessful.\n");
+            perror("Allocation of prefix to log was unsuccessful.");
             return "";
         }
 
@@ -287,7 +312,7 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
 
             if (msg == NULL)
             {
-                printf("Allocation of prefix to log was unsuccessful.\n");
+                perror("Allocation of prefix to log was unsuccessful.");
                 return "";
             }
 
@@ -301,11 +326,107 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
 
             if (msg == NULL)
             {
-                printf("Allocation of prefix to log was unsuccessful.\n");
+                perror("Allocation of prefix to log was unsuccessful.");
                 return "";
             }
 
             snprintf(msg, msg_length, "%s - %s%s%s: %s\n", timestamp, color, level, RESET_COLOR, message);
+            return msg;
+        }
+    }
+}
+
+/**
+ * @brief Assembling all parts of a log message to be printed to a file without color formatting
+ *
+ * @param timestamp Timestamp string
+ * @param level Level enum of LogLevel
+ * @param file Filename of file
+ * @param line Line of info, debug, error, etc.
+ * @param message Message to print
+ *
+ * @return Char array of assembled and formatted log message
+ */
+char *buildFileFormattedMessage(const char *timestamp, const char *level, const char *file, int line, const char *message)
+{
+    // Calculate length of prefix strings with formatting, including colon, dash, and spaces
+    int msg_length = strlen(timestamp) +
+                     strlen(level) +
+                     strlen(message);
+
+    // Format: timestamp (file, line) - color level reset: message
+    if (GLOBAL_LOGGING.include_file_info && !GLOBAL_LOGGING.include_line_info)
+    {
+        msg_length += strlen(file) + 10;
+
+        char *msg = (char *)malloc(msg_length + 1);
+
+        if (msg == NULL)
+        {
+            perror("Allocation of prefix to log was unsuccessful.");
+            return "";
+        }
+
+        snprintf(msg, msg_length, "%s (%s) - %s: %s\n", timestamp, file, level, message);
+        return msg;
+    }
+    else if (GLOBAL_LOGGING.include_line_info && !GLOBAL_LOGGING.include_file_info)
+    {
+        msg_length += countDigits(line) + 10;
+        char *msg = (char *)malloc(msg_length + 1);
+
+        if (msg == NULL)
+        {
+            perror("Allocation of prefix to log was unsuccessful.");
+            return "";
+        }
+
+        snprintf(msg, msg_length, "%s (%d) - %s: %s\n", timestamp, line, level, message);
+        return msg;
+    }
+    else if (GLOBAL_LOGGING.include_file_info && GLOBAL_LOGGING.include_line_info)
+    {
+        msg_length += strlen(file) + countDigits(line) + 12;
+
+        char *msg = (char *)malloc(msg_length + 1);
+
+        if (msg == NULL)
+        {
+            perror("Allocation of prefix to log was unsuccessful.");
+            return "";
+        }
+
+        snprintf(msg, msg_length, "%s (%s, %d) - %s: %s\n", timestamp, file, line, level, message);
+        return msg;
+    }
+    else
+    {
+        if (strlen(timestamp) == 0)
+        {
+            msg_length += 4;
+            char *msg = (char *)malloc(msg_length + 1);
+
+            if (msg == NULL)
+            {
+                perror("Allocation of prefix to log was unsuccessful.");
+                return "";
+            }
+
+            snprintf(msg, msg_length, "%s: %s\n", level, message);
+            return msg;
+        }
+        else
+        {
+            msg_length += 7;
+            char *msg = (char *)malloc(msg_length + 1);
+
+            if (msg == NULL)
+            {
+                perror("Allocation of prefix to log was unsuccessful.");
+                return "";
+            }
+
+            snprintf(msg, msg_length, "%s - %s: %s\n", timestamp, level, message);
             return msg;
         }
     }
@@ -323,18 +444,18 @@ char *build_formatted_message(LogConfig config, const char *timestamp, const cha
  *
  * @return Color format with respect to logging level
  */
-int log_message(LogConfig config, int level, const char *file, int line, const char *format, ...)
+int log_message(int level, const char *file, int line, const char *format, ...)
 {
-    if (level < config.min_level)
+    if (level < GLOBAL_LOGGING.min_level)
     {
         return 0;
     }
 
     // Build the log message
     char temp_timestamp[LOG_DATE_TIME_SIZE];
-    if (getCurrentTime(config.include_date, config.include_time, temp_timestamp) < 0)
+    if (getCurrentTime(GLOBAL_LOGGING.include_date, GLOBAL_LOGGING.include_time, temp_timestamp) < 0)
     {
-        printf("Getting timestamp for logging was unsuccessful.\n");
+        perror("Getting timestamp for logging was unsuccessful.");
         return -1;
     }
     const char *timestamp_str = temp_timestamp;
@@ -349,7 +470,7 @@ int log_message(LogConfig config, int level, const char *file, int line, const c
 
     if (len < 0)
     {
-        printf("Error determining formatted string length.\n");
+        perror("Error determining formatted string length.");
         return -1;
     }
 
@@ -357,7 +478,7 @@ int log_message(LogConfig config, int level, const char *file, int line, const c
     char *formatted_message = (char *)malloc(len + 1);
     if (formatted_message == NULL)
     {
-        printf("Memory allocation for formatted logging message failed.\n");
+        perror("Memory allocation for formatted logging message failed.");
         return -1;
     }
 
@@ -365,22 +486,25 @@ int log_message(LogConfig config, int level, const char *file, int line, const c
     vsnprintf(formatted_message, len + 1, format, args);
     va_end(args);
 
-    char *built_message = build_formatted_message(config, timestamp_str, level_str, file, line, color_code_str, formatted_message);
-    free(formatted_message);
-
-    if (config.log_to_console)
+    // Log a different message to the console or file if applicable
+    // Don't ever print to the terminal if testing
+    if (GLOBAL_LOGGING.log_to_console && GLOBAL_LOGGING.min_level > TEST)
     {
+        char *built_message = buildConsoleFormattedMessage(timestamp_str, level_str, file, line, color_code_str, formatted_message);
         printf("%s", built_message);
+        free(built_message);
     }
-    if (config.log_to_file)
+    if (GLOBAL_LOGGING.log_to_file)
     {
+        char *built_message = buildFileFormattedMessage(timestamp_str, level_str, file, line, formatted_message);
+
         FILE *fptr;
 
-        fptr = fopen(config.log_filepath, "a");
+        fptr = fopen(GLOBAL_LOGGING.log_filepath, "a");
 
         if (fptr == NULL)
         {
-            printf("Logging file could not be opened.\n");
+            perror("Logging file could not be opened.");
             return -1;
         }
         else
@@ -391,7 +515,7 @@ int log_message(LogConfig config, int level, const char *file, int line, const c
         fclose(fptr);
     }
 
-    free(built_message);
+    free(formatted_message);
 
     return 0;
 }
@@ -403,18 +527,89 @@ int log_message(LogConfig config, int level, const char *file, int line, const c
  *
  * @return None
  */
-void freeLogger(LogConfig *config)
+void freeLogger()
 {
-    if (config && config->log_filepath != NULL)
+    if (GLOBAL_LOGGING.log_filepath != NULL)
     {
-        free(config->log_filepath);
-        config->log_filepath = NULL;
+        free(GLOBAL_LOGGING.log_filepath);
+        GLOBAL_LOGGING.log_filepath = NULL;
     }
-    if (config && config->log_filename != NULL)
+    if (GLOBAL_LOGGING.log_filename != NULL)
     {
-        free(config->log_filename);
-        config->log_filename = NULL;
+        free(GLOBAL_LOGGING.log_filename);
+        GLOBAL_LOGGING.log_filename = NULL;
     }
 
     return;
+}
+
+/**
+ * @brief Read the test_log_file.txt file and relay the contents
+ *
+ * @param config LogConfig variable to free
+ *
+ * @return Array of strings (char *) of lines from file
+ */
+char **readLogFile(const char *filepath)
+{
+    FILE *fp;
+
+    // Open the file in read mode
+    fp = fopen(filepath, "r");
+    if (fp == NULL)
+    {
+        perror("Error opening test_log_file.txt file");
+        return NULL;
+    }
+
+    char **lines = NULL;
+    char *line = NULL;
+    size_t len = 0;
+    size_t read;
+    int count = 0;
+
+    while ((read = getline(&line, &len, fp)) != -1)
+    {
+        // Remove trailing newline character if present
+        if (read > 0 && line[read - 1] == '\n')
+        {
+            line[read - 1] = '\0';
+        }
+
+        // Reallocate memory for the array of strings
+        lines = (char **)realloc(lines, (count + 1) * sizeof(char *));
+        if (lines == NULL)
+        {
+            perror("Memory reallocation failed");
+            // Free previously allocated lines before exiting
+            for (int i = 0; i < count; i++)
+            {
+                free(lines[i]);
+            }
+            free(line);
+            fclose(fp);
+            return NULL;
+        }
+
+        // Duplicate the line and store it in the array
+        lines[count] = strdup(line);
+        if (lines[count] == NULL)
+        {
+            perror("Memory allocation for line failed");
+            // Free previously allocated lines and the current line buffer
+            for (int i = 0; i < count; i++)
+            {
+                free(lines[i]);
+            }
+            free(lines);
+            free(line);
+            fclose(fp);
+            return NULL;
+        }
+        count++;
+    }
+
+    free(line); // Free the buffer used by getline
+    fclose(fp);
+    return lines;
 }

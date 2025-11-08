@@ -24,11 +24,8 @@ void test_init_log_trace(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(TRACE, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -37,11 +34,8 @@ void test_init_log_debug(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, DEBUG, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(DEBUG, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -50,11 +44,8 @@ void test_init_log_info(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, INFO, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(INFO, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -63,11 +54,8 @@ void test_init_log_warn(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, WARN, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(WARN, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -76,11 +64,8 @@ void test_init_log_error(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, ERROR, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(ERROR, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -89,11 +74,8 @@ void test_init_log_fatal(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, FATAL, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(FATAL, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(0, status);
-    freeLogger(&test_logger);
 
     return;
 }
@@ -102,12 +84,10 @@ void test_init_log_wrong_level(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, 8, "test_log_file.txt", true, true, true, true, true, true);
+    status = initLogger(8, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(-1, status);
-    
-    status = initLogger(&test_logger, -1, "test_log_file.txt", true, true, true, true, true, true);
+
+    status = initLogger(-1, TEST_FILENAME, true, true, true, true, true, true);
     TEST_ASSERT_EQUAL_INT(-1, status);
 
     return;
@@ -117,12 +97,10 @@ void test_init_log_wrong_filename(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, "", true, true, true, true, true, false);
+    status = initLogger(TRACE, "", true, true, true, true, true, false);
     TEST_ASSERT_EQUAL_INT(-1, status);
 
-    status = initLogger(&test_logger, TRACE, NULL, true, true, true, true, true, false);
+    status = initLogger(TRACE, NULL, true, true, true, true, true, false);
     TEST_ASSERT_EQUAL_INT(-1, status);
 
     return;
@@ -131,18 +109,42 @@ void test_init_log_wrong_filename(void)
 void test_log_to_console_all(void)
 {
     int status = -1;
+    // char *messages[] = {"TEST LOG TRACE", "TEST LOG DEBUG", "TEST LOG INFO", "TEST LOG WARN", "TEST LOG ERROR", "TEST LOG FATAL"};
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, true, true, true, true, false, true);
+    status = initLogger(TEST, NULL, true, true, true, true, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    // TEST_ASSERT_EQUAL_STRING();
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    // // Read log file and compare answers
+    // char **file_lines = readLogFile(GLOBAL_LOGGING.log_filepath);
+
+    // if (file_lines != NULL)
+    // {
+
+    //     for (int i = 0; i < 6; i++)
+    //     {
+    //         printf("Line %d: %s\n", i + 1, file_lines[i]);
+    //         free(file_lines[i]); // Free individual line memory
+    //     }
+    //     free(file_lines); // Free the array of pointers
+    // }
 
     return;
 }
@@ -151,15 +153,26 @@ void test_log_to_console_file(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, true, false, false, false, false, true);
+    status = initLogger(TEST, NULL, true, false, false, false, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
 }
@@ -168,15 +181,26 @@ void test_log_to_console_line(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, false, true, false, false, false, true);
+    status = initLogger(TEST, NULL, false, true, false, false, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
 }
@@ -185,15 +209,26 @@ void test_log_to_console_date(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, false, false, true, false, false, true);
+    status = initLogger(TEST, NULL, false, false, true, false, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
 }
@@ -202,15 +237,26 @@ void test_log_to_console_time(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, false, false, false, true, false, true);
+    status = initLogger(TEST, NULL, false, false, false, true, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
 }
@@ -219,15 +265,194 @@ void test_log_to_console_none(void)
 {
     int status = -1;
 
-    LogConfig test_logger;
-
-    status = initLogger(&test_logger, TRACE, NULL, false, false, false, false, false, true);
+    status = initLogger(TEST, NULL, false, false, false, false, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    status = LOG_TRACE(test_logger, "TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE");
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    freeLogger(&test_logger);
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_all(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, true, true, true, true, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_file(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, true, false, false, false, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_line(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, false, true, false, false, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_date(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, false, false, true, false, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_time(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, false, false, false, true, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    return;
+}
+
+void test_log_to_file_none(void)
+{
+    int status = -1;
+
+    status = initLogger(TEST, TEST_FILENAME, false, false, false, false, true, false);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_TRACE("TEST LOG TRACE");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_DEBUG("TEST LOG DEBUG");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_INFO("TEST LOG INFO");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_WARN("TEST LOG WARN");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_ERROR("TEST LOG ERROR");
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = LOG_FATAL("TEST LOG FATAL");
+    TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
 }
@@ -255,6 +480,14 @@ int main(void)
     RUN_TEST(test_log_to_console_date);
     RUN_TEST(test_log_to_console_time);
     RUN_TEST(test_log_to_console_none);
+
+    // Test message logging to console and not file
+    RUN_TEST(test_log_to_file_all);
+    RUN_TEST(test_log_to_file_file);
+    RUN_TEST(test_log_to_file_line);
+    RUN_TEST(test_log_to_file_date);
+    RUN_TEST(test_log_to_file_time);
+    RUN_TEST(test_log_to_file_none);
 
     return UNITY_END();
 }
