@@ -19,7 +19,7 @@ int clearMatrix(Matrix *m)
 {
     if (!m || !m->data)
     {
-        printf("Incompatible input to clearMatrix operation.\n");
+        LOG_ERROR("Incompatible input to clearMatrix operation.\n");
         return -1;
     }
 
@@ -46,12 +46,12 @@ int copyMatrix(Matrix m, Matrix *mc)
 {
     if (!m.data || !mc || !mc->data)
     {
-        printf("Incompatible input to copyMatrix operation.\n");
+        LOG_ERROR("Incompatible input to copyMatrix operation.\n");
         return -1;
     }
     if (m.rows != mc->rows || m.cols != mc->cols)
     {
-        printf("Matrices are not the same shape. Cannot perform copy operation.\n");
+        LOG_ERROR("Matrices are not the same shape. Cannot perform copy operation.\n");
         return -1;
     }
 
@@ -77,23 +77,23 @@ void printMatrix(Matrix m)
 {
     if (!m.data)
     {
-        printf("Printing Matrix m was unsuccessful.\n");
+        LOG_ERROR("Printing Matrix m was unsuccessful.\n");
         return;
     }
 
     for (int r = 0; r < m.rows; ++r)
     {
-        printf("[");
+        LOG_INFO("[");
         for (int c = 0; c < m.cols; ++c)
         {
             int idx = r * m.cols + c;
 
-            printf("%.6lf", m.data[idx]);
+            LOG_INFO("%.6lf", m.data[idx]);
 
             if (c < m.cols - 1)
-                printf(", ");
+                LOG_INFO(", ");
         }
-        printf("]\n");
+        LOG_INFO("]\n");
     }
 }
 
@@ -106,7 +106,7 @@ void printMatrix(Matrix m)
  */
 void printMatrixShape(Matrix m)
 {
-    printf("[%d x %d]\n", m.rows, m.cols);
+    LOG_INFO("[%d x %d]\n", m.rows, m.cols);
 }
 
 /**
@@ -121,23 +121,23 @@ void printMatrixHead(Matrix m, int rows)
 {
     if (rows <= 0 || !m.data)
     {
-        printf("Printing %d rows of Matrix m was unsuccessful.\n", rows);
+        LOG_INFO("Printing %d rows of Matrix m was unsuccessful.\n", rows);
         return;
     }
 
     for (int r = 0; r < rows; ++r)
     {
-        printf("[");
+        LOG_INFO("[");
         for (int c = 0; c < m.cols; ++c)
         {
             int idx = r * m.cols + c;
 
-            printf("%.6lf", m.data[idx]);
+            LOG_INFO("%.6lf", m.data[idx]);
 
             if (c < m.cols - 1)
-                printf(", ");
+                LOG_INFO(", ");
         }
-        printf("]\n");
+        LOG_INFO("]\n");
     }
 }
 
@@ -177,7 +177,7 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
     m->data = malloc(rows * cols * sizeof(double));
     if (!m->data)
     {
-        printf("Failed to allocate matrix\n");
+        LOG_ERROR("Failed to allocate matrix\n");
         return -1;
     }
 
@@ -244,7 +244,7 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
 {
     if (rows <= 0 || cols <= 0)
     {
-        printf("Input row {%d} or col {%d} value(s) was incompatible.\n", rows, cols);
+        LOG_ERROR("Input row {%d} or col {%d} value(s) was incompatible.\n", rows, cols);
         m->data = NULL;
         return -1;
     }
@@ -255,7 +255,7 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
     m->data = calloc(rows * cols, sizeof(double));
     if (!m->data)
     {
-        printf("Failed to allocate matrix\n");
+        LOG_ERROR("Failed to allocate matrix\n");
         return -1;
     }
 
@@ -296,8 +296,8 @@ int deleteColMatrix(Matrix *m, int col)
 {
     if (!m || !m->data || col >= m->cols || col < 0)
     {
-        printf("Error deleting column #%d from Matrix.\n", col);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error deleting column #%d from Matrix.\n", col);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
@@ -341,8 +341,8 @@ int deleteRowMatrix(Matrix *m, int row)
 {
     if (!m || !m->data || row >= m->rows || row < 0)
     {
-        printf("Error deleting row #%d from Matrix.\n", row);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error deleting row #%d from Matrix.\n", row);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
