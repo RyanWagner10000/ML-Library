@@ -69,42 +69,42 @@ int checkModel(Model *model)
     // Check if X has been set
     if (model->splitdata.train_features.data == NULL)
     {
-        printf("X Matrix is NULL and unset.\n");
+        LOG_ERROR("X Matrix is NULL and unset.\n");
         return -1;
     }
 
     // Check if y has been set
     if (model->splitdata.train_labels.data == NULL)
     {
-        printf("y Matrix is NULL and unset.\n");
+        LOG_ERROR("y Matrix is NULL and unset.\n");
         return -1;
     }
 
     // Check if weights has been set
     if (model->weights->data == NULL)
     {
-        printf("Weights Matrix is NULL and unset.\n");
+        LOG_ERROR("Weights Matrix is NULL and unset.\n");
         return -1;
     }
 
     // Check if bias has been set
     if (model->bias->data == NULL)
     {
-        printf("Bias Vector is NULL and unset.\n");
+        LOG_ERROR("Bias Vector is NULL and unset.\n");
         return -1;
     }
 
     // // Check if logits has been set
     // if (model->logits->data == NULL)
     // {
-    //     printf("Logits Matrix is NULL and unset.\n");
+    //     LOG_ERROR("Logits Matrix is NULL and unset.\n");
     //     return -1;
     // }
 
     // Check if batch size has been set
     if (model->batch_size < 1)
     {
-        printf("Batch size was invalid or unset. Setting automatically based on input size.\n");
+        LOG_WARN("Batch size was invalid or unset. Setting automatically based on input size.\n");
         int batch_size = 1;
         while (batch_size < (int)model->splitdata.train_features.rows / 2)
         {
@@ -116,21 +116,21 @@ int checkModel(Model *model)
     // Check if regression type has been set
     if (model->type < 0 || model->type > 2)
     {
-        printf("Regression type is not recognized or unset.\n");
+        LOG_ERROR("Regression type is not recognized or unset.\n");
         return -1;
     }
 
     // Check if model config learning rate has been set, default to 0.01
     if (model->config.learning_rate.init_learning_rate <= 0)
     {
-        printf("Learning rate is <= 0 or unset. Setting to default 0.01.\n");
+        LOG_WARN("Learning rate is <= 0 or unset. Setting to default 0.01.\n");
         model->config.learning_rate.init_learning_rate = 0.01;
     }
 
     // Check if model config learning rate has been set, default to 0.01
     if (model->config.learning_rate.decay_type < 0)
     {
-        printf("Decay type is < 0 or unset. Setting to default Exponential Decay.\n");
+        LOG_WARN("Decay type is < 0 or unset. Setting to default Exponential Decay.\n");
         model->config.learning_rate.decay_type = EXPONENTIAL_DECAY;
         model->config.learning_rate.init_learning_rate = 0.01;
         model->config.learning_rate.curr_learning_rate = 0.01;
@@ -139,21 +139,21 @@ int checkModel(Model *model)
     // Check if model config epochs has been set, default to 1
     if (model->config.epochs <= 0)
     {
-        printf("Epochs is <= 0 or unset. Setting to default 1\n");
+        LOG_WARN("Epochs is <= 0 or unset. Setting to default 1\n");
         model->config.epochs = 1;
     }
 
     // Check if model config lambda has been set, default to 0.01
     if (model->config.lambda <= 0)
     {
-        printf("Lambda is <= 0 or unset. Setting to default 0.01\n");
+        LOG_WARN("Lambda is <= 0 or unset. Setting to default 0.01\n");
         model->config.lambda = 0.01;
     }
 
     // Check if model config regularization has been set, default to none
     if (model->config.regularization < 0 || model->config.regularization > 2)
     {
-        printf("Regularization is not recognized. Setting to default 0 or REG_NONE\n");
+        LOG_WARN("Regularization is not recognized. Setting to default 0 or REG_NONE\n");
         model->config.regularization = REG_NONE;
     }
 
@@ -175,7 +175,7 @@ int computeOneHotEncodedMatrix(Matrix m, Matrix *m_encoded, int classes)
     Matrix temp_y = {0};
     if (makeMatrixZeros(&temp_y, m.rows, classes) < 0)
     {
-        printf("Could not initialize temp y matrix.\n");
+        LOG_ERROR("Could not initialize temp y matrix.\n");
         return -1;
     }
 
@@ -190,14 +190,14 @@ int computeOneHotEncodedMatrix(Matrix m, Matrix *m_encoded, int classes)
     // Reallocate memory for bigger y matrix in one-hot encoded form
     if (makeMatrixZeros(m_encoded, temp_y.rows, classes) < 0)
     {
-        printf("Recreation of encoded matrix was unsuccessful.\n");
+        LOG_ERROR("Recreation of encoded matrix was unsuccessful.\n");
         return -1;
     }
 
     // Copy contents of one-hot encoded form to y matrix
     if (copyMatrix(temp_y, m_encoded) < 0)
     {
-        printf("Copying of temp matrix in encoded matrix was unsuccessful.\n");
+        LOG_ERROR("Copying of temp matrix in encoded matrix was unsuccessful.\n");
         return -1;
     }
 
@@ -220,7 +220,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
 {
     if (!X.data || !weights.data || !biases.data || !labels->data)
     {
-        printf("Input variables int computeLabels were not sucessfully setup.\n");
+        LOG_ERROR("Input variables int computeLabels were not sucessfully setup.\n");
         return -1;
     }
 
@@ -238,13 +238,13 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
 
     if (mat_mul(X, weights, labels) < 0)
     {
-        printf("Matrix multiplication in computeLabels was unsuccessful.\n");
+        LOG_ERROR("Matrix multiplication in computeLabels was unsuccessful.\n");
         return -1;
     }
 
     if (mat_add(*labels, biases, labels) < 0)
     {
-        printf("Error with matrix addition.\n");
+        LOG_ERROR("Error with matrix addition.\n");
         return -1;
     }
 
@@ -254,7 +254,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, SIGMOID) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -263,7 +263,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, SIGMOID_DX) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -272,7 +272,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, RELU) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -281,7 +281,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, RELU_DX) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -290,7 +290,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, TANH) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -299,7 +299,7 @@ int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activ
     {
         if (applyToMatrix(labels, TANH_DX) < 0)
         {
-            printf("Applying activation function was unsuccessful.\n");
+            LOG_ERROR("Applying activation function was unsuccessful.\n");
             return -1;
         }
         break;
@@ -325,7 +325,7 @@ static int computeLogits(Matrix x_inputs, Model *model)
     // Calculate X * weights
     if (mat_mul(x_inputs, *model->weights, model->logits) < 0)
     {
-        printf("Matrix multiplication in logits computation was unsuccessful.\n");
+        LOG_ERROR("Matrix multiplication in logits computation was unsuccessful.\n");
         return -1;
     }
 
@@ -345,7 +345,7 @@ static int computeLogits(Matrix x_inputs, Model *model)
         // Element-wise sigmoid
         if (applyToMatrix(model->logits, model->func) < 0)
         {
-            printf("Applying function to each member in logits matrix was unsuccessful.\n");
+            LOG_ERROR("Applying function to each member in logits matrix was unsuccessful.\n");
             return -1;
         }
 
@@ -357,7 +357,7 @@ static int computeLogits(Matrix x_inputs, Model *model)
         Vector temp_row = {0};
         if (makeVectorZeros(&temp_row, model->logits->cols) < 0)
         {
-            printf("Making temp row variable was unsuccessful.\n");
+            LOG_ERROR("Making temp row variable was unsuccessful.\n");
             return -1;
         }
 
@@ -366,7 +366,7 @@ static int computeLogits(Matrix x_inputs, Model *model)
         {
             if (getRowMatrix(*model->logits, r, &temp_row) < 0)
             {
-                printf("Getting row %d from Matrix m for computing Logits was unsuccessful.\n", r);
+                LOG_ERROR("Getting row %d from Matrix m for computing Logits was unsuccessful.\n", r);
                 return -1;
             }
 
@@ -375,7 +375,7 @@ static int computeLogits(Matrix x_inputs, Model *model)
                 int index = r * model->logits->cols + j;
                 if (softmax(model->logits->data[index], temp_row, &model->logits->data[index]) < 0)
                 {
-                    printf("Softmax function was unsuccessful when computing logits.\n");
+                    LOG_ERROR("Softmax function was unsuccessful when computing logits.\n");
                     freeVector(&temp_row);
                     return -1;
                 }
@@ -470,7 +470,7 @@ static int computeLoss(Matrix y_real, Model *model, double *loss)
     }
     default:
     {
-        printf("Model type unrecognized when computing the loss.\n");
+        LOG_ERROR("Model type unrecognized when computing the loss.\n");
         return -1;
     }
     }
@@ -521,7 +521,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
     Matrix dZ = {0};
     if (makeMatrixZeros(&dZ, x_inputs.rows, model->classes) < 0)
     {
-        printf("Creation of delta Z matrix from computation of gradients was unsuccessful.\n");
+        LOG_ERROR("Creation of delta Z matrix from computation of gradients was unsuccessful.\n");
         return -1;
     }
 
@@ -530,7 +530,8 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(y_real, *model->logits, &dZ) < 0)
         {
-            printf("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            return -1;
         }
 
         // Calculate gradient of bias
@@ -545,7 +546,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         Matrix X_T = {0};
         if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
-            printf("Initialization of transpose matrix unsuccessful.\n");
+            LOG_ERROR("Initialization of transpose matrix unsuccessful.\n");
             freeMatrix(&X_T);
             return -1;
         }
@@ -553,7 +554,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate transpose of X matrix
         if (transpose(x_inputs, &X_T) < 0)
         {
-            printf("Transpose operation was unsuccessful in compute gradients.\n");
+            LOG_ERROR("Transpose operation was unsuccessful in compute gradients.\n");
             freeMatrix(&X_T);
             return -1;
         }
@@ -561,7 +562,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Matrix multiply to get gradient of weights
         if (mat_mul(X_T, dZ, grad_w) < 0)
         {
-            printf("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
+            LOG_ERROR("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
             freeMatrix(&X_T);
             return -1;
         }
@@ -578,7 +579,8 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            printf("Matrix subtraction was undsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            return -1;
         }
 
         // Calculate gradient of bias
@@ -593,21 +595,21 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         Matrix X_T = {0};
         if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
-            printf("Initialization of transpose matrix unsuccessful.\n");
+            LOG_ERROR("Initialization of transpose matrix unsuccessful.\n");
             return -1;
         }
 
         // Calculate transpose of X matrix
         if (transpose(x_inputs, &X_T) < 0)
         {
-            printf("Transpose operation was unsuccessful in compute gradients.\n");
+            LOG_ERROR("Transpose operation was unsuccessful in compute gradients.\n");
             return -1;
         }
 
         // Matrix multiply to get gradient of weights
         if (mat_mul(X_T, dZ, grad_w) < 0)
         {
-            printf("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
+            LOG_ERROR("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
             return -1;
         }
 
@@ -623,28 +625,29 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            printf("Matrix subtraction was undsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            return -1;
         }
 
         // Init transpose of X matrix
         Matrix X_T = {0};
         if (makeMatrixZeros(&X_T, x_inputs.cols, x_inputs.rows) < 0)
         {
-            printf("Initialization of transpose matrix unsuccessful.\n");
+            LOG_ERROR("Initialization of transpose matrix unsuccessful.\n");
             return -1;
         }
 
         // Calculate transpose of X matrix
         if (transpose(x_inputs, &X_T) < 0)
         {
-            printf("Transpose operation was unsuccessful in compute gradients.\n");
+            LOG_ERROR("Transpose operation was unsuccessful in compute gradients.\n");
             return -1;
         }
 
         // Matrix multiply to get gradient of weights
         if (mat_mul(X_T, dZ, grad_w) < 0)
         {
-            printf("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
+            LOG_ERROR("X^T and dZ matrix multiplication was unsuccessful in compute gradients.\n");
             return -1;
         }
 
@@ -726,41 +729,41 @@ int computeVelocityWeights(Matrix *v_t, double beta, Matrix grad_w)
     // Check current velocity matrix
     if (!v_t || !v_t->data || v_t->rows <= 0 || v_t->cols <= 0)
     {
-        printf("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
     
     // Check weight matrix
     if (!grad_w.data || grad_w.rows <= 0 || grad_w.cols <= 0)
     {
-        printf("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
 
     // Check beta is greater than zero
     if (beta <= 0)
     {
-        printf("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
+        LOG_WARN("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
         beta = 0.0000001;
     }
 
     Matrix temp_left = {0};
     if (makeMatrixZeros(&temp_left, grad_w.rows, grad_w.cols) < 0)
     {
-        printf("Unsuccessful initialization of temp Matrix in Momentum computation.\n");
+        LOG_ERROR("Unsuccessful initialization of temp Matrix in Momentum computation.\n");
         return -1;
     }
 
     if (mat_mul(*v_t, beta, &temp_left) < 0)
     {
-        printf("Matrix multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Matrix multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
         freeMatrix(&temp_left);
         return -1;
     }
 
     if (mat_add(temp_left, grad_w, v_t) < 0)
     {
-        printf("Matrix addition of part [beta * m_t-1] and [(1 - beta) * weights] in Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Matrix addition of part [beta * m_t-1] and [(1 - beta) * weights] in Momentum calculation was unsuccessful.\n");
         freeMatrix(&temp_left);
         return -1;
     }
@@ -782,41 +785,41 @@ int computeVelocityBias(Vector *mt, double beta, Vector grad_b)
     // Check current velocity matrix
     if (!mt || !mt->data || mt->size <= 0)
     {
-        printf("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
     
     // Check weight matrix
     if (!grad_b.data || grad_b.size <= 0)
     {
-        printf("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Input Weights matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
 
     // Check beta is greater than zero
     if (beta <= 0)
     {
-        printf("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
+        LOG_WARN("Input Momentum Beta constant was <= 0. Using value close to zero instead.\n");
         beta = 0.0000001;
     }
 
     Vector temp_left = {0};
     if (makeVectorZeros(&temp_left, grad_b.size) < 0)
     {
-        printf("Unsuccessful initialization of temp Vector in Momentum computation.\n");
+        LOG_ERROR("Unsuccessful initialization of temp Vector in Momentum computation.\n");
         return -1;
     }
 
     if (vect_mul(*mt, beta, &temp_left) < 0)
     {
-        printf("Vector multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Vector multiplication of beta * m_t-1 in Momentum calculation was unsuccessful.\n");
         freeVector(&temp_left);
         return -1;
     }
 
     if (vect_add(temp_left, grad_b, mt) < 0)
     {
-        printf("Vector addition of part [beta * m_t-1] and [(1 - beta) * bias] in Momentum calculation was unsuccessful.\n");
+        LOG_ERROR("Vector addition of part [beta * m_t-1] and [(1 - beta) * bias] in Momentum calculation was unsuccessful.\n");
         freeVector(&temp_left);
         return -1;
     }
@@ -837,12 +840,12 @@ int updateLearningRate(Model *model, int epoch)
 {
     if (!model)
     {
-        printf("Input model for learning rate was not accepted.\n");
+        LOG_ERROR("Input model for learning rate was not accepted.\n");
         return -1;
     }
     else if (!model->config.learning_rate.init_learning_rate)
     {
-        printf("Input learning rate information was not accepted.\n");
+        LOG_ERROR("Input learning rate information was not accepted.\n");
         return -1;
     }
 
@@ -900,19 +903,19 @@ int trainModel(Model *model)
     // Init weights matrix and bias vector
     if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
     {
-        printf("Problem initializing weight Matrix\n");
+        LOG_ERROR("Problem initializing weight Matrix\n");
         return -1;
     }
     if (makeVectorZeros(model->bias, model->classes) < 0)
     {
-        printf("Problem initializing bias Matrix\n");
+        LOG_ERROR("Problem initializing bias Matrix\n");
         return -1;
     }
 
     // Check that the model has been setup correctly before trying to train
     if (checkModel(model) < 0)
     {
-        printf("The model object submitted to train has not be setup properly.\n");
+        LOG_ERROR("The model object submitted to train has not be setup properly.\n");
         return -1;
     }
 
@@ -926,25 +929,25 @@ int trainModel(Model *model)
     Matrix grad_w = {0};
     if (makeMatrixZeros(&grad_w, model->weights->rows, model->weights->cols) < 0)
     {
-        printf("Unsuccessful initialization of gradient weights Matrix in model training.\n");
+        LOG_ERROR("Unsuccessful initialization of gradient weights Matrix in model training.\n");
         return -1;
     }
     Vector grad_b = {0};
     if (makeVectorZeros(&grad_b, model->bias->size) < 0)
     {
-        printf("Unsuccessful initialization of gradient bias Vector in model training.\n");
+        LOG_ERROR("Unsuccessful initialization of gradient bias Vector in model training.\n");
         return -1;
     }
     Matrix velocity_weights = {0};
     if (makeMatrixZeros(&velocity_weights, model->weights->rows, model->weights->cols) < 0)
     {
-        printf("Unsuccessful initialization of velocity weights Matrix in model training.\n");
+        LOG_ERROR("Unsuccessful initialization of velocity weights Matrix in model training.\n");
         return -1;
     }
     Vector velocity_bias = {0};
     if (makeVectorZeros(&velocity_bias, model->bias->size) < 0)
     {
-        printf("Unsuccessful initialization of velocity bias Vector in model training.\n");
+        LOG_ERROR("Unsuccessful initialization of velocity bias Vector in model training.\n");
         return -1;
     }
 
@@ -966,7 +969,7 @@ int trainModel(Model *model)
         // Create a random permutation of the number of samples in the dataset
         if (generateRandomPermutation(perm_arr, model->splitdata.train_features.rows) < 0)
         {
-            printf("Creating random permutation for input shuffling was unsuccessful.\n");
+            LOG_ERROR("Creating random permutation for input shuffling was unsuccessful.\n");
             return -1;
         }
 
@@ -985,7 +988,7 @@ int trainModel(Model *model)
             // Make Logits matrix
             if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
             {
-                printf("Problem initializing logits Matrix\n");
+                LOG_ERROR("Problem initializing logits Matrix\n");
                 return -1;
             }
 
@@ -993,12 +996,12 @@ int trainModel(Model *model)
             Matrix mini_X = {0};
             if (makeMatrixZeros(&mini_X, batch_size, model->splitdata.train_features.cols) < 0)
             {
-                printf("Creation of empty mini-batch X matrix was unsuccessful.\n");
+                LOG_ERROR("Creation of empty mini-batch X matrix was unsuccessful.\n");
                 return -1;
             }
             if (makeMiniMatrix(*model->X, &mini_X, perm_arr, b, batch_size) < 0)
             {
-                printf("Creation of mini-batch X matrix was unsuccessful.\n");
+                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
                 return -1;
             }
 
@@ -1006,12 +1009,12 @@ int trainModel(Model *model)
             Matrix mini_y = {0};
             if (makeMatrixZeros(&mini_y, batch_size, model->splitdata.train_labels.cols) < 0)
             {
-                printf("Creation of empty mini-batch y matrix was unsuccessful.\n");
+                LOG_ERROR("Creation of empty mini-batch y matrix was unsuccessful.\n");
                 return -1;
             }
             if (makeMiniMatrix(*model->y, &mini_y, perm_arr, b, batch_size) < 0)
             {
-                printf("Creation of mini-batch X matrix was unsuccessful.\n");
+                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
                 return -1;
             }
 
@@ -1021,14 +1024,14 @@ int trainModel(Model *model)
             // Compute logits and apply activation function
             if (computeLogits(mini_X, model) < 0)
             {
-                printf("Computation of logits was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of logits was unsuccessful while training model.\n");
                 return -1;
             }
 
             // Compute loss
             if (computeLoss(mini_y, model, &loss) < 0)
             {
-                printf("Computation of Loss was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of Loss was unsuccessful while training model.\n");
                 return -1;
             }
 
@@ -1036,64 +1039,64 @@ int trainModel(Model *model)
 
             if (clearMatrix(&grad_w) < 0)
             {
-                printf("Clearing gradient weights matrix was unsuccessful.\n");
+                LOG_ERROR("Clearing gradient weights matrix was unsuccessful.\n");
                 return -1;
             }
             if (clearVector(&grad_b) < 0)
             {
-                printf("Clearing gradient bias vector was unsuccessful.\n");
+                LOG_ERROR("Clearing gradient bias vector was unsuccessful.\n");
                 return -1;
             }
 
             // Compute gradients
             if (computeGradients(mini_X, mini_y, model, &grad_w, &grad_b) < 0)
             {
-                printf("Computation of Gradient was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of Gradient was unsuccessful while training model.\n");
                 return -1;
             }
 
             // Optional regularization
             if (computeRegularization(*model, &grad_w) < 0)
             {
-                printf("Computation of Regularization was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of Regularization was unsuccessful while training model.\n");
                 return -1;
             }
 
             // Calculate weights velocity matrix
             if (computeVelocityWeights(&velocity_weights, model->beta, grad_w))
             {
-                printf("Computation of Weights Momentum was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of Weights Momentum was unsuccessful while training model.\n");
                 return -1;
             }
             // Calculate biases velocity vector
             if (computeVelocityBias(&velocity_bias, model->beta, grad_b))
             {
-                printf("Computation of Biases Momentum was unsuccessful while training model.\n");
+                LOG_ERROR("Computation of Biases Momentum was unsuccessful while training model.\n");
                 return -1;
             }
 
             // Gradient descent update with momentum
             if (mat_mul(velocity_weights, model->config.learning_rate.curr_learning_rate, &velocity_weights) < 0)
             {
-                printf("Weights gradient descent update with learning rate was not successful.\n");
+                LOG_ERROR("Weights gradient descent update with learning rate was not successful.\n");
                 return -1;
             }
 
             if (mat_sub(*model->weights, velocity_weights, model->weights) < 0)
             {
-                printf("Weights update with gradient weights was not successful.\n");
+                LOG_ERROR("Weights update with gradient weights was not successful.\n");
                 return -1;
             }
 
             if (vect_mul(velocity_bias, model->config.learning_rate.curr_learning_rate, &velocity_bias) < 0)
             {
-                printf("Bias gradient descent update with learning rate was not successful.\n");
+                LOG_ERROR("Bias gradient descent update with learning rate was not successful.\n");
                 return -1;
             }
 
             if (vect_sub(*model->bias, velocity_bias, model->bias) < 0)
             {
-                printf("Bias update with gradient bias was not successful.\n");
+                LOG_ERROR("Bias update with gradient bias was not successful.\n");
                 return -1;
             }
 
@@ -1107,7 +1110,7 @@ int trainModel(Model *model)
         // Update learning rate
         if (updateLearningRate(model, epoch) < 0)
         {
-            printf("Bias update with gradient bias was not successful.\n");
+            LOG_ERROR("Bias update with gradient bias was not successful.\n");
             return -1;
         }
 
@@ -1117,7 +1120,7 @@ int trainModel(Model *model)
         progress_bar.Progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
         drawProgressBar(&progress_bar);
     }
-    printf("\n");
+    LOG_INFO("\n");
 
     freeMatrix(&grad_w);
     freeMatrix(&velocity_weights);
