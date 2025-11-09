@@ -45,10 +45,10 @@ void initProgressBar(PBD *p, int MaxLen, char Left, char Right, char Fill, char 
 void drawProgressBar(PBD *p)
 {
     /** Move to the beginning of the line. */
-    printf("\r");
+    LOG_INFO("\r");
 
     /** Print the left margin char. */
-    printf("%c", p->LeftMargin);
+    LOG_INFO("%c", p->LeftMargin);
 
     /** Make sure that MaxLen >= CurLen */
     if (p->nMaxLen < p->nCurLen)
@@ -59,21 +59,21 @@ void drawProgressBar(PBD *p)
     /** Print the progress with the Fill char. */
     for (int i = 0; i < p->nCurLen; i++)
     {
-        printf("%c", p->FillChr);
+        LOG_INFO("%c", p->FillChr);
     }
 
     /** Complete whats left with the Fill char. */
     for (int i = 0; i < p->nMaxLen - p->nCurLen; i++)
     {
-        printf("%c", p->EmptyChr);
+        LOG_INFO("%c", p->EmptyChr);
     }
 
     /** Print the right margin char. */
-    printf("%c", p->RightMargin);
+    LOG_INFO("%c", p->RightMargin);
 
     // Print the percentage done
-    printf(" [%%%3.2lf]", p->Progress);
+    LOG_INFO(" [%%%3.2lf]", p->Progress);
 
     // Print the loss
-    printf(" [Loss: %.4lf]", p->Loss);
+    LOG_INFO(" [Loss: %.4lf]", p->Loss);
 }
