@@ -1,28 +1,32 @@
 # Execute all test files
+path="/home/ryan/ML-Library/build/"
 
 echo "---------- Test Activation Functions ----------"
-./testActivation
+${path}testActivation
 
 echo "---------- Test Dot Product Function ----------"
-./testDot
+${path}testDot
 
 echo "---------- Test Identity Function ----------"
-./testIden
+${path}testIden
+
+echo "---------- Test Identity Function ----------"
+${path}testIden
 
 echo "---------- Test Matrix Vector Multiplication ----------"
-./testMatVect
+${path}testMatVect
 
 echo "---------- Test Transpose Functions ----------"
-./testTrans
+${path}testTrans
 
 echo "---------- Test Matrix Math Functions ----------"
-./testMatOps
+${path}testMatOps
 
 echo "---------- Test Vector Math Functions ----------"
-./testVectOps
+${path}testVectOps
 
 echo "---------- Test Random Permutation Function ----------"
-./testRandPerm
+${path}testRandPerm
 
 echo "---------- Test Z Score Normalization Function ----------"
-./testDataManip
+${path}testDataManip

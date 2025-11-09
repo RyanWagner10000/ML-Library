@@ -88,7 +88,7 @@ const char *getLevelString(int level)
     default:
     {
         perror("Level given to getLevelString was not valid.");
-        return NULL;
+        return "";
     }
     }
 }
@@ -134,10 +134,24 @@ const char *getColorCode(int level)
     }
     default:
     {
-        perror("Level given to getLevelString was not valid.");
+        perror("Level given to getColorCode was not valid.");
         return "";
     }
     }
+}
+
+/**
+ * @brief Calculate the number of digits in integer
+ *
+ * @param n Integer value to count digits
+ *
+ * @return Number of digits as integer
+ */
+int countDigits(int n)
+{
+    // Sufficiently large buffer for 2^32 unsigned int value
+    char buffer[20];
+    return snprintf(buffer, sizeof(buffer), "%d", n);
 }
 
 /**
@@ -221,20 +235,6 @@ int initLogger(LogLevel min_level, const char *filename, bool include_file_info,
     }
 
     return 0;
-}
-
-/**
- * @brief Calculate the number of digits in integer
- *
- * @param n Integer value to count digits
- *
- * @return Number of digits as integer
- */
-int countDigits(int n)
-{
-    // Sufficiently large buffer for 2^64 unsigned int value
-    char buffer[20];
-    return snprintf(buffer, sizeof(buffer), "%d", n);
 }
 
 /**

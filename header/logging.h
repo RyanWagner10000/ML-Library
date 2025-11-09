@@ -58,9 +58,18 @@ typedef struct
 
 extern LogConfig GLOBAL_LOGGING;
 
+int getCurrentTime(bool include_date, bool include_time, char *buffer);
+const char *getLevelString(int level);
+const char *getColorCode(int level);
+int countDigits(int n);
+
 int initLogger(LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console);
+
 char *buildConsoleFormattedMessage(const char *timestamp, const char *level, const char *file, int line, const char *color, const char *message);
 char *buildFileFormattedMessage(const char *timestamp, const char *level, const char *file, int line, const char *message);
+
 int log_message(int level, const char *file, int line, const char *format, ...);
+
 void freeLogger();
+
 char **readLogFile(const char *filepath);
