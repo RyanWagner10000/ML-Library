@@ -6,6 +6,11 @@
  * notes:
  */
 
+#ifndef LOGGING_H
+#define LOGGING_H
+
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -61,7 +66,7 @@ extern LogConfig GLOBAL_LOGGING;
 int getCurrentTime(bool include_date, bool include_time, char *buffer);
 const char *getLevelString(int level);
 const char *getColorCode(int level);
-int countDigits(int n);
+int countDigits(double n, const char* fmt);
 
 int initLogger(LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console);
 
@@ -73,3 +78,5 @@ int log_message(int level, const char *file, int line, const char *format, ...);
 void freeLogger();
 
 char **readLogFile(const char *filepath);
+
+#endif // LOGGING_H

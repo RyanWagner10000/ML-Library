@@ -141,17 +141,18 @@ const char *getColorCode(int level)
 }
 
 /**
- * @brief Calculate the number of digits in integer
+ * @brief Calculate the number of digits for value
  *
- * @param n Integer value to count digits
+ * @param n Double (or typecasted int) value to count digits
  *
  * @return Number of digits as integer
  */
-int countDigits(int n)
+int countDigits(double n, const char* fmt)
 {
-    // Sufficiently large buffer for 2^32 unsigned int value
-    char buffer[20];
-    return snprintf(buffer, sizeof(buffer), "%d", n);
+    // Source: https://stackoverflow.com/questions/1701055/what-is-the-maximum-length-in-chars-needed-to-represent-any-double-value
+    // Sufficiently large buffer for signed 2^64 value
+    char buffer[1079];
+    return snprintf(buffer, sizeof(buffer), fmt, n);
 }
 
 /**
@@ -271,12 +272,12 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%s) - %s%s%s: %s\n", timestamp, file, color, level, RESET_COLOR, message);
+        snprintf(msg, msg_length, "%s (%s) - %s%s%s: %s", timestamp, file, color, level, RESET_COLOR, message);
         return msg;
     }
     else if (GLOBAL_LOGGING.include_line_info && !GLOBAL_LOGGING.include_file_info)
     {
-        msg_length += countDigits(line) + 10;
+        msg_length += countDigits((double)line, "%.0lf") + 10;
         char *msg = (char *)malloc(msg_length + 1);
 
         if (msg == NULL)
@@ -285,12 +286,12 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%d) - %s%s%s: %s\n", timestamp, line, color, level, RESET_COLOR, message);
+        snprintf(msg, msg_length, "%s (%d) - %s%s%s: %s", timestamp, line, color, level, RESET_COLOR, message);
         return msg;
     }
     else if (GLOBAL_LOGGING.include_file_info && GLOBAL_LOGGING.include_line_info)
     {
-        msg_length += strlen(file) + countDigits(line) + 12;
+        msg_length += strlen(file) + countDigits((double)line, "%.0lf") + 12;
 
         char *msg = (char *)malloc(msg_length + 1);
 
@@ -300,7 +301,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%s, %d) - %s%s%s: %s\n", timestamp, file, line, color, level, RESET_COLOR, message);
+        snprintf(msg, msg_length, "%s (%s, %d) - %s%s%s: %s", timestamp, file, line, color, level, RESET_COLOR, message);
         return msg;
     }
     else
@@ -316,7 +317,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
                 return "";
             }
 
-            snprintf(msg, msg_length, "%s%s%s: %s\n", color, level, RESET_COLOR, message);
+            snprintf(msg, msg_length, "%s%s%s: %s", color, level, RESET_COLOR, message);
             return msg;
         }
         else
@@ -330,7 +331,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
                 return "";
             }
 
-            snprintf(msg, msg_length, "%s - %s%s%s: %s\n", timestamp, color, level, RESET_COLOR, message);
+            snprintf(msg, msg_length, "%s - %s%s%s: %s", timestamp, color, level, RESET_COLOR, message);
             return msg;
         }
     }
@@ -367,12 +368,12 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%s) - %s: %s\n", timestamp, file, level, message);
+        snprintf(msg, msg_length, "%s (%s) - %s: %s", timestamp, file, level, message);
         return msg;
     }
     else if (GLOBAL_LOGGING.include_line_info && !GLOBAL_LOGGING.include_file_info)
     {
-        msg_length += countDigits(line) + 10;
+        msg_length += countDigits((double)line, "%.0lf") + 10;
         char *msg = (char *)malloc(msg_length + 1);
 
         if (msg == NULL)
@@ -381,12 +382,12 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%d) - %s: %s\n", timestamp, line, level, message);
+        snprintf(msg, msg_length, "%s (%d) - %s: %s", timestamp, line, level, message);
         return msg;
     }
     else if (GLOBAL_LOGGING.include_file_info && GLOBAL_LOGGING.include_line_info)
     {
-        msg_length += strlen(file) + countDigits(line) + 12;
+        msg_length += strlen(file) + countDigits((double)line, "%.0lf") + 12;
 
         char *msg = (char *)malloc(msg_length + 1);
 
@@ -396,7 +397,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
             return "";
         }
 
-        snprintf(msg, msg_length, "%s (%s, %d) - %s: %s\n", timestamp, file, line, level, message);
+        snprintf(msg, msg_length, "%s (%s, %d) - %s: %s", timestamp, file, line, level, message);
         return msg;
     }
     else
@@ -412,7 +413,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
                 return "";
             }
 
-            snprintf(msg, msg_length, "%s: %s\n", level, message);
+            snprintf(msg, msg_length, "%s: %s", level, message);
             return msg;
         }
         else
@@ -426,7 +427,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
                 return "";
             }
 
-            snprintf(msg, msg_length, "%s - %s: %s\n", timestamp, level, message);
+            snprintf(msg, msg_length, "%s - %s: %s", timestamp, level, message);
             return msg;
         }
     }
@@ -491,7 +492,7 @@ int log_message(int level, const char *file, int line, const char *format, ...)
     if (GLOBAL_LOGGING.log_to_console && GLOBAL_LOGGING.min_level > TEST)
     {
         char *built_message = buildConsoleFormattedMessage(timestamp_str, level_str, file, line, color_code_str, formatted_message);
-        printf("%s", built_message);
+        fprintf(stdout, "%s", built_message);
         free(built_message);
     }
     if (GLOBAL_LOGGING.log_to_file)

@@ -7,20 +7,28 @@
  * src: https://stackoverflow.com/questions/60949001/progress-bar-in-c-for-an-arbitrary-long-execution-console
  */
 
+#include <logging.h>
+
+#define MAX_PROGRESS_BAR_LEN 300
+#define DEFAULT_TIME_UPDATE 0.100
+
 struct tagProgressBarData
 {
-    int nMaxLen;
-    int nCurLen;
+    int m_max_len;
+    int n_curr_len;
 
-    double Progress;
-    double Loss;
+    double progress;
+    double loss;
+    double ms_update;
+    struct timespec last_time;
 
-    char FillChr;
-    char EmptyChr;
-    char LeftMargin;
-    char RightMargin;
+    char fill_char;
+    char empty_char;
+    char left_margin;
+    char right_margin;
 };
 typedef struct tagProgressBarData PBD;
 
-void initProgressBar(PBD* p, int MaxLen, char Left, char Right, char Fill, char Empty);
+void initProgressBar(PBD *p, int max_len, char left, char right, char fill, char empty, double update_rate);
+char *buildProgressBar(PBD* p);
 void drawProgressBar(PBD* p);

@@ -8,7 +8,6 @@
 
 #include <math.h>
 
-#include "matrix.h"
 #include "vector.h"
 
 #ifndef MATH_FUNCS_H

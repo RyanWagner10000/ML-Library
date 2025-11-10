@@ -276,10 +276,13 @@ Matrix makeMatrixEmpty()
     m.data = calloc(1, sizeof(double));
     if (!m.data)
     {
-        perror("calloc");
-        exit(EXIT_FAILURE);
+        LOG_WARN("Calloc call to make zero matrix was unsuccessful. Set to NULL.\n");
+        m.data = NULL;
     }
-    m.data[0] = 0.0;
+    else
+    {
+        m.data[0] = 0.0;
+    }
 
     return m;
 }

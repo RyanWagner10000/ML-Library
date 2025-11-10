@@ -208,20 +208,53 @@ void test_get_color_code_wrong(void)
     return;
 }
 
-void test_count_digits(void)
+void test_count_digits_int(void)
 {
     int count = 0;
 
-    count = countDigits(INT32_MAX);
-    TEST_ASSERT_EQUAL_INT(10, count);
+    count = countDigits(123456, "%.0lf");
+    TEST_ASSERT_EQUAL_INT(6, count);
 
     count = 0;
-    count = countDigits(INT32_MIN);
-    TEST_ASSERT_EQUAL_INT(11, count);
+    count = countDigits(-123456, "%.0lf");
+    TEST_ASSERT_EQUAL_INT(7, count);
 
     count = 0;
-    count = countDigits(0);
+    count = countDigits(0, "%.0lf");
     TEST_ASSERT_EQUAL_INT(1, count);
+
+    return;
+}
+
+void test_count_digits_double(void)
+{
+    int count = 0;
+
+    count = countDigits(123.456, "%3.3lf");
+    TEST_ASSERT_EQUAL_INT(7, count);
+
+    count = 0;
+    count = countDigits(12.34, "%3.1lf");
+    TEST_ASSERT_EQUAL_INT(4, count);
+
+    count = 0;
+    count = countDigits(12.34, "%3.0lf");
+    TEST_ASSERT_EQUAL_INT(3, count);
+
+    count = countDigits(-123.456, "%3.3lf");
+    TEST_ASSERT_EQUAL_INT(8, count);
+
+    count = 0;
+    count = countDigits(-12.34, "%3.1lf");
+    TEST_ASSERT_EQUAL_INT(5, count);
+
+    count = 0;
+    count = countDigits(-12.34, "%3.0lf");
+    TEST_ASSERT_EQUAL_INT(3, count);
+
+    count = 0;
+    count = countDigits(0, "%3.3lf");
+    TEST_ASSERT_EQUAL_INT(5, count);
 
     return;
 }
@@ -235,27 +268,27 @@ void test_log_to_console_all(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     // // Read log file and compare answers
@@ -283,27 +316,27 @@ void test_log_to_console_file(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -317,27 +350,27 @@ void test_log_to_console_line(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -351,27 +384,27 @@ void test_log_to_console_date(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -385,27 +418,27 @@ void test_log_to_console_time(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -419,27 +452,27 @@ void test_log_to_console_none(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -453,27 +486,27 @@ void test_log_to_file_all(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -487,27 +520,27 @@ void test_log_to_file_file(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -521,27 +554,27 @@ void test_log_to_file_line(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -555,27 +588,27 @@ void test_log_to_file_date(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -589,27 +622,27 @@ void test_log_to_file_time(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -623,27 +656,27 @@ void test_log_to_file_none(void)
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_TRACE("TEST LOG TRACE");
+    status = LOG_TRACE("TEST LOG TRACE\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_DEBUG("TEST LOG DEBUG");
+    status = LOG_DEBUG("TEST LOG DEBUG\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_INFO("TEST LOG INFO");
+    status = LOG_INFO("TEST LOG INFO\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_WARN("TEST LOG WARN");
+    status = LOG_WARN("TEST LOG WARN\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_ERROR("TEST LOG ERROR");
+    status = LOG_ERROR("TEST LOG ERROR\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     status = -1;
-    status = LOG_FATAL("TEST LOG FATAL");
+    status = LOG_FATAL("TEST LOG FATAL\n");
     TEST_ASSERT_EQUAL_INT(0, status);
 
     return;
@@ -677,7 +710,8 @@ int main(void)
     RUN_TEST(test_get_color_code_wrong);
 
     // Test count digits
-    RUN_TEST(test_count_digits);
+    RUN_TEST(test_count_digits_int);
+    RUN_TEST(test_count_digits_double);
 
     // Test message logging to console and not file
     RUN_TEST(test_log_to_console_all);

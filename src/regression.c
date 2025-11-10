@@ -958,7 +958,7 @@ int trainModel(Model *model)
     int mini_batch_idx = 0;
     int batch_size = 0;
     PBD progress_bar;
-    initProgressBar(&progress_bar, 90, '[', ']', '#', '.');
+    initProgressBar(&progress_bar, 50, '[', ']', '#', '.', 0.1);
     drawProgressBar(&progress_bar);
 
     // Iterate through N-number of epochs adjusting the weights and bias
@@ -1115,9 +1115,9 @@ int trainModel(Model *model)
         }
 
         // Progress over time/epoch
-        progress_bar.nCurLen = (epoch * progress_bar.nMaxLen) / model->config.epochs;
-        progress_bar.Loss = loss;
-        progress_bar.Progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
+        progress_bar.n_curr_len = (epoch * progress_bar.m_max_len) / model->config.epochs;
+        progress_bar.loss = loss;
+        progress_bar.progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
         drawProgressBar(&progress_bar);
     }
     LOG_INFO("\n");

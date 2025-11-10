@@ -26,7 +26,7 @@ int getColandRowNum(const char *filename, bool has_header, int *rows, int *cols)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        perror("Error opening CSV file");
+        LOG_ERROR("Error opening CSV file");
         return -1;
     }
 
@@ -83,7 +83,7 @@ int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        perror("Error opening CSV file");
+        LOG_ERROR("Error opening CSV file");
         return -1;
     }
 

@@ -5,7 +5,6 @@
  * date: June 6, 2025
  * notes:
  */
-#include "../header/math_funcs.h"
 #include "../header/regression.h"
 #include "../header/file_handling.h"
 #include "../header/eval_matrics.h"
@@ -342,23 +341,33 @@ int run_heart_disease_dataset()
  */
 int main(void)
 {
+
+    // Init Logging
+    if (initLogger(INFO, "Heart_Disease_Logs.txt", true, true, true, true, true, true))
+    {
+        perror("Initialzing logging was unsuccessful.\n");
+        return -1;
+    }
+
     // LOG_INFO("\n---------------File Salary Dataset Linear Regression---------------\n");
     // if (run_salary_dataset() < 0)
     // {
-    //     LOG_INFO("Salary Dataset linear regression was unsuccessful.\n");
+    //     LOG_FATAL("Salary Dataset linear regression was unsuccessful.\n");
     // }
 
     // LOG_INFO("\n---------------File Wine Quality Linear Regression---------------\n");
     // if (run_wine_quality_dataset() < 0)
     // {
-    //     LOG_INFO("Wine Quality Dataset linear regression was unsuccessful.\n");
+    //     LOG_FATAL("Wine Quality Dataset linear regression was unsuccessful.\n");
     // }
 
     LOG_INFO("\n---------------File Heart Disease Logistic Regression---------------\n");
     if (run_heart_disease_dataset() < 0)
     {
-        LOG_INFO("Heart Disease Dataset Logistic regression was unsuccessful.\n");
+        LOG_FATAL("Heart Disease Dataset Logistic regression was unsuccessful.\n");
     }
+
+    LOG_INFO("----- COMPLETED -----\n");
 
     return 0;
 }

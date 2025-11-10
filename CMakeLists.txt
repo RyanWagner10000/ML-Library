@@ -12,7 +12,7 @@ include_directories(header tests)
 
 # Add main source files as a library
 add_library(math_funcs STATIC src/math_funcs.c src/matrix.c src/vector.c src/logging.c)
-add_library(progress_bar STATIC src/progressbar.c)
+add_library(progress_bar STATIC src/progressbar.c src/logging.c)
 
 # Add the executable using source files
 add_executable(main src/main.c src/regression.c src/file_handling.c src/eval_metrics.c)
