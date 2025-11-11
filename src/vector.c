@@ -19,7 +19,7 @@ int clearVector(Vector *v)
 {
     if (!v || !v->data)
     {
-        printf("Incompatible input to clearVector operation,\n");
+        LOG_ERROR("Incompatible input to clearVector operation,\n");
         return -1;
     }
 
@@ -40,15 +40,15 @@ int clearVector(Vector *v)
  */
 void printVector(Vector v)
 {
-    printf("[");
+    LOG_INFO("[");
     for (int i = 0; i < v.size; ++i)
     {
-        printf("%.6lf", ((double *)v.data)[i]);
+        LOG_INFO("%.6lf", ((double *)v.data)[i]);
 
         if (i < v.size - 1)
-            printf(", ");
+            LOG_INFO(", ");
     }
-    printf("]\n");
+    LOG_INFO("]\n");
 }
 
 /**
@@ -80,17 +80,17 @@ int copyVector(Vector v1, Vector *v2)
 {
     if (!v1.data)
     {
-        printf("Input vector V1 was not properly initialized.\n");
+        LOG_ERROR("Input vector V1 was not properly initialized.\n");
         return -1;
     }
     if (!v2 || !v2->data)
     {
-        printf("Input vector V2 was not properly initialized.\n");
+        LOG_ERROR("Input vector V2 was not properly initialized.\n");
         return -1;
     }
     if (v1.size != v2->size)
     {
-        printf("Input vector V1 and V2 do not have matching sizes.\n");
+        LOG_ERROR("Input vector V1 and V2 do not have matching sizes.\n");
         return -1;
     }
 
@@ -126,7 +126,7 @@ int makeVector(Vector *v, int size, void *data, DataType type)
     v->data = malloc(size * sizeof(double));
     if (!v->data)
     {
-        printf("Failed to allocate vector\n");
+        LOG_ERROR("Failed to allocate vector\n");
         return -1;
     }
 
@@ -180,7 +180,7 @@ int makeVectorZeros(Vector *v, int size)
     // Test inputs
     if (size <= 0)
     {
-        printf("Size <= 0 when making this vector.\n");
+        LOG_ERROR("Size <= 0 when making this vector.\n");
         v->data = NULL;
         return -1;
     }
@@ -192,7 +192,7 @@ int makeVectorZeros(Vector *v, int size)
     v->data = calloc(size, sizeof(double));
     if (!v->data)
     {
-        printf("Failed to allocate vector\n");
+        LOG_ERROR("Failed to allocate vector\n");
         return -1;
     }
 
@@ -212,7 +212,7 @@ int deleteElemVector(Vector *v, int elem)
     // Test inputs
     if (!v || !v->data || elem >= v->size || elem < 0)
     {
-        printf("Error deleting element #%d from Vector.\n", elem);
+        LOG_ERROR("Error deleting element #%d from Vector.\n", elem);
         return -1;
     }
 
@@ -256,8 +256,8 @@ int getColMatrix_v(Matrix m, int col, Vector *v)
     // Test inputs
     if (!m.data || col >= m.cols || col < 0 || !v)
     {
-        printf("Error getting column #%d from Matrix for Vector.\n", col);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error getting column #%d from Matrix for Vector.\n", col);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
@@ -265,7 +265,7 @@ int getColMatrix_v(Matrix m, int col, Vector *v)
     {
         if (makeVectorZeros(v, m.rows) < 0)
         {
-            printf("Error initializing zero vector.\n");
+            LOG_ERROR("Error initializing zero vector.\n");
             return -1;
         }
     }
@@ -273,7 +273,7 @@ int getColMatrix_v(Matrix m, int col, Vector *v)
     {
         if (clearVector(v) < 0)
         {
-            printf("Could not set Matrix object to all 0's\n");
+            LOG_ERROR("Could not set Matrix object to all 0's\n");
             return -1;
         }
     }
@@ -300,15 +300,15 @@ int getColMatrix_m(Matrix m, int col, Matrix *mf)
     // Test inputs
     if (!m.data || !mf || col >= m.cols || col < 0)
     {
-        printf("Error getting column #%d from Matrix for Matrix.\n", col);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error getting column #%d from Matrix for Matrix.\n", col);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
     freeMatrix(mf);
     if (makeMatrixZeros(mf, m.rows, 1) < 0)
     {
-        printf("Recreating mf matrix was unsuccessful.\n");
+        LOG_ERROR("Recreating mf matrix was unsuccessful.\n");
         return -1;
     }
 
@@ -336,8 +336,8 @@ int getRowMatrix_v(Matrix m, int row, Vector *v)
     // Test inputs
     if (!m.data || row >= m.rows || row < 0 || !v)
     {
-        printf("Error getting row #%d from Matrix for Vector.\n", row);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error getting row #%d from Matrix for Vector.\n", row);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
@@ -345,7 +345,7 @@ int getRowMatrix_v(Matrix m, int row, Vector *v)
     {
         if (makeVectorZeros(v, m.cols) < 0)
         {
-            printf("Error initializing zero vector.\n");
+            LOG_ERROR("Error initializing zero vector.\n");
             return -1;
         }
     }
@@ -353,7 +353,7 @@ int getRowMatrix_v(Matrix m, int row, Vector *v)
     {
         if (clearVector(v) < 0)
         {
-            printf("Could not set Matrix object to all 0's\n");
+            LOG_ERROR("Could not set Matrix object to all 0's\n");
             return -1;
         }
     }
@@ -382,15 +382,15 @@ int getRowMatrix_m(Matrix m, int row, Matrix *mf)
     // Test inputs
     if (!m.data || row >= m.rows || row < 0 || !mf)
     {
-        printf("Error getting row #%d from Matrix for Matrix.\n", row);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error getting row #%d from Matrix for Matrix.\n", row);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
     freeMatrix(mf);
     if (makeMatrixZeros(mf, 1, m.cols) < 0)
     {
-        printf("Recreating mf matrix was unsuccessful.\n");
+        LOG_ERROR("Recreating mf matrix was unsuccessful.\n");
         return -1;
     }
 
@@ -416,8 +416,8 @@ int setColMatrix(Matrix *m, int col, Vector v)
     // Test inputs
     if (!m->data || col >= m->cols || col < 0 || !v.data || v.size != m->rows)
     {
-        printf("Error setting column #%d in Matrix with Vector.\n", col);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error setting column #%d in Matrix with Vector.\n", col);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 
@@ -443,8 +443,8 @@ int setRowMatrix(Matrix *m, int row, Vector v)
     // Test inputs
     if (!m->data || row >= m->rows || row < 0 || !v.data || v.size != m->cols)
     {
-        printf("Error setting row #%d from Matrix for Vector.\n", row);
-        printf("Could not pass initial tests.\n");
+        LOG_ERROR("Error setting row #%d from Matrix for Vector.\n", row);
+        LOG_ERROR("Could not pass initial tests.\n");
         return -1;
     }
 

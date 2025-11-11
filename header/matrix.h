@@ -9,11 +9,9 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
+
+#include "logging.h"
 
 typedef enum
 {

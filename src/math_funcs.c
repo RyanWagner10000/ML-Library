@@ -7,7 +7,6 @@
  */
 
 #include "../header/math_funcs.h"
-#include <time.h>
 
 /**
  * @brief Performs the dot product of two vectors
@@ -23,19 +22,19 @@ int dot_product(Vector x, Vector y, double *result)
     // If they ain't the right size then exit on failure
     if (x.size != y.size)
     {
-        printf("Size of input Vectors do not match for dot product operation.\n");
-        printf("Size of Vector x = %d.\n", x.size);
-        printf("Size of Vector y = %d.\n", y.size);
+        LOG_ERROR("Size of input Vectors do not match for dot product operation.\n");
+        LOG_ERROR("Size of Vector x = %d.\n", x.size);
+        LOG_ERROR("Size of Vector y = %d.\n", y.size);
         return -1;
     }
     if (x.size <= 0)
     {
-        printf("Size of input Vector x in <= 0.\n");
+        LOG_ERROR("Size of input Vector x in <= 0.\n");
         return -1;
     }
     if (y.size <= 0)
     {
-        printf("Size of input Vector y in <= 0.\n");
+        LOG_ERROR("Size of input Vector y in <= 0.\n");
         return -1;
     }
 
@@ -93,36 +92,36 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix multiplication.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix multiplication.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.cols != B.rows)
     {
-        printf("Matrix shapes do not match. Cannot perform matrix multiplication.\n");
+        LOG_ERROR("Matrix shapes do not match. Cannot perform matrix multiplication.\n");
         return -1;
     }
 
     // Check if the resulting matrix is initialized or has been inited to zero or less
     if (!initialized_matrix(result) || result->cols <= 0 || result->rows <= 0)
     {
-        printf("Input result matrix was unitialized. Zeroing input results matrix.\n");
+        LOG_WARN("Input result matrix was unitialized. Zeroing input results matrix.\n");
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
     else if (result->cols != B.cols || result->rows != A.rows)
     {
         // Check if the input result matrix is the right shape if it's already inited
-        printf("Input result matrix dimensions do match input A or B. Freeing, resizing, and zeroing input result matrix.\n");
+        LOG_WARN("Input result matrix dimensions do match input A or B. Freeing, resizing, and zeroing input result matrix.\n");
         // Free and remake matrix properly
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -131,7 +130,7 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
         // Clear Matrix for a clean slate
         if (clearMatrix(result) < 0)
         {
-            printf("Could not set Matrix object to all 0's\n");
+            LOG_ERROR("Could not set Matrix object to all 0's\n");
             return -1;
         }
     }
@@ -140,13 +139,13 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
     Vector curr_row = {0};
     if (makeVectorZeros(&curr_row, A.cols) < 0)
     {
-        printf("Could not init temp row vector in matrix multiplication function.\n");
+        LOG_ERROR("Could not init temp row vector in matrix multiplication function.\n");
         return -1;
     }
     Vector curr_col = {0};
     if (makeVectorZeros(&curr_col, B.rows) < 0)
     {
-        printf("Could not init temp col vector in matrix multiplication function.\n");
+        LOG_ERROR("Could not init temp col vector in matrix multiplication function.\n");
         return -1;
     }
 
@@ -156,7 +155,7 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
     {
         if (getRowMatrix(A, r, &curr_row) < 0)
         {
-            printf("Could not get row from Matrix A doing matrix multiplication.\n");
+            LOG_ERROR("Could not get row from Matrix A doing matrix multiplication.\n");
             return -1;
         }
 
@@ -165,13 +164,13 @@ int mat_mul_matrix(Matrix A, Matrix B, Matrix *result)
 
             if (getColMatrix(B, c, &curr_col) < 0)
             {
-                printf("Could not get column from Matrix B doing matrix multiplication.\n");
+                LOG_ERROR("Could not get column from Matrix B doing matrix multiplication.\n");
                 return -1;
             }
 
             if (dot_product(curr_row, curr_col, &temp_result) < 0)
             {
-                printf("Could not do dot product for row and column for matrix multiplication.\n");
+                LOG_ERROR("Could not do dot product for row and column for matrix multiplication.\n");
                 return -1;
             }
 
@@ -197,14 +196,14 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
     // Test inputs
     if (!A.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix multiplication.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix multiplication.\n");
         return -1;
     }
 
     // Test inputs
     if (!result)
     {
-        printf("Input variables could not pass inital tests for matrix multiplication.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix multiplication.\n");
         return -1;
     }
 
@@ -213,7 +212,7 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -224,7 +223,7 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -255,7 +254,7 @@ int mat_add_vector(Matrix A, Vector B, Matrix *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix addition.\n");
         return -1;
     }
 
@@ -264,7 +263,7 @@ int mat_add_vector(Matrix A, Vector B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, 1) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -275,7 +274,7 @@ int mat_add_vector(Matrix A, Vector B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, 1) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -304,9 +303,9 @@ int mat_add_vector(Matrix A, Vector B, Matrix *result)
     }
     else
     {
-        printf("The size of the input B Vector does not meet cases to apply to row-wise element addition.\n");
-        printf("Matrix A shape = [%d, %d]\n", A.rows, A.cols);
-        printf("Vector B shape = [%d, 1]\n", B.size);
+        LOG_ERROR("The size of the input B Vector does not meet cases to apply to row-wise element addition.\n");
+        LOG_ERROR("Matrix A shape = [%d, %d]\n", A.rows, A.cols);
+        LOG_ERROR("Vector B shape = [%d, 1]\n", B.size);
         return -1;
     }
 
@@ -327,14 +326,14 @@ int mat_add_matrix(Matrix A, Matrix B, Matrix *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix addition.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.cols != B.cols || A.rows != B.rows)
     {
-        printf("Matrix shapes do not match. Cannot perform matrix addition.\n");
+        LOG_ERROR("Matrix shapes do not match. Cannot perform matrix addition.\n");
         return -1;
     }
 
@@ -343,7 +342,7 @@ int mat_add_matrix(Matrix A, Matrix B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -354,19 +353,10 @@ int mat_add_matrix(Matrix A, Matrix B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform element-wise addition for Matrix
     for (int i = 0; i < A.rows; ++i)
@@ -394,7 +384,7 @@ int mat_add_double(Matrix A, double B, Matrix *result)
     // Test inputs
     if (!A.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix addition.\n");
         return -1;
     }
 
@@ -403,7 +393,7 @@ int mat_add_double(Matrix A, double B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -414,19 +404,10 @@ int mat_add_double(Matrix A, double B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform element-wise addition for Matrix
     for (int i = 0; i < A.rows; ++i)
@@ -454,14 +435,14 @@ int mat_sub_matrix(Matrix A, Matrix B, Matrix *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix subtraction.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix subtraction.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.cols != B.cols || A.rows != B.rows)
     {
-        printf("Matrix shapes do not match. Cannot perform matrix subtraction.\n");
+        LOG_ERROR("Matrix shapes do not match. Cannot perform matrix subtraction.\n");
         return -1;
     }
 
@@ -470,7 +451,7 @@ int mat_sub_matrix(Matrix A, Matrix B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -481,19 +462,10 @@ int mat_sub_matrix(Matrix A, Matrix B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, B.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform element-wise addition for Matrix
     for (int i = 0; i < A.rows; ++i)
@@ -521,7 +493,7 @@ int mat_sub_double(Matrix A, double B, Matrix *result)
     // Test inputs
     if (!A.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix subtraction.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix subtraction.\n");
         return -1;
     }
 
@@ -530,7 +502,7 @@ int mat_sub_double(Matrix A, double B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -541,19 +513,10 @@ int mat_sub_double(Matrix A, double B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform element-wise subtraction for Matrix
     for (int i = 0; i < A.rows; ++i)
@@ -581,14 +544,14 @@ int mat_div_double(Matrix A, double B, Matrix *result)
     // Test inputs
     if (!A.data || !result)
     {
-        printf("Input variables could not pass inital tests for matrix division.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix division.\n");
         return -1;
     }
 
     // Test inputs
     if (!result)
     {
-        printf("Input variables could not pass inital tests for matrix division.\n");
+        LOG_ERROR("Input variables could not pass inital tests for matrix division.\n");
         return -1;
     }
 
@@ -597,7 +560,7 @@ int mat_div_double(Matrix A, double B, Matrix *result)
     {
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
@@ -608,19 +571,10 @@ int mat_div_double(Matrix A, double B, Matrix *result)
         freeMatrix(result);
         if (makeMatrixZeros(result, A.rows, A.cols) < 0)
         {
-            printf("Error initializing zero output matrix.\n");
+            LOG_ERROR("Error initializing zero output matrix.\n");
             return -1;
         }
     }
-    // Clear Matrix for a clean slate
-    // else
-    // {
-    //     if (clearMatrix(result) < 0)
-    //     {
-    //         printf("Could not set Matrix object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform element-wise division for Matrix
     for (int i = 0; i < A.rows; ++i)
@@ -648,14 +602,14 @@ int vect_mul_vector(Vector A, Vector B, Vector *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for vector multiplication.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector multiplication.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.size != B.size)
     {
-        printf("Vector shapes do not match. Cannot perform vector multiplication.\n");
+        LOG_ERROR("Vector shapes do not match. Cannot perform vector multiplication.\n");
         return -1;
     }
 
@@ -664,7 +618,7 @@ int vect_mul_vector(Vector A, Vector B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -675,19 +629,10 @@ int vect_mul_vector(Vector A, Vector B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -712,7 +657,7 @@ int vect_mul_double(Vector A, double B, Vector *result)
     // Test inputs
     if (!A.data || !B || !result)
     {
-        printf("Input variables could not pass inital tests for vector addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector addition.\n");
         return -1;
     }
 
@@ -721,7 +666,7 @@ int vect_mul_double(Vector A, double B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -732,19 +677,10 @@ int vect_mul_double(Vector A, double B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -769,14 +705,14 @@ int vect_add_vector(Vector A, Vector B, Vector *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for vector addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector addition.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.size != B.size)
     {
-        printf("Vector shapes do not match. Cannot perform vector addition.\n");
+        LOG_ERROR("Vector shapes do not match. Cannot perform vector addition.\n");
         return -1;
     }
 
@@ -785,7 +721,7 @@ int vect_add_vector(Vector A, Vector B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -796,19 +732,10 @@ int vect_add_vector(Vector A, Vector B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output Vector.\n");
+            LOG_ERROR("Error initializing zero output Vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -833,7 +760,7 @@ int vect_add_double(Vector A, double B, Vector *result)
     // Test inputs
     if (!A.data || !B || !result)
     {
-        printf("Input variables could not pass inital tests for vector addition.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector addition.\n");
         return -1;
     }
 
@@ -842,7 +769,7 @@ int vect_add_double(Vector A, double B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -853,19 +780,10 @@ int vect_add_double(Vector A, double B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -890,14 +808,14 @@ int vect_sub_vector(Vector A, Vector B, Vector *result)
     // Test inputs
     if (!A.data || !B.data || !result)
     {
-        printf("Input variables could not pass inital tests for vector subtraction.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector subtraction.\n");
         return -1;
     }
 
     // If sizes don't match, then exit on failure
     if (A.size != B.size)
     {
-        printf("Vector shapes do not match. Cannot perform vector subtraction.\n");
+        LOG_ERROR("Vector shapes do not match. Cannot perform vector subtraction.\n");
         return -1;
     }
 
@@ -906,7 +824,7 @@ int vect_sub_vector(Vector A, Vector B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -917,19 +835,10 @@ int vect_sub_vector(Vector A, Vector B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output Vector.\n");
+            LOG_ERROR("Error initializing zero output Vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -954,7 +863,7 @@ int vect_sub_double(Vector A, double B, Vector *result)
     // Test inputs
     if (!A.data || !B || !result)
     {
-        printf("Input variables could not pass inital tests for vector subtraction.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector subtraction.\n");
         return -1;
     }
 
@@ -963,7 +872,7 @@ int vect_sub_double(Vector A, double B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -974,19 +883,10 @@ int vect_sub_double(Vector A, double B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
-    // Clear Vector for a clean slate
-    // else
-    // {
-    //     if (clearVector(result) < 0)
-    //     {
-    //         printf("Could not set Vector object to all 0's\n");
-    //         return -1;
-    //     }
-    // }
 
     // Perform sum of products for rows in Matrix
     for (int i = 0; i < A.size; ++i)
@@ -1011,7 +911,7 @@ int vect_div_double(Vector A, double B, Vector *result)
     // Test inputs
     if (!A.data || !B || !result)
     {
-        printf("Input variables could not pass inital tests for vector division.\n");
+        LOG_ERROR("Input variables could not pass inital tests for vector division.\n");
         return -1;
     }
 
@@ -1020,7 +920,7 @@ int vect_div_double(Vector A, double B, Vector *result)
     {
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -1031,7 +931,7 @@ int vect_div_double(Vector A, double B, Vector *result)
         freeVector(result);
         if (makeVectorZeros(result, A.size) < 0)
         {
-            printf("Error initializing zero output vector.\n");
+            LOG_ERROR("Error initializing zero output vector.\n");
             return -1;
         }
     }
@@ -1087,34 +987,34 @@ int identity(Matrix *A, int size)
 {
     if (size < 1)
     {
-        printf("Incorrect size passed into identity function.\n");
+        LOG_ERROR("Incorrect size passed into identity function.\n");
         return -1;
     }
     else if (A->rows != A->cols)
     {
-        printf("Input matrix dimensions do NOT match. Freeing and resetting.\n");
+        LOG_WARN("Input matrix dimensions do NOT match. Freeing and resetting.\n");
         freeMatrix(A);
 
         if (makeMatrixZeros(A, size, size) < 0)
         {
-            printf("Remaking input matrix to identity function was unsuccessful.\n");
+            LOG_ERROR("Remaking input matrix to identity function was unsuccessful.\n");
             return -1;
         }
     }
     else if (!A->data)
     {
-        printf("Input matrix data was NULL, reallocating.\n");
+        LOG_WARN("Input matrix data was NULL, reallocating.\n");
         freeMatrix(A);
 
         if (makeMatrixZeros(A, size, size) < 0)
         {
-            printf("Remaking input matrix to identity function was unsuccessful.\n");
+            LOG_ERROR("Remaking input matrix to identity function was unsuccessful.\n");
             return -1;
         }
     }
     else if (size != A->rows || size != A->cols)
     {
-        printf("Input size passed into identity function did NOT match matrix size.\n");
+        LOG_ERROR("Input size passed into identity function did NOT match matrix size.\n");
         return -1;
     }
 
@@ -1237,7 +1137,7 @@ int softmax(double x_i, Vector x_j, double *x_out)
 {
     if (!x_j.data)
     {
-        printf("Problem with input variables put into softmax activation funciton.\n");
+        LOG_ERROR("Problem with input variables put into softmax activation funciton.\n");
         return -1;
     }
 
@@ -1283,7 +1183,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (sigmoid(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying sigmoid function to each element in vector.\n");
+                LOG_ERROR("Error applying sigmoid function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1294,7 +1194,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (sigmoid_dx(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying sigmoid dx function to each element in vector.\n");
+                LOG_ERROR("Error applying sigmoid dx function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1305,7 +1205,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (relu(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying relu function to each element in vector.\n");
+                LOG_ERROR("Error applying relu function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1316,7 +1216,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (relu_dx(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying relu dx function to each element in vector.\n");
+                LOG_ERROR("Error applying relu dx function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1327,7 +1227,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (tanh_(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying tanh function to each element in vector.\n");
+                LOG_ERROR("Error applying tanh function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1338,7 +1238,7 @@ int applyToVector(Vector *v, Activation func)
         {
             if (tanh_dx(v->data[i], &temp_out) < 0)
             {
-                printf("Error applying tanh dx function to each element in vector.\n");
+                LOG_ERROR("Error applying tanh dx function to each element in vector.\n");
                 v->data = NULL;
                 return -1;
             }
@@ -1347,7 +1247,7 @@ int applyToVector(Vector *v, Activation func)
         }
         default:
         {
-            printf("Input Activation type was not recognized.\n");
+            LOG_ERROR("Input Activation type was not recognized.\n");
             return -1;
         }
         }
@@ -1379,7 +1279,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (sigmoid(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying sigmoid function to each element in matrix.\n");
+                    LOG_ERROR("Error applying sigmoid function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1390,7 +1290,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (sigmoid_dx(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying sigmoid dx function to each element in matrix.\n");
+                    LOG_ERROR("Error applying sigmoid dx function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1401,7 +1301,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (relu(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying relu function to each element in matrix.\n");
+                    LOG_ERROR("Error applying relu function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1412,7 +1312,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (relu_dx(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying relu dx function to each element in matrix.\n");
+                    LOG_ERROR("Error applying relu dx function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1423,7 +1323,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (tanh_(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying tanh function to each element in matrix.\n");
+                    LOG_ERROR("Error applying tanh function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1434,7 +1334,7 @@ int applyToMatrix(Matrix *m, Activation func)
             {
                 if (tanh_dx(m->data[idx], &temp_out) < 0)
                 {
-                    printf("Error applying tanh dx function to each element in matrix.\n");
+                    LOG_ERROR("Error applying tanh dx function to each element in matrix.\n");
                     m->data = NULL;
                     return -1;
                 }
@@ -1443,7 +1343,7 @@ int applyToMatrix(Matrix *m, Activation func)
             }
             default:
             {
-                printf("Input Activation type was not recognized.\n");
+                LOG_ERROR("Input Activation type was not recognized.\n");
                 return -1;
             }
             }
@@ -1468,7 +1368,7 @@ int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int siz
 {
     if (!m.data || !mini->data || !perm_arr || batch_idx < 0)
     {
-        printf("Parameters input into mini batch function were not correct.\n");
+        LOG_ERROR("Parameters input into mini batch function were not correct.\n");
         return -1;
     }
 
@@ -1477,7 +1377,7 @@ int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int siz
     Vector v = {0};
     if (makeVectorZeros(&v, m.cols) < 0)
     {
-        printf("Making of default row vector was unsuccessful.\n");
+        LOG_ERROR("Making of default row vector was unsuccessful.\n");
         return -1;
     }
 
@@ -1489,14 +1389,14 @@ int makeMiniMatrix(Matrix m, Matrix *mini, int *perm_arr, int batch_idx, int siz
         // Get row from original matrix
         if (getRowMatrix_v(m, row, &v) < 0)
         {
-            printf("Getting row vector from X matrix was unsuccessful.\n");
+            LOG_ERROR("Getting row vector from X matrix was unsuccessful.\n");
             return -1;
         }
 
         // Set the row in the new matrix
         if (setRowMatrix(mini, r, v) < 0)
         {
-            printf("Setting row vector in mini matrix was unsuccessful.\n");
+            LOG_ERROR("Setting row vector in mini matrix was unsuccessful.\n");
             return -1;
         }
     }
@@ -1520,7 +1420,7 @@ int generateRandomPermutation(int *arr, int n)
     // Check input variables
     if (!arr || n <= 0)
     {
-        printf("Input variables to generate random array permutation were not correct.\n");
+        LOG_ERROR("Input variables to generate random array permutation were not correct.\n");
         return -1;
     }
 
@@ -1606,63 +1506,63 @@ int splitData(Matrix input, Matrix labels, int train_per, int test_per, int vali
     // Check input data
     if (!input.data || !labels.data || input.rows != labels.rows)
     {
-        printf("Input or labels matrices could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Input or labels matrices could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check train features inputs
     if (!splitdata->train_features.data)
     {
-        printf("Train input variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Train input variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check test features inputs
     if (!splitdata->test_features.data)
     {
-        printf("Test input variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Test input variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check valid features inputs
     if (!splitdata->valid_features.data)
     {
-        printf("Validate input variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Validate input variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check train labels inputs
     if (!splitdata->train_labels.data)
     {
-        printf("Train labels variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Train labels variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check test labels inputs
     if (!splitdata->test_labels.data)
     {
-        printf("Test labels variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Test labels variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check valid labels inputs
     if (!splitdata->valid_labels.data)
     {
-        printf("Validate labels variables could not pass inital tests for splitting data.\n");
+        LOG_ERROR("Validate labels variables could not pass inital tests for splitting data.\n");
         return -1;
     }
 
     // Check if the input percentages are less than 0
     if (train_per <= 0 || test_per <= 0 || valid_per < 0)
     {
-        printf("Invalid value(s) put for test, train, or valid percentages.\n");
+        LOG_ERROR("Invalid value(s) put for test, train, or valid percentages.\n");
         return -1;
     }
 
     // Check for percentages math
     if (train_per + test_per + valid_per != 100)
     {
-        printf("Input percentages for Training, Testing, and Validation did not add to 100%%.\n");
+        LOG_ERROR("Input percentages for Training, Testing, and Validation did not add to 100%%.\n");
         return -1;
     }
 
@@ -1670,7 +1570,7 @@ int splitData(Matrix input, Matrix labels, int train_per, int test_per, int vali
     int *perm_arr = (int *)calloc(input.rows, sizeof(int));
     if (generateRandomPermutation(perm_arr, input.rows) < 0)
     {
-        printf("Creating random permutation for test, train, validate splitting was unsuccessful.\n");
+        LOG_ERROR("Creating random permutation for test, train, validate splitting was unsuccessful.\n");
         return -1;
     }
 
@@ -1699,7 +1599,7 @@ int splitData(Matrix input, Matrix labels, int train_per, int test_per, int vali
     }
     else
     {
-        printf("Number of train rows was calculated to 0.\n");
+        LOG_ERROR("Number of train rows was calculated to 0.\n");
         return -1;
     }
     if (test_rows > 0)
@@ -1713,7 +1613,7 @@ int splitData(Matrix input, Matrix labels, int train_per, int test_per, int vali
     }
     else
     {
-        printf("Number of test rows was calculated to 0.\n");
+        LOG_ERROR("Number of test rows was calculated to 0.\n");
         return -1;
     }
     if (valid_rows > 0)
