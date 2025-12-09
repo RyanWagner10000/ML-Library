@@ -97,7 +97,9 @@ void test_identity_3d(void)
     status = makeMatrix(&result, 3, 3, NULL, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
 
-    double init_ans[] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+    double init_ans[] = {1, 0, 0,
+                         0, 1, 0,
+                         0, 0, 1};
     Matrix ans;
     status = makeMatrix(&ans, 3, 3, &init_ans, TYPE_DOUBLE);
     TEST_ASSERT_EQUAL_INT(0, status);
@@ -145,6 +147,36 @@ void test_identity_4d(void)
     freeMatrix(&ans);
 }
 
+void test_identity_5d(void)
+{
+    int status = -1;
+    Matrix result;
+    status = makeMatrix(&result, 5, 5, NULL, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    double init_ans[] = {1, 0, 0, 0, 0,
+                         0, 1, 0, 0, 0,
+                         0, 0, 1, 0, 0,
+                         0, 0, 0, 1, 0,
+                         0, 0, 0, 0, 1};
+    Matrix ans;
+    status = makeMatrix(&ans, 5, 5, &init_ans, TYPE_DOUBLE);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    status = identity(&result, 5);
+    TEST_ASSERT_EQUAL_INT(0, status);
+
+    for (int i = 0; i < LEN(init_ans); ++i)
+    {
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Mismatch at [%d]", i);
+        TEST_ASSERT_FLOAT_WITHIN(0.0001f, ((double *)ans.data)[i], ((double *)result.data)[i]);
+    }
+
+    freeMatrix(&result);
+    freeMatrix(&ans);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -154,6 +186,7 @@ int main(void)
     RUN_TEST(test_identity_2d);
     RUN_TEST(test_identity_3d);
     RUN_TEST(test_identity_4d);
+    RUN_TEST(test_identity_5d);
 
     return UNITY_END();
 }

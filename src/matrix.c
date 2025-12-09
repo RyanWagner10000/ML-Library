@@ -174,7 +174,7 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
     m->rows = rows;
     m->cols = cols;
 
-    m->data = malloc(rows * cols * sizeof(double));
+    m->data = calloc(rows * cols, sizeof(double));
     if (!m->data)
     {
         LOG_ERROR("Failed to allocate matrix\n");

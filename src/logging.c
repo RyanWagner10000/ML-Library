@@ -192,7 +192,7 @@ int initLogger(LogLevel min_level, const char *filename, bool include_file_info,
     else
     {
         // If the filename is not valid
-        if (filename == NULL || strlen(filename) < 1)
+        if (log_to_file && (filename == NULL || strlen(filename) < 1))
         {
             perror("Minimum filename length of 1 was not met.");
             return -1;
