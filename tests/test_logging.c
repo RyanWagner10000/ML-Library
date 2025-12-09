@@ -262,8 +262,7 @@ void test_count_digits_double(void)
 void test_log_to_console_all(void)
 {
     int status = -1;
-    // char *messages[] = {"TEST LOG TRACE", "TEST LOG DEBUG", "TEST LOG INFO", "TEST LOG WARN", "TEST LOG ERROR", "TEST LOG FATAL"};
-
+    
     status = initLogger(TEST, NULL, true, true, true, true, false, true);
     TEST_ASSERT_EQUAL_INT(0, status);
 

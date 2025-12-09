@@ -45,12 +45,6 @@ void test_create_perm(void)
 
     status = generateRandomPermutation(arr, n);
     TEST_ASSERT_EQUAL_INT(0, status);
-    // printf("[");
-    // for (int i = 0; i < n; ++i)
-    // {
-    //     printf("%d, ", arr[i]);
-    // }
-    // printf("]\n");
 
     free(arr);
 }

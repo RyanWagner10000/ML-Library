@@ -101,19 +101,6 @@ void test_test_train_valid_split(void)
     status = splitData(input, labels, 50, 30, 20, &splitdata);
     TEST_ASSERT_EQUAL_INT(0, status);
     
-    // printf("train_features = \n");
-    // printMatrix(splitdata.train_features);
-    // printf("train_labels = \n");
-    // printMatrix(splitdata.train_labels);
-    // printf("test_features = \n");
-    // printMatrix(splitdata.test_features);
-    // printf("test_labels = \n");
-    // printMatrix(splitdata.test_labels);
-    // printf("valid_features = \n");
-    // printMatrix(splitdata.valid_features);
-    // printf("valid_labels = \n");
-    // printMatrix(splitdata.valid_labels);
-    
     freeMatrix(&input);
     freeMatrix(&labels);
     freeSplitData(&splitdata);
