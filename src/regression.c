@@ -94,13 +94,6 @@ int checkModel(Model *model)
         return -1;
     }
 
-    // // Check if logits has been set
-    // if (model->logits->data == NULL)
-    // {
-    //     LOG_ERROR("Logits Matrix is NULL and unset.\n");
-    //     return -1;
-    // }
-
     // Check if batch size has been set
     if (model->batch_size < 1)
     {
@@ -454,8 +447,6 @@ static int computeLoss(Matrix y_real, Model *model, double *loss)
         // Performing CCE (Categorical Cross Entropy)
         for (int r = 0; r < model->logits->rows; ++r)
         {
-            // reset error to zero so loss sums row-wise
-            // error = 0.0;
             for (int c = 0; c < model->logits->cols; ++c)
             {
                 index = r * model->logits->cols + c;
