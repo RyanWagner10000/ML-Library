@@ -10,9 +10,12 @@
 #define FILE_HANDLING_H
 
 #include "../header/math_funcs.h"
+#include "../header/regression.h"
 
 int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m);
 
 int normalizeMatrix(Matrix *m);
+
+int outputHDF5Data(const char *filename, Model model);
 
 #endif // FILE_HANDLING_H

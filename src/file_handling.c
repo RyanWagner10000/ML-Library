@@ -194,3 +194,15 @@ int normalizeMatrix(Matrix *m)
 
     return 0;
 }
+
+/**
+ * @brief Function to save training metrics to HDF5 file
+ *
+ * @param filename Name of file output
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int outputHDF5Data(const char *filename, Model model)
+{
+    return 0;
+}

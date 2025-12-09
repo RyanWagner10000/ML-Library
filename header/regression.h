@@ -55,18 +55,24 @@ typedef struct
 
 typedef struct
 {
-    RegressionType type; // Type of regression to use
-    ModelConfig config;  // Configuration for the model
-    Matrix *X;           // Input matrix of NxM dimension
-    Matrix *y;           // Input matrix of 1xP dimension
-    SplitData splitdata; // Struct that holds all the split data
-    Matrix *weights;     // Learned weights matrix of Nx1 dimension
-    Vector *bias;        // Learned bias matrix of 1xM dimension
-    Matrix *logits;      // Logits vector
-    Activation func;     // Activation function
-    int batch_size;      // Batch size for regression computation
-    int classes;         // Number of classes to use for classification
-    double beta;         // Number to control momentum
+    double *loss_vs_epochs; // Array of loss over epochs
+} ModelMetrics;
+
+typedef struct
+{
+    RegressionType type;  // Type of regression to use
+    ModelConfig config;   // Configuration for the model
+    ModelMetrics metrics; // Configuration for the model
+    Matrix *X;            // Input matrix of NxM dimension
+    Matrix *y;            // Input matrix of 1xP dimension
+    SplitData splitdata;  // Struct that holds all the split data
+    Matrix *weights;      // Learned weights matrix of Nx1 dimension
+    Vector *bias;         // Learned bias matrix of 1xM dimension
+    Matrix *logits;       // Logits vector
+    Activation func;      // Activation function
+    int batch_size;       // Batch size for regression computation
+    int classes;          // Number of classes to use for classification
+    double beta;          // Number to control momentum
 } Model;
 
 ModelConfig makeDefaultConfig();

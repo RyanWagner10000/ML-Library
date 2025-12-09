@@ -135,6 +135,11 @@ int checkModel(Model *model)
         LOG_WARN("Epochs is <= 0 or unset. Setting to default 1\n");
         model->config.epochs = 1;
     }
+    else
+    {
+        // Set array size of loss metrics now that epochs value is good
+        model->metrics.loss_vs_epochs = calloc(model->config.epochs, sizeof(double));
+    }
 
     // Check if model config lambda has been set, default to 0.01
     if (model->config.lambda <= 0)
@@ -1110,6 +1115,9 @@ int trainModel(Model *model)
         progress_bar.loss = loss;
         progress_bar.progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
         drawProgressBar(&progress_bar);
+
+        // Save Loss value to array for output
+        model->metrics.loss_vs_epochs[epoch-1] = loss;
     }
     LOG_INFO("\n");
 
@@ -1169,5 +1177,11 @@ void freeModel(Model *model)
     {
         free(model->logits->data);
         model->logits->data = NULL;
+    }
+
+    // Free metrics arrays
+    if (model && model->metrics.loss_vs_epochs)
+    {
+        free(model->metrics.loss_vs_epochs);
     }
 }
