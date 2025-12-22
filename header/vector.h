@@ -9,7 +9,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "../header/matrix.h"
+#include "matrix.h"
 
 #define getColMatrix(a, b, c) _Generic((c), \
     Vector *: getColMatrix_v,               \

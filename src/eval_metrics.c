@@ -6,7 +6,7 @@
  * notes: script encompasses confusion matris, accuracy, precision, recall, and f1
  */
 
-#include "../header/eval_matrics.h"
+#include "eval_matrics.h"
 
 /**
  * @brief Fill a created EvalMetrics object with default values
@@ -392,6 +392,48 @@ int computeR2Score(Matrix y_true, Matrix y_pred, double *r2score)
 }
 
 /**
+ * @brief Function to print all metrics for a model
+ *
+ * @param eval_metrics EvalMetrics object
+ * @param model_type RegressionType enum of the model type
+ * @param predicted_labels Matrix of the predicted labels
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int printMetrics(EvalMetrics eval_metrics, RegressionType model_type)
+{
+    if (model_type == LINEAR_REGRESSION)
+    {
+        LOG_INFO("\n");
+        LOG_INFO("     MSE = %.6lf\n", eval_metrics.mse);
+        LOG_INFO("     RMSE = %.6lf\n", eval_metrics.rmse);
+        LOG_INFO("     MAE = %.6lf\n", eval_metrics.mae);
+        LOG_INFO("     R2 Score = %.6lf\n", eval_metrics.r2score);
+        LOG_INFO("\n");
+    }
+    else if (model_type == LOGISTIC_REGRESSION || model_type == SOFTMAX_REGRESSION)
+    {
+        LOG_INFO("\n");
+        LOG_INFO("     TP = %d\n", eval_metrics.TP);
+        LOG_INFO("     TN = %d\n", eval_metrics.TN);
+        LOG_INFO("     FP = %d\n", eval_metrics.FP);
+        LOG_INFO("     FN = %d\n", eval_metrics.FN);
+        LOG_INFO("     Accuracy = %.6lf\n", eval_metrics.accuracy);
+        LOG_INFO("     Precision = %.6lf\n", eval_metrics.precision);
+        LOG_INFO("     Recall = %.6lf\n", eval_metrics.recall);
+        LOG_INFO("     F1 Score = %.6lf\n", eval_metrics.f1);
+        LOG_INFO("\n");
+    }
+    else
+    {
+        LOG_ERROR("Model type unknown\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
  * @brief Function to calculate all the metrics given the models type. Initialize EvalMetrics object prior to calulating metrics.
  *
  * @param eval_metrics Pointer to initialized EvalMetrics object with predicted labels for testing
@@ -495,48 +537,6 @@ int calculateAllMetrics(EvalMetrics *eval_metrics, RegressionType model_type, Ma
     if (printMetrics(*eval_metrics, model_type) < 0)
     {
         LOG_ERROR("Printing all performance metrics failed.\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-/**
- * @brief Function to print all metrics for a model
- *
- * @param eval_metrics EvalMetrics object
- * @param model_type RegressionType enum of the model type
- * @param predicted_labels Matrix of the predicted labels
- *
- * @return 0 if successful, -1 if failure
- */
-int printMetrics(EvalMetrics eval_metrics, RegressionType model_type)
-{
-    if (model_type == LINEAR_REGRESSION)
-    {
-        LOG_INFO("\n");
-        LOG_INFO("     MSE = %.6lf\n", eval_metrics.mse);
-        LOG_INFO("     RMSE = %.6lf\n", eval_metrics.rmse);
-        LOG_INFO("     MAE = %.6lf\n", eval_metrics.mae);
-        LOG_INFO("     R2 Score = %.6lf\n", eval_metrics.r2score);
-        LOG_INFO("\n");
-    }
-    else if (model_type == LOGISTIC_REGRESSION || model_type == SOFTMAX_REGRESSION)
-    {
-        LOG_INFO("\n");
-        LOG_INFO("     TP = %d\n", eval_metrics.TP);
-        LOG_INFO("     TN = %d\n", eval_metrics.TN);
-        LOG_INFO("     FP = %d\n", eval_metrics.FP);
-        LOG_INFO("     FN = %d\n", eval_metrics.FN);
-        LOG_INFO("     Accuracy = %.6lf\n", eval_metrics.accuracy);
-        LOG_INFO("     Precision = %.6lf\n", eval_metrics.precision);
-        LOG_INFO("     Recall = %.6lf\n", eval_metrics.recall);
-        LOG_INFO("     F1 Score = %.6lf\n", eval_metrics.f1);
-        LOG_INFO("\n");
-    }
-    else
-    {
-        LOG_ERROR("Model type unknown\n");
         return -1;
     }
 

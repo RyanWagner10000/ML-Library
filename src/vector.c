@@ -6,7 +6,7 @@
  * notes:
  */
 
-#include "../header/vector.h"
+#include "vector.h"
 
 /**
  * @brief Clears a Vector by making all values 0
@@ -273,7 +273,7 @@ int getColMatrix_v(Matrix m, int col, Vector *v)
     {
         if (clearVector(v) < 0)
         {
-            LOG_ERROR("Could not set Matrix object to all 0's\n");
+            LOG_ERROR("Could not set Matrix object to all 0's.\n");
             return -1;
         }
     }
@@ -353,7 +353,7 @@ int getRowMatrix_v(Matrix m, int row, Vector *v)
     {
         if (clearVector(v) < 0)
         {
-            LOG_ERROR("Could not set Matrix object to all 0's\n");
+            LOG_ERROR("Could not set Matrix object to all 0's.\n");
             return -1;
         }
     }

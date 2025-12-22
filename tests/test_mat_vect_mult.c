@@ -8,7 +8,7 @@
 
 #include "unity.h"
 #include <stdio.h>
-#include "../header/math_funcs.h"
+#include "math_funcs.h"
 
 void setUp(void) {
     // Optional: initialize stuff before each test

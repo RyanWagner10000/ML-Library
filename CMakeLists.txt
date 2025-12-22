@@ -10,16 +10,17 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Include header files
 include_directories(header tests)
 
+# Source files
+file(GLOB SRC_FILES
+    src/*.c
+)
+
 # Add main source files as a library
-add_library(math_funcs STATIC src/math_funcs.c src/matrix.c src/vector.c src/logging.c)
-add_library(progress_bar STATIC src/progressbar.c src/logging.c)
+add_library(math_funcs STATIC ${SRC_FILES})
+add_library(progress_bar STATIC ${SRC_FILES})
 
 # Add the executable using source files
-add_executable(main src/main.c src/regression.c src/file_handling.c src/eval_metrics.c)
-# Legacy code
-# add_executable(default_lin_reg src/default_lin_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
-# add_executable(default_log_reg src/default_log_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
-# add_executable(default_soft_reg src/default_soft_reg.c src/regression.c src/file_handling.c src/eval_metrics.c)
+add_executable(main ${SRC_FILES})
 
 # Add test executable
 add_executable(testActivation tests/test_activations.c tests/unity.c)
@@ -45,10 +46,6 @@ target_link_libraries(testMatOps PRIVATE math_funcs m)
 target_link_libraries(testVectOps PRIVATE math_funcs m)
 target_link_libraries(testRandPerm PRIVATE math_funcs m)
 target_link_libraries(main PRIVATE math_funcs progress_bar m)
-# Legacy Code
-# target_link_libraries(default_lin_reg PRIVATE math_funcs progress_bar m)
-# target_link_libraries(default_log_reg PRIVATE math_funcs progress_bar m)
-# target_link_libraries(default_soft_reg PRIVATE math_funcs progress_bar m)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 

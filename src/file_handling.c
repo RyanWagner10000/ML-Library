@@ -8,7 +8,7 @@
  *        TXT files need to be comma separated as well, in
  */
 
-#include "../header/file_handling.h"
+#include "file_handling.h"
 
 /**
  * @brief Function to get the number of rows and columns in a file
@@ -26,7 +26,7 @@ int getColandRowNum(const char *filename, bool has_header, int *rows, int *cols)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        LOG_ERROR("Error opening CSV file");
+        LOG_ERROR("Error opening CSV file.\n");
         return -1;
     }
 
@@ -83,7 +83,7 @@ int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        LOG_ERROR("Error opening CSV file");
+        LOG_ERROR("Error opening CSV file.\n");
         return -1;
     }
 
@@ -196,13 +196,286 @@ int normalizeMatrix(Matrix *m)
 }
 
 /**
- * @brief Function to save training metrics to HDF5 file
+ * @brief Function to get Regression Type string from enum
+ *
+ * @param type Type of regression
+ *
+ * @return Const char * of the regression name
+ */
+const char *regressionTypeEnumToString(RegressionType type)
+{
+    switch (type)
+    {
+    case 0:
+    {
+        return "Linear";
+    }
+    case 1:
+    {
+        return "Logistic";
+    }
+    case 2:
+    {
+        return "Softmax";
+    }
+    default:
+    {
+        return "Null";
+    }
+    }
+}
+
+/**
+ * @brief Function to get Regularization Type string from enum
+ *
+ * @param type Type of regularization
+ *
+ * @return Const char * of the regularization name
+ */
+const char *regularizationTypeEnumToString(RegularizationType type)
+{
+    switch (type)
+    {
+    case 0:
+    {
+        return "None";
+    }
+    case 1:
+    {
+        return "L1";
+    }
+    case 2:
+    {
+        return "L2";
+    }
+    default:
+    {
+        return "Null";
+    }
+    }
+}
+
+/**
+ * @brief Function to get Decay Type string from enum
+ *
+ * @param type Type of decay
+ *
+ * @return Const char * of the decay name
+ */
+const char *decayTypeEnumToString(DecayType type)
+{
+    switch (type)
+    {
+    case 0:
+    {
+        return "Constant";
+    }
+    case 1:
+    {
+        return "Linear";
+    }
+    case 2:
+    {
+        return "Exponential";
+    }
+    case 3:
+    {
+        return "Step";
+    }
+    case 4:
+    {
+        return "Cosine Annealing";
+    }
+    default:
+    {
+        return "Null";
+    }
+    }
+}
+
+/**
+ * @brief Function to translate Matrix object into JSON format
+ *
+ * @param json_file cJSON object
+ * @param name Name of key for JSON file
+ * @param matrix Matrix object
+ *
+ * @return None
+ */
+void translateMatrixToJSON(cJSON *json_file, const char *name, Matrix matrix)
+{
+    cJSON *outer_array = cJSON_CreateArray();
+
+    // Add the outer array to the root object with a key, e.g., "matrix"
+    cJSON_AddItemToObject(json_file, name, outer_array);
+
+    int idx = 0;
+    for (int r = 0; r < matrix.rows; ++r)
+    {
+        cJSON *inner_array = cJSON_CreateArray();
+
+        // Add the newly created inner array (row) to the outer array
+        cJSON_AddItemToArray(outer_array, inner_array);
+
+        for (int c = 0; c < matrix.cols; ++c)
+        {
+            // Create a JSON number item for the data
+            idx = r * matrix.cols + c;
+            cJSON *item = cJSON_CreateNumber(matrix.data[idx]);
+
+            // Add the data item to the current inner array
+            cJSON_AddItemToArray(inner_array, item);
+        }
+    }
+    return;
+}
+
+/**
+ * @brief Function to translate Vector object into JSON format
+ *
+ * @param json_file cJSON object
+ * @param name Name of key for JSON file
+ * @param vector Vector object
+ *
+ * @return None
+ */
+void translateVectorToJSON(cJSON *json_file, const char *name, Vector vector)
+{
+    cJSON *outer_array = cJSON_CreateArray();
+
+    // Add the outer array to the root object with a key, e.g., "matrix"
+    cJSON_AddItemToObject(json_file, name, outer_array);
+
+    int idx = 0;
+    for (int i = 0; i < vector.size; ++i)
+    {
+        cJSON *item = cJSON_CreateNumber(vector.data[idx]);
+
+        // Add the data item to the current inner array
+        cJSON_AddItemToArray(outer_array, item);
+    }
+    return;
+}
+
+/**
+ * @brief Function to get Activation Function string from enum
+ *
+ * @param func Activation function
+ *
+ * @return Const char * of the function name
+ */
+const char *activationFuncitonEnumToString(Activation func)
+{
+    switch (func)
+    {
+    case 0:
+    {
+        return "None";
+    }
+    case 1:
+    {
+        return "Sigmoid";
+    }
+    case 2:
+    {
+        return "Sigmoid Derivative";
+    }
+    case 3:
+    {
+        return "ReLu";
+    }
+    case 4:
+    {
+        return "ReLu Derivative";
+    }
+    case 5:
+    {
+        return "Tanh";
+    }
+    case 6:
+    {
+        return "Tanh Derivative";
+    }
+    case 7:
+    {
+        return "Softmax";
+    }
+    default:
+    {
+        return "Null";
+    }
+    }
+}
+
+/**
+ * @brief Function to save training model setup and evaluation metrics to JSON file
  *
  * @param filename Name of file output
+ * @param model Trained Model type model
  *
  * @return 0 if successful, -1 if failure
  */
-int outputHDF5Data(const char *filename, Model model)
+int outputData(const char *filename, Model model)
 {
+    const char *output_folder = "output/";
+
+    // Create a cJSON object
+    cJSON *json = cJSON_CreateObject();
+
+    // Add Model params to JSON object
+    //   RegressionType Enum
+    cJSON_AddStringToObject(json, "regression_type", regressionTypeEnumToString(model.type));
+    //   ModelConfig Enum
+    cJSON *config;
+    cJSON_AddItemToObject(json, "config", config = cJSON_CreateObject());
+    cJSON_AddNumberToObject(config, "epochs", model.config.epochs);
+    cJSON_AddNumberToObject(config, "lambda", model.config.lambda);
+    cJSON_AddStringToObject(config, "regularization", regularizationTypeEnumToString(model.config.regularization));
+    cJSON *learning_rate;
+    cJSON_AddItemToObject(config, "learning_rate", learning_rate = cJSON_CreateObject());
+    cJSON_AddNumberToObject(learning_rate, "init_learning_rate", model.config.learning_rate.init_learning_rate);
+    cJSON_AddNumberToObject(learning_rate, "min_learning_rate", model.config.learning_rate.min_learning_rate);
+    cJSON_AddNumberToObject(learning_rate, "curr_learning_rate", model.config.learning_rate.curr_learning_rate);
+    cJSON_AddNumberToObject(learning_rate, "max_epoch_cycle", model.config.learning_rate.max_epoch_cycle);
+    cJSON_AddStringToObject(learning_rate, "decay_type", decayTypeEnumToString(model.config.learning_rate.decay_type));
+    cJSON_AddNumberToObject(learning_rate, "decay_step", model.config.learning_rate.init_learning_rate);
+    cJSON_AddNumberToObject(learning_rate, "decay_constant", model.config.learning_rate.init_learning_rate);
+    //   ModelMetrics Object
+    cJSON *metrics;
+    cJSON_AddItemToObject(json, "metrics", metrics = cJSON_CreateObject());
+    //   Weights Matrix
+    translateMatrixToJSON(json, "weights", *model.weights);
+    //   Bias Vector
+    translateVectorToJSON(json, "bias", *model.bias);
+    //   Activation Function
+    cJSON_AddStringToObject(json, "activation_function", activationFuncitonEnumToString(model.func));
+
+    cJSON_AddNumberToObject(json, "batch_size", model.batch_size);
+    cJSON_AddNumberToObject(json, "classes", model.classes);
+    cJSON_AddNumberToObject(json, "beta", model.beta);
+
+    // Convert the cJSON object to a JSON string
+    char *json_str = cJSON_Print(json);
+
+    // Write the JSON string to a file
+    int path_length = strlen(output_folder) + strlen(filename) + 1;
+    char *file_path = (char *)malloc(path_length + 1);
+    snprintf(file_path, path_length, "%s%s", output_folder, filename);
+
+    // Open JSON file and put data
+    FILE *fp = fopen(file_path, "w");
+    if (fp == NULL)
+    {
+        printf("Error: Unable to open the file.\n");
+        return -1;
+    }
+    fputs(json_str, fp);
+    fclose;
+
+    // Free filepath variable
+    free(file_path);
+    // free the JSON string and cJSON object
+    cJSON_free(json_str);
+    cJSON_Delete(json);
     return 0;
 }

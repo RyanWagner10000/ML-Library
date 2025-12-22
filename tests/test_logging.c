@@ -8,7 +8,7 @@
 
 #include "unity.h"
 #include <stdio.h>
-#include "../header/file_handling.h"
+#include "file_handling.h"
 
 void setUp(void)
 {

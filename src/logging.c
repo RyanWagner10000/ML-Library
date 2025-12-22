@@ -6,7 +6,7 @@
  * notes:
  */
 
-#include "../header/logging.h"
+#include "logging.h"
 
 LogConfig GLOBAL_LOGGING;
 
@@ -87,7 +87,7 @@ const char *getLevelString(int level)
     }
     default:
     {
-        perror("Level given to getLevelString was not valid.");
+        perror("Level given to getLevelString was not valid.\n");
         return "";
     }
     }
@@ -134,7 +134,7 @@ const char *getColorCode(int level)
     }
     default:
     {
-        perror("Level given to getColorCode was not valid.");
+        perror("Level given to getColorCode was not valid.\n");
         return "";
     }
     }
@@ -175,7 +175,7 @@ int initLogger(LogLevel min_level, const char *filename, bool include_file_info,
     // Check if input config options are valid
     if (min_level < TEST || min_level > FATAL)
     {
-        perror("Minimum level of logging configuration is invalid.");
+        perror("Minimum level of logging configuration is invalid.\n");
         return -1;
     }
     GLOBAL_LOGGING.min_level = min_level;
@@ -194,7 +194,7 @@ int initLogger(LogLevel min_level, const char *filename, bool include_file_info,
         // If the filename is not valid
         if (log_to_file && (filename == NULL || strlen(filename) < 1))
         {
-            perror("Minimum filename length of 1 was not met.");
+            perror("Minimum filename length of 1 was not met.\n");
             return -1;
         }
         output_filename = (char *)filename;
@@ -222,7 +222,7 @@ int initLogger(LogLevel min_level, const char *filename, bool include_file_info,
 
         if (fptr == NULL)
         {
-            perror("Error: Logging file could not be opened.");
+            perror("Error: Logging file could not be opened.\n");
             return -1;
         }
 
@@ -268,7 +268,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -282,7 +282,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -297,7 +297,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -313,7 +313,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
 
             if (msg == NULL)
             {
-                perror("Allocation of prefix to log was unsuccessful.");
+                perror("Allocation of prefix to log was unsuccessful.\n");
                 return "";
             }
 
@@ -327,7 +327,7 @@ char *buildConsoleFormattedMessage(const char *timestamp, const char *level, con
 
             if (msg == NULL)
             {
-                perror("Allocation of prefix to log was unsuccessful.");
+                perror("Allocation of prefix to log was unsuccessful.\n");
                 return "";
             }
 
@@ -364,7 +364,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -378,7 +378,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -393,7 +393,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
 
         if (msg == NULL)
         {
-            perror("Allocation of prefix to log was unsuccessful.");
+            perror("Allocation of prefix to log was unsuccessful.\n");
             return "";
         }
 
@@ -409,7 +409,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
 
             if (msg == NULL)
             {
-                perror("Allocation of prefix to log was unsuccessful.");
+                perror("Allocation of prefix to log was unsuccessful.\n");
                 return "";
             }
 
@@ -423,7 +423,7 @@ char *buildFileFormattedMessage(const char *timestamp, const char *level, const 
 
             if (msg == NULL)
             {
-                perror("Allocation of prefix to log was unsuccessful.");
+                perror("Allocation of prefix to log was unsuccessful.\n");
                 return "";
             }
 
@@ -456,7 +456,7 @@ int log_message(int level, const char *file, int line, const char *format, ...)
     char temp_timestamp[LOG_DATE_TIME_SIZE];
     if (getCurrentTime(GLOBAL_LOGGING.include_date, GLOBAL_LOGGING.include_time, temp_timestamp) < 0)
     {
-        perror("Getting timestamp for logging was unsuccessful.");
+        perror("Getting timestamp for logging was unsuccessful.\n");
         return -1;
     }
     const char *timestamp_str = temp_timestamp;
@@ -471,7 +471,7 @@ int log_message(int level, const char *file, int line, const char *format, ...)
 
     if (len < 0)
     {
-        perror("Error determining formatted string length.");
+        perror("Error determining formatted string length.\n");
         return -1;
     }
 
@@ -479,7 +479,7 @@ int log_message(int level, const char *file, int line, const char *format, ...)
     char *formatted_message = (char *)malloc(len + 1);
     if (formatted_message == NULL)
     {
-        perror("Memory allocation for formatted logging message failed.");
+        perror("Memory allocation for formatted logging message failed.\n");
         return -1;
     }
 
@@ -505,7 +505,7 @@ int log_message(int level, const char *file, int line, const char *format, ...)
 
         if (fptr == NULL)
         {
-            perror("Logging file could not be opened.");
+            perror("Logging file could not be opened.\n");
             return -1;
         }
         else
@@ -559,7 +559,7 @@ char **readLogFile(const char *filepath)
     fp = fopen(filepath, "r");
     if (fp == NULL)
     {
-        perror("Error opening test_log_file.txt file");
+        perror("Error opening test_log_file.txt file.\n");
         return NULL;
     }
 
@@ -581,7 +581,7 @@ char **readLogFile(const char *filepath)
         lines = (char **)realloc(lines, (count + 1) * sizeof(char *));
         if (lines == NULL)
         {
-            perror("Memory reallocation failed");
+            perror("Memory reallocation failed.\n");
             // Free previously allocated lines before exiting
             for (int i = 0; i < count; i++)
             {
@@ -596,7 +596,7 @@ char **readLogFile(const char *filepath)
         lines[count] = strdup(line);
         if (lines[count] == NULL)
         {
-            perror("Memory allocation for line failed");
+            perror("Memory allocation for line failed.\n");
             // Free previously allocated lines and the current line buffer
             for (int i = 0; i < count; i++)
             {

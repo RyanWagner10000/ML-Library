@@ -7,8 +7,8 @@
  *        gradient descent, and a linear/logistic model trainer
  */
 
-#include "../header/regression.h"
-#include "../header/progressbar.h"
+#include "regression.h"
+#include "progressbar.h"
 
 /**
  * @brief Initialize a Model object by malloc-ing the Matrix and Vector members
@@ -526,7 +526,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(y_real, *model->logits, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -575,7 +575,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -621,7 +621,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -888,6 +888,51 @@ int updateLearningRate(Model *model, int epoch)
 }
 
 /**
+ * @brief Function to take a trained model and calculate performance metrics
+ *
+ * @param model Model object that holds the configuration, matrices, and vectors to evaluate
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int testModel(Model *model)
+{
+    // Calculate the predicted labels
+    Matrix computed_labels = makeMatrixEmpty();
+    if (comptueLabels(model->splitdata.test_features, *model->weights, *model->bias, &computed_labels, model->func) < 0)
+    {
+        LOG_ERROR("Computing labels after training was unsuccessful.\n");
+        return -1;
+    }
+
+    // Perform evaluation metrics on the model
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, computed_labels, model->type) < 0)
+    {
+        LOG_ERROR("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
+    freeMatrix(&computed_labels);
+
+    eval_metrics.threshold = 0.2;
+
+    if (calculateAllMetrics(&eval_metrics, model->type, model->splitdata.test_labels) < 0)
+    {
+        LOG_ERROR("Calculating all performance metrics failed.\n");
+        return -1;
+    }
+
+    if (outputData("model_output.json", *model) < 0)
+    {
+        LOG_WARN("Could no save model information and metrics to JSON file.\n");
+        return -1;
+    }
+
+    freeEvalMetrics(&eval_metrics);
+
+    return 0;
+}
+
+/**
  * @brief
  *
  * @param model Model object that holds the configuration, matrices, and vectors to run
@@ -899,12 +944,12 @@ int trainModel(Model *model)
     // Init weights matrix and bias vector
     if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
     {
-        LOG_ERROR("Problem initializing weight Matrix\n");
+        LOG_ERROR("Problem initializing weight Matrix.\n");
         return -1;
     }
     if (makeVectorZeros(model->bias, model->classes) < 0)
     {
-        LOG_ERROR("Problem initializing bias Matrix\n");
+        LOG_ERROR("Problem initializing bias Matrix.\n");
         return -1;
     }
 
@@ -984,7 +1029,7 @@ int trainModel(Model *model)
             // Make Logits matrix
             if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
             {
-                LOG_ERROR("Problem initializing logits Matrix\n");
+                LOG_ERROR("Problem initializing logits Matrix.\n");
                 return -1;
             }
 
@@ -1121,6 +1166,10 @@ int trainModel(Model *model)
     }
     LOG_INFO("\n");
 
+    // Test model performance and save to JSON
+    testModel(model);
+
+    // Free everything malloc/calloc-ed
     freeMatrix(&grad_w);
     freeMatrix(&velocity_weights);
     freeVector(&grad_b);

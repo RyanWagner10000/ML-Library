@@ -6,7 +6,7 @@
  * notes: All math functions are row-wise vectors/matrices in memory
  */
 
-#include "../header/math_funcs.h"
+#include "math_funcs.h"
 
 /**
  * @brief Performs the dot product of two vectors

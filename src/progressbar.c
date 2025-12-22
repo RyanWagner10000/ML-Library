@@ -129,7 +129,7 @@ char *buildProgressBar(PBD *p)
 
     if (progress_str == NULL)
     {
-        perror("Allocation of progress bar string was unsuccessful.");
+        perror("Allocation of progress bar string was unsuccessful.\n");
         return "\r";
     }
 
