@@ -43,12 +43,12 @@ void printVector(Vector v)
     LOG_INFO("[");
     for (int i = 0; i < v.size; ++i)
     {
-        LOG_INFO("%.6lf", ((double *)v.data)[i]);
+        printf("%.6lf", ((double *)v.data)[i]);
 
         if (i < v.size - 1)
-            LOG_INFO(", ");
+            printf(", ");
     }
-    LOG_INFO("]\n");
+    printf("]\n");
 }
 
 /**

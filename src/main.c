@@ -284,7 +284,7 @@ int run_heart_disease_dataset()
     logistic_model.func = SIGMOID;
     logistic_model.beta = 0.70;
 
-    logistic_model.config.epochs = 100;
+    logistic_model.config.epochs = 10;
     logistic_model.config.lambda = 0.1;
     logistic_model.config.regularization = REG_L2;
     logistic_model.config.learning_rate.init_learning_rate = 0.0003;

@@ -294,6 +294,31 @@ const char *decayTypeEnumToString(DecayType type)
 }
 
 /**
+ * @brief Function to add metrics arrays into JSON format
+ *
+ * @param json_file cJSON object
+ * @param matrix Matrix object
+ *
+ * @return None
+ */
+void addMetricsToJSON(cJSON *json_file, ModelMetrics model_metrics)
+{
+    // Create outer container for all metrics
+    cJSON *metrics  = cJSON_CreateArray();
+
+    // Add Loss vs. Epochs arary
+    cJSON_AddItemToObject(json_file, "loss", metrics);
+    for (int i = 0; i < model_metrics.loss_vs_epochs->size; ++i)
+    {
+        cJSON *item = cJSON_CreateNumber(model_metrics.loss_vs_epochs->data[i]);
+
+        // Add data to the array
+        cJSON_AddItemToArray(metrics, item);
+    }
+    return;
+}
+
+/**
  * @brief Function to translate Matrix object into JSON format
  *
  * @param json_file cJSON object
@@ -441,8 +466,7 @@ int outputData(const char *filename, Model model)
     cJSON_AddNumberToObject(learning_rate, "decay_step", model.config.learning_rate.init_learning_rate);
     cJSON_AddNumberToObject(learning_rate, "decay_constant", model.config.learning_rate.init_learning_rate);
     //   ModelMetrics Object
-    cJSON *metrics;
-    cJSON_AddItemToObject(json, "metrics", metrics = cJSON_CreateObject());
+    addMetricsToJSON(json, model.metrics);
     //   Weights Matrix
     translateMatrixToJSON(json, "weights", *model.weights);
     //   Bias Vector

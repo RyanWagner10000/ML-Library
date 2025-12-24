@@ -88,12 +88,12 @@ void printMatrix(Matrix m)
         {
             int idx = r * m.cols + c;
 
-            LOG_INFO("%.6lf", m.data[idx]);
+            printf("%.6lf", m.data[idx]);
 
             if (c < m.cols - 1)
-                LOG_INFO(", ");
+                printf(", ");
         }
-        LOG_INFO("]\n");
+        printf("]\n");
     }
 }
 

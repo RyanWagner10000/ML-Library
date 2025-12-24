@@ -15,6 +15,8 @@
 
 ModelConfig makeDefaultConfig();
 
+ModelMetrics makeDefaultMetrics();
+
 int comptueLabels(Matrix X, Matrix weights, Vector biases, Matrix *labels, Activation activation);
 
 int initModel(Model *model);

@@ -29,11 +29,26 @@ int initModel(Model *model)
 
     model->config = makeDefaultConfig();
 
+    model->metrics = makeDefaultMetrics();
+
     model->func = ACT_NONE;
     model->batch_size = -1;
     model->classes = 1;
 
     return 0;
+}
+
+/**
+ * @brief Make a default model metrics
+ *
+ * @return ModelMetrics object
+ */
+ModelMetrics makeDefaultMetrics()
+{
+    ModelMetrics metrics;
+    metrics.loss_vs_epochs = malloc(sizeof(Vector));
+
+    return metrics;
 }
 
 /**
@@ -134,11 +149,6 @@ int checkModel(Model *model)
     {
         LOG_WARN("Epochs is <= 0 or unset. Setting to default 1\n");
         model->config.epochs = 1;
-    }
-    else
-    {
-        // Set array size of loss metrics now that epochs value is good
-        model->metrics.loss_vs_epochs = calloc(model->config.epochs, sizeof(double));
     }
 
     // Check if model config lambda has been set, default to 0.01
@@ -949,7 +959,7 @@ int trainModel(Model *model)
     }
     if (makeVectorZeros(model->bias, model->classes) < 0)
     {
-        LOG_ERROR("Problem initializing bias Matrix.\n");
+        LOG_ERROR("Problem initializing bias Vector.\n");
         return -1;
     }
 
@@ -957,6 +967,13 @@ int trainModel(Model *model)
     if (checkModel(model) < 0)
     {
         LOG_ERROR("The model object submitted to train has not be setup properly.\n");
+        return -1;
+    }
+
+    // Init metrics
+    if (makeVectorZeros(model->metrics.loss_vs_epochs, model->config.epochs) < 0)
+    {
+        LOG_ERROR("Problem initializing metrics Vector.\n");
         return -1;
     }
 
@@ -1148,6 +1165,9 @@ int trainModel(Model *model)
         }
         mini_batch_idx = 0;
 
+        // Save Loss value to array for output
+        model->metrics.loss_vs_epochs->data[epoch-1] = loss;
+
         // Update learning rate
         if (updateLearningRate(model, epoch) < 0)
         {
@@ -1160,9 +1180,6 @@ int trainModel(Model *model)
         progress_bar.loss = loss;
         progress_bar.progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
         drawProgressBar(&progress_bar);
-
-        // Save Loss value to array for output
-        model->metrics.loss_vs_epochs[epoch-1] = loss;
     }
     LOG_INFO("\n");
 

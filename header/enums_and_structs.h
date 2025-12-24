@@ -81,7 +81,7 @@ typedef struct
 
 typedef struct
 {
-    double *loss_vs_epochs; // Array of loss over epochs
+    Vector *loss_vs_epochs; // Vector of loss over epochs
 } ModelMetrics;
 
 typedef struct
