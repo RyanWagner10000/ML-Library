@@ -9,27 +9,9 @@
 #ifndef EVAL_METRICS_H
 #define EVAL_METRICS_H
 
-#include "matrix.h"
 #include "vector.h"
-#include "regression.h"
-
-typedef struct
-{
-    Matrix *y_lables; // Vector of predicted classes
-    double threshold; // Threshold value for comparison of real to predicted values
-    int TP;           // True Positive value
-    int FP;           // False Positive value
-    int TN;           // True Negative value
-    int FN;           // False Negative value
-    double accuracy;  // Fraction of correct predictions
-    double precision; // How many predicted 1's are correct for binary classification
-    double recall;    // How many actual 1's were caught  for binary classification
-    double f1;        // harminic mean of precision and recall
-    double mse;       // Mean Squared Error, lower is better
-    double rmse;      // Root Mean Squared Error, in same units as the output
-    double mae;       // Mean Absolute Error, less sensitive to outliers thatn MSE
-    double r2score;   // Coefficient of Determination, how well the model explains variance in the data
-} EvalMetrics;
+#include "file_handling.h"
+#include "enums_and_structs.h"
 
 int initEvalMetrics(EvalMetrics *eval_metrics, Matrix y_pred, RegressionType type);
 int applyLabelThreshold(Matrix y_pred, Matrix *y_labels, double threshold);

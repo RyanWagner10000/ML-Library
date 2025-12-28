@@ -7,8 +7,8 @@
  *        gradient descent, and a linear/logistic model trainer
  */
 
-#include "../header/regression.h"
-#include "../header/progressbar.h"
+#include "regression.h"
+#include "progressbar.h"
 
 /**
  * @brief Initialize a Model object by malloc-ing the Matrix and Vector members
@@ -29,11 +29,26 @@ int initModel(Model *model)
 
     model->config = makeDefaultConfig();
 
+    model->metrics = makeDefaultMetrics();
+
     model->func = ACT_NONE;
     model->batch_size = -1;
     model->classes = 1;
 
     return 0;
+}
+
+/**
+ * @brief Make a default model metrics
+ *
+ * @return ModelMetrics object
+ */
+ModelMetrics makeDefaultMetrics()
+{
+    ModelMetrics metrics;
+    metrics.loss_vs_epochs = malloc(sizeof(Vector));
+
+    return metrics;
 }
 
 /**
@@ -521,7 +536,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(y_real, *model->logits, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -570,7 +585,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -616,7 +631,7 @@ static int computeGradients(Matrix x_inputs, Matrix y_real, Model *model, Matrix
         // Calculate dZ matrix
         if (mat_sub(*model->logits, y_real, &dZ) < 0)
         {
-            LOG_ERROR("Matrix subtraction was unsuccessful.");
+            LOG_ERROR("Matrix subtraction was unsuccessful.\n");
             return -1;
         }
 
@@ -723,7 +738,7 @@ int computeVelocityWeights(Matrix *v_t, double beta, Matrix grad_w)
         LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
-    
+
     // Check weight matrix
     if (!grad_w.data || grad_w.rows <= 0 || grad_w.cols <= 0)
     {
@@ -779,7 +794,7 @@ int computeVelocityBias(Vector *mt, double beta, Vector grad_b)
         LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
-    
+
     // Check weight matrix
     if (!grad_b.data || grad_b.size <= 0)
     {
@@ -883,6 +898,51 @@ int updateLearningRate(Model *model, int epoch)
 }
 
 /**
+ * @brief Function to take a trained model and calculate performance metrics
+ *
+ * @param model Model object that holds the configuration, matrices, and vectors to evaluate
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int testModel(Model *model)
+{
+    // Calculate the predicted labels
+    Matrix computed_labels = makeMatrixEmpty();
+    if (comptueLabels(model->splitdata.test_features, *model->weights, *model->bias, &computed_labels, model->func) < 0)
+    {
+        LOG_ERROR("Computing labels after training was unsuccessful.\n");
+        return -1;
+    }
+
+    // Perform evaluation metrics on the model
+    EvalMetrics eval_metrics;
+    if (initEvalMetrics(&eval_metrics, computed_labels, model->type) < 0)
+    {
+        LOG_ERROR("Initialization of evaluation metrics object failed.\n");
+        return -1;
+    }
+    freeMatrix(&computed_labels);
+
+    eval_metrics.threshold = 0.2;
+
+    if (calculateAllMetrics(&eval_metrics, model->type, model->splitdata.test_labels) < 0)
+    {
+        LOG_ERROR("Calculating all performance metrics failed.\n");
+        return -1;
+    }
+
+    if (outputData("model_output.json", *model) < 0)
+    {
+        LOG_WARN("Could no save model information and metrics to JSON file.\n");
+        return -1;
+    }
+
+    freeEvalMetrics(&eval_metrics);
+
+    return 0;
+}
+
+/**
  * @brief
  *
  * @param model Model object that holds the configuration, matrices, and vectors to run
@@ -894,12 +954,12 @@ int trainModel(Model *model)
     // Init weights matrix and bias vector
     if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
     {
-        LOG_ERROR("Problem initializing weight Matrix\n");
+        LOG_ERROR("Problem initializing weight Matrix.\n");
         return -1;
     }
     if (makeVectorZeros(model->bias, model->classes) < 0)
     {
-        LOG_ERROR("Problem initializing bias Matrix\n");
+        LOG_ERROR("Problem initializing bias Vector.\n");
         return -1;
     }
 
@@ -907,6 +967,13 @@ int trainModel(Model *model)
     if (checkModel(model) < 0)
     {
         LOG_ERROR("The model object submitted to train has not be setup properly.\n");
+        return -1;
+    }
+
+    // Init metrics
+    if (makeVectorZeros(model->metrics.loss_vs_epochs, model->config.epochs) < 0)
+    {
+        LOG_ERROR("Problem initializing metrics Vector.\n");
         return -1;
     }
 
@@ -948,6 +1015,13 @@ int trainModel(Model *model)
     int batches = (int)ceil(model->splitdata.train_features.rows / (double)model->batch_size);
     int mini_batch_idx = 0;
     int batch_size = 0;
+
+    // Print start time
+    time_t start_time, end_time;
+    time(&start_time);
+    LOG_INFO("Start Time: %s\n", ctime(&start_time));
+
+    // Init progress bar
     PBD progress_bar;
     initProgressBar(&progress_bar, 50, '[', ']', '#', '.', 0.1);
     drawProgressBar(&progress_bar);
@@ -979,7 +1053,7 @@ int trainModel(Model *model)
             // Make Logits matrix
             if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
             {
-                LOG_ERROR("Problem initializing logits Matrix\n");
+                LOG_ERROR("Problem initializing logits Matrix.\n");
                 return -1;
             }
 
@@ -1098,6 +1172,9 @@ int trainModel(Model *model)
         }
         mini_batch_idx = 0;
 
+        // Save Loss value to array for output
+        model->metrics.loss_vs_epochs->data[epoch - 1] = loss;
+
         // Update learning rate
         if (updateLearningRate(model, epoch) < 0)
         {
@@ -1113,6 +1190,16 @@ int trainModel(Model *model)
     }
     LOG_INFO("\n");
 
+    // Print end time and total time taken
+    time(&end_time);
+    LOG_INFO("Finish Time: %s\n", ctime(&end_time));
+    double sec_difference = difftime(end_time, start_time);
+    LOG_INFO("Total Elapsed Time: %.4f seconds.\n", sec_difference);
+    
+    // Test model performance and save to JSON
+    testModel(model);
+
+    // Free everything malloc/calloc-ed
     freeMatrix(&grad_w);
     freeMatrix(&velocity_weights);
     freeVector(&grad_b);
@@ -1169,5 +1256,11 @@ void freeModel(Model *model)
     {
         free(model->logits->data);
         model->logits->data = NULL;
+    }
+
+    // Free metrics arrays
+    if (model && model->metrics.loss_vs_epochs)
+    {
+        free(model->metrics.loss_vs_epochs);
     }
 }

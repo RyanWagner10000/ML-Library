@@ -6,7 +6,7 @@
  * notes: All math functions are row-wise vectors/matrices in memory
  */
 
-#include "../header/math_funcs.h"
+#include "math_funcs.h"
 
 /**
  * @brief Performs the dot product of two vectors
@@ -227,7 +227,7 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
             return -1;
         }
     }
-    
+
     // Perform element-wise multiplication for Matrix
     for (int i = 0; i < A.rows; ++i)
     {

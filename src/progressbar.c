@@ -129,7 +129,7 @@ char *buildProgressBar(PBD *p)
 
     if (progress_str == NULL)
     {
-        perror("Allocation of progress bar string was unsuccessful.");
+        perror("Allocation of progress bar string was unsuccessful.\n");
         return "\r";
     }
 
@@ -152,7 +152,8 @@ void drawProgressBar(PBD *p)
 
     long diff_ms = (now.tv_sec - p->last_time.tv_sec) * 1000 + (now.tv_nsec - p->last_time.tv_nsec) / 1000000;
 
-    if (diff_ms < p->ms_update) return;
+    if (diff_ms < p->ms_update)
+        return;
 
     p->last_time = now;
 
@@ -165,7 +166,8 @@ void drawProgressBar(PBD *p)
     // If sufficient time has passed
     const char *progress_bar = buildProgressBar(p);
 
-    LOG_INFO(progress_bar);
+    // LOG_INFO(progress_bar);
+    printf("%s", progress_bar);
 
     return;
 }

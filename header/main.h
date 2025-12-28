@@ -1,9 +1,9 @@
 /*
  * file: main.h
- * description: header file for main script 
+ * description: header file for main script
  * author: Ryan Wagner
  * date: June 6, 2025
- * notes: 
+ * notes:
  */
 
 #ifndef MAIN_H

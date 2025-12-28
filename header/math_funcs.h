@@ -6,12 +6,12 @@
  * notes:
  */
 
-#include <math.h>
-
-#include "vector.h"
-
 #ifndef MATH_FUNCS_H
 #define MATH_FUNCS_H
+
+#include <math.h>
+
+#include "enums_and_structs.h"
 
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -40,28 +40,6 @@
     Vector: vect_sub_vector)(a, b, c)
 #define vect_div(a, b, c) _Generic((b), \
     double: vect_div_double)(a, b, c)
-
-typedef enum
-{
-    ACT_NONE,
-    SIGMOID,
-    SIGMOID_DX,
-    RELU,
-    RELU_DX,
-    TANH,
-    TANH_DX,
-    SOFTMAX
-} Activation;
-
-typedef struct
-{
-    Matrix train_features; // Matrix that holds the training features
-    Matrix test_features;  // Matrix that holds the testing features
-    Matrix valid_features; // Matrix that holds the validation features
-    Matrix train_labels;   // Matrix that holds the training features
-    Matrix test_labels;    // Matrix that holds the testing features
-    Matrix valid_labels;   // Matrix that holds the validation features
-} SplitData;
 
 int dot_product(Vector x, Vector y, double *result);
 int matvec_mult(Matrix A, Vector y, Vector *result);

@@ -6,7 +6,7 @@
  * notes:
  */
 
-#include "../header/matrix.h"
+#include "matrix.h"
 
 /**
  * @brief Clears a Matrix by making all values 0
@@ -88,12 +88,12 @@ void printMatrix(Matrix m)
         {
             int idx = r * m.cols + c;
 
-            LOG_INFO("%.6lf", m.data[idx]);
+            printf("%.6lf", m.data[idx]);
 
             if (c < m.cols - 1)
-                LOG_INFO(", ");
+                printf(", ");
         }
-        LOG_INFO("]\n");
+        printf("]\n");
     }
 }
 
@@ -177,7 +177,7 @@ int makeMatrix(Matrix *m, int rows, int cols, void *data, DataType type)
     m->data = calloc(rows * cols, sizeof(double));
     if (!m->data)
     {
-        LOG_ERROR("Failed to allocate matrix\n");
+        LOG_ERROR("Failed to allocate matrix.\n");
         return -1;
     }
 
@@ -255,7 +255,7 @@ int makeMatrixZeros(Matrix *m, int rows, int cols)
     m->data = calloc(rows * cols, sizeof(double));
     if (!m->data)
     {
-        LOG_ERROR("Failed to allocate matrix\n");
+        LOG_ERROR("Failed to allocate matrix.\n");
         return -1;
     }
 

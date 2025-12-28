@@ -9,10 +9,14 @@
 #ifndef FILE_HANDLING_H
 #define FILE_HANDLING_H
 
-#include "../header/math_funcs.h"
+#include "math_funcs.h"
+#include "regression.h"
+#include "cJSON.h"
 
 int loadCSVtoMatrix(const char *filename, bool has_header, Matrix *m);
 
 int normalizeMatrix(Matrix *m);
+
+int outputData(const char *filename, Model model);
 
 #endif // FILE_HANDLING_H

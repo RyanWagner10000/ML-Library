@@ -5,9 +5,7 @@
  * date: June 6, 2025
  * notes:
  */
-#include "../header/regression.h"
-#include "../header/file_handling.h"
-#include "../header/eval_matrics.h"
+#include "regression.h"
 
 int run_salary_dataset()
 {
@@ -227,7 +225,7 @@ int run_heart_disease_dataset()
     DataType type = TYPE_DOUBLE;
 
     // Extract the data from the CSV file into a Matrix
-    const char *filename = "../datasets/heart_2020_cleaned.csv";
+    const char *filename = "datasets/heart_2020_cleaned.csv";
     Model logistic_model;
     if (initModel(&logistic_model) < 0)
     {
@@ -247,7 +245,7 @@ int run_heart_disease_dataset()
         LOG_ERROR("Reading CSV to Matrix was unsuccessful.\n");
         return -1;
     }
-    
+
     // Copy the y-values from the matrix into a vector
     if (makeMatrixZeros(logistic_model.y, logistic_model.X->rows, 1) < 0)
     {
@@ -282,11 +280,11 @@ int run_heart_disease_dataset()
     }
 
     logistic_model.classes = 1;
-    logistic_model.batch_size = 256;
+    logistic_model.batch_size = 512;
     logistic_model.func = SIGMOID;
     logistic_model.beta = 0.70;
-    
-    logistic_model.config.epochs = 300;
+
+    logistic_model.config.epochs = 500;
     logistic_model.config.lambda = 0.1;
     logistic_model.config.regularization = REG_L2;
     logistic_model.config.learning_rate.init_learning_rate = 0.0003;
@@ -301,33 +299,7 @@ int run_heart_disease_dataset()
         return -1;
     }
 
-    // Calculate the predicted labels
-    Matrix computed_labels = makeMatrixEmpty();
-    if (comptueLabels(logistic_model.splitdata.test_features, *logistic_model.weights, *logistic_model.bias, &computed_labels, logistic_model.func) < 0)
-    {
-        LOG_ERROR("Computing labels after training was unsuccessful.\n");
-        return -1;
-    }
-
-    // Perform evaluation metrics on the model
-    EvalMetrics eval_metrics;
-    if (initEvalMetrics(&eval_metrics, computed_labels, logistic_model.type) < 0)
-    {
-        LOG_ERROR("Initialization of evaluation metrics object failed.\n");
-        return -1;
-    }
-    freeMatrix(&computed_labels);
-
-    eval_metrics.threshold = 0.2;
-
-    if (calculateAllMetrics(&eval_metrics, logistic_model.type, logistic_model.splitdata.test_labels) < 0)
-    {
-        LOG_ERROR("Calculating all performance metrics failed.\n");
-        return -1;
-    }
-
     freeModel(&logistic_model);
-    freeEvalMetrics(&eval_metrics);
 
     return 0;
 }

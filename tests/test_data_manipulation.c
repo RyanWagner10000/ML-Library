@@ -8,7 +8,7 @@
 
 #include "unity.h"
 #include <stdio.h>
-#include "../header/file_handling.h"
+#include "file_handling.h"
 
 void setUp(void)
 {
@@ -177,6 +177,19 @@ void test_test_train_valid_split_wrong(void)
     freeSplitData(&splitdata);
 }
 
+void test_create_JSON(void)
+{
+    DataType type = TYPE_DOUBLE;
+
+    // Extract the data from the CSV file into a Matrix
+    const char *filename = "../datasets/heart_2020_cleaned.csv";
+    Model model;
+    initModel(&model);
+
+    int status = outputData("test_JSON.json", model);
+    TEST_ASSERT_EQUAL_INT(0, status);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -184,6 +197,7 @@ int main(void)
     RUN_TEST(test_normalization);
     RUN_TEST(test_test_train_valid_split);
     RUN_TEST(test_test_train_valid_split_wrong);
+    RUN_TEST(test_create_JSON);
 
     return UNITY_END();
 }
