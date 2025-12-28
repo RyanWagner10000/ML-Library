@@ -47,7 +47,7 @@ target_link_libraries(testVectOps PRIVATE math_funcs m)
 target_link_libraries(testRandPerm PRIVATE math_funcs m)
 target_link_libraries(main PRIVATE math_funcs progress_bar m)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror -O1)
 
 # Add a test target for CTest
 # enable_testing()

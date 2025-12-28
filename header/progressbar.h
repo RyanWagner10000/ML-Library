@@ -33,7 +33,7 @@ struct tagProgressBarData
 typedef struct tagProgressBarData PBD;
 
 void initProgressBar(PBD *p, int max_len, char left, char right, char fill, char empty, double update_rate);
-char *buildProgressBar(PBD* p);
-void drawProgressBar(PBD* p);
+char *buildProgressBar(PBD *p);
+void drawProgressBar(PBD *p);
 
 #endif // PROGRESSBAR_H

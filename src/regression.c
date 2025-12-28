@@ -738,7 +738,7 @@ int computeVelocityWeights(Matrix *v_t, double beta, Matrix grad_w)
         LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
-    
+
     // Check weight matrix
     if (!grad_w.data || grad_w.rows <= 0 || grad_w.cols <= 0)
     {
@@ -794,7 +794,7 @@ int computeVelocityBias(Vector *mt, double beta, Vector grad_b)
         LOG_ERROR("Input current Momentum matrix was invalid. Momentum calculation was unsuccessful.\n");
         return -1;
     }
-    
+
     // Check weight matrix
     if (!grad_b.data || grad_b.size <= 0)
     {
@@ -1015,6 +1015,13 @@ int trainModel(Model *model)
     int batches = (int)ceil(model->splitdata.train_features.rows / (double)model->batch_size);
     int mini_batch_idx = 0;
     int batch_size = 0;
+
+    // Print start time
+    time_t start_time, end_time;
+    time(&start_time);
+    LOG_INFO("Start Time: %s\n", ctime(&start_time));
+
+    // Init progress bar
     PBD progress_bar;
     initProgressBar(&progress_bar, 50, '[', ']', '#', '.', 0.1);
     drawProgressBar(&progress_bar);
@@ -1166,7 +1173,7 @@ int trainModel(Model *model)
         mini_batch_idx = 0;
 
         // Save Loss value to array for output
-        model->metrics.loss_vs_epochs->data[epoch-1] = loss;
+        model->metrics.loss_vs_epochs->data[epoch - 1] = loss;
 
         // Update learning rate
         if (updateLearningRate(model, epoch) < 0)
@@ -1183,6 +1190,12 @@ int trainModel(Model *model)
     }
     LOG_INFO("\n");
 
+    // Print end time and total time taken
+    time(&end_time);
+    LOG_INFO("Finish Time: %s\n", ctime(&end_time));
+    double sec_difference = difftime(end_time, start_time);
+    LOG_INFO("Total Elapsed Time: %.4f seconds.\n", sec_difference);
+    
     // Test model performance and save to JSON
     testModel(model);
 

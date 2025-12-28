@@ -227,7 +227,7 @@ int mat_mul_double(Matrix A, double B, Matrix *result)
             return -1;
         }
     }
-    
+
     // Perform element-wise multiplication for Matrix
     for (int i = 0; i < A.rows; ++i)
     {

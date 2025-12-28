@@ -304,7 +304,7 @@ const char *decayTypeEnumToString(DecayType type)
 void addMetricsToJSON(cJSON *json_file, ModelMetrics model_metrics)
 {
     // Create outer container for all metrics
-    cJSON *metrics  = cJSON_CreateArray();
+    cJSON *metrics = cJSON_CreateArray();
 
     // Add Loss vs. Epochs arary
     cJSON_AddItemToObject(json_file, "loss", metrics);

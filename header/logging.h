@@ -66,7 +66,7 @@ extern LogConfig GLOBAL_LOGGING;
 int getCurrentTime(bool include_date, bool include_time, char *buffer);
 const char *getLevelString(int level);
 const char *getColorCode(int level);
-int countDigits(double n, const char* fmt);
+int countDigits(double n, const char *fmt);
 
 int initLogger(LogLevel min_level, const char *filename, bool include_file_info, bool include_line_info, bool include_date, bool include_time, bool log_to_file, bool log_to_console);
 

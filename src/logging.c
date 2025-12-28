@@ -147,7 +147,7 @@ const char *getColorCode(int level)
  *
  * @return Number of digits as integer
  */
-int countDigits(double n, const char* fmt)
+int countDigits(double n, const char *fmt)
 {
     // Source: https://stackoverflow.com/questions/1701055/what-is-the-maximum-length-in-chars-needed-to-represent-any-double-value
     // Sufficiently large buffer for signed 2^64 value
