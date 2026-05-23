@@ -943,269 +943,44 @@ int testModel(Model *model)
 }
 
 /**
- * @brief
+ * @brief Free Matrix and Vectors associated with the training process
  *
- * @param model Model object that holds the configuration, matrices, and vectors to run
+ * @param grad_w Gradient of the weights matrix
+ * @param velocity_weights Momentum velocity of the weights matrix
+ * @param grad_b Gradient of the bias vector
+ * @param velocity_weights Momentum velocity of the bias vector
  *
- * @return 0 if successful, -1 if failure
+ * @return None
  */
-int trainModel(Model *model)
+void freeTrainingObjects(Matrix *grad_w, Matrix *velocity_weights, Vector *grad_b, Vector *velocity_bias)
 {
-    // Init weights matrix and bias vector
-    if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
+    // Free Weights Gradient matrix
+    if (grad_w && grad_w->data)
     {
-        LOG_ERROR("Problem initializing weight Matrix.\n");
-        return -1;
-    }
-    if (makeVectorZeros(model->bias, model->classes) < 0)
-    {
-        LOG_ERROR("Problem initializing bias Vector.\n");
-        return -1;
+        free(grad_w->data);
+        grad_w->data = NULL;
     }
 
-    // Check that the model has been setup correctly before trying to train
-    if (checkModel(model) < 0)
+    // Free Weight Velocity matrix
+    if (velocity_weights && velocity_weights->data)
     {
-        LOG_ERROR("The model object submitted to train has not be setup properly.\n");
-        return -1;
+        free(velocity_weights->data);
+        velocity_weights->data = NULL;
     }
 
-    // Init metrics
-    if (makeVectorZeros(model->metrics.loss_vs_epochs, model->config.epochs) < 0)
+    // Free Bias Gradient matrix
+    if (grad_b && grad_b->data)
     {
-        LOG_ERROR("Problem initializing metrics Vector.\n");
-        return -1;
+        free(grad_b->data);
+        grad_b->data = NULL;
     }
 
-    // Convert y matrix to one-hot encoded form if performing softmax regression
-    if (model->type == SOFTMAX_REGRESSION)
+    // Free Bias Velocity matrix
+    if (velocity_bias && velocity_bias->data)
     {
-        computeOneHotEncodedMatrix(*model->y, model->y, model->classes);
+        free(velocity_bias->data);
+        velocity_bias->data = NULL;
     }
-
-    // Init gradient weight Matrix, bias Vector, and velocity Matrix
-    Matrix grad_w = {0};
-    if (makeMatrixZeros(&grad_w, model->weights->rows, model->weights->cols) < 0)
-    {
-        LOG_ERROR("Unsuccessful initialization of gradient weights Matrix in model training.\n");
-        return -1;
-    }
-    Vector grad_b = {0};
-    if (makeVectorZeros(&grad_b, model->bias->size) < 0)
-    {
-        LOG_ERROR("Unsuccessful initialization of gradient bias Vector in model training.\n");
-        return -1;
-    }
-    Matrix velocity_weights = {0};
-    if (makeMatrixZeros(&velocity_weights, model->weights->rows, model->weights->cols) < 0)
-    {
-        LOG_ERROR("Unsuccessful initialization of velocity weights Matrix in model training.\n");
-        return -1;
-    }
-    Vector velocity_bias = {0};
-    if (makeVectorZeros(&velocity_bias, model->bias->size) < 0)
-    {
-        LOG_ERROR("Unsuccessful initialization of velocity bias Vector in model training.\n");
-        return -1;
-    }
-
-    // Init reused variables, build batch sizing
-    double loss = 0;
-    int *perm_arr = (int *)calloc(model->splitdata.train_features.rows, sizeof(int));
-    int batches = (int)ceil(model->splitdata.train_features.rows / (double)model->batch_size);
-    int mini_batch_idx = 0;
-    int batch_size = 0;
-
-    // Print start time
-    time_t start_time, end_time;
-    time(&start_time);
-    LOG_INFO("Start Time: %s\n", ctime(&start_time));
-
-    // Init progress bar
-    PBD progress_bar;
-    initProgressBar(&progress_bar, 50, '[', ']', '#', '.', 0.1);
-    drawProgressBar(&progress_bar);
-
-    // Iterate through N-number of epochs adjusting the weights and bias
-    for (int epoch = 1; epoch <= model->config.epochs; ++epoch)
-    {
-        // --- SHUFFLE DATASET ---
-
-        // Create a random permutation of the number of samples in the dataset
-        if (generateRandomPermutation(perm_arr, model->splitdata.train_features.rows) < 0)
-        {
-            LOG_ERROR("Creating random permutation for input shuffling was unsuccessful.\n");
-            return -1;
-        }
-
-        // Iterate through forward and backward pass for each mini-batch matrix
-        for (int b = 0; b < batches; ++b)
-        {
-            if (model->splitdata.train_features.rows - mini_batch_idx < model->batch_size)
-            {
-                batch_size = model->splitdata.train_features.rows - mini_batch_idx;
-            }
-            else
-            {
-                batch_size = model->batch_size;
-            }
-
-            // Make Logits matrix
-            if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
-            {
-                LOG_ERROR("Problem initializing logits Matrix.\n");
-                return -1;
-            }
-
-            // Get mini-batch of X
-            Matrix mini_X = {0};
-            if (makeMatrixZeros(&mini_X, batch_size, model->splitdata.train_features.cols) < 0)
-            {
-                LOG_ERROR("Creation of empty mini-batch X matrix was unsuccessful.\n");
-                return -1;
-            }
-            if (makeMiniMatrix(*model->X, &mini_X, perm_arr, b, batch_size) < 0)
-            {
-                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
-                return -1;
-            }
-
-            // Get mini-batch of y
-            Matrix mini_y = {0};
-            if (makeMatrixZeros(&mini_y, batch_size, model->splitdata.train_labels.cols) < 0)
-            {
-                LOG_ERROR("Creation of empty mini-batch y matrix was unsuccessful.\n");
-                return -1;
-            }
-            if (makeMiniMatrix(*model->y, &mini_y, perm_arr, b, batch_size) < 0)
-            {
-                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
-                return -1;
-            }
-
-            loss = 0;
-            // --- FORWARD PASS ---
-
-            // Compute logits and apply activation function
-            if (computeLogits(mini_X, model) < 0)
-            {
-                LOG_ERROR("Computation of logits was unsuccessful while training model.\n");
-                return -1;
-            }
-
-            // Compute loss
-            if (computeLoss(mini_y, model, &loss) < 0)
-            {
-                LOG_ERROR("Computation of Loss was unsuccessful while training model.\n");
-                return -1;
-            }
-
-            // --- BACKWARD PASS (GRADIENTS) ---
-
-            if (clearMatrix(&grad_w) < 0)
-            {
-                LOG_ERROR("Clearing gradient weights matrix was unsuccessful.\n");
-                return -1;
-            }
-            if (clearVector(&grad_b) < 0)
-            {
-                LOG_ERROR("Clearing gradient bias vector was unsuccessful.\n");
-                return -1;
-            }
-
-            // Compute gradients
-            if (computeGradients(mini_X, mini_y, model, &grad_w, &grad_b) < 0)
-            {
-                LOG_ERROR("Computation of Gradient was unsuccessful while training model.\n");
-                return -1;
-            }
-
-            // Optional regularization
-            if (computeRegularization(*model, &grad_w) < 0)
-            {
-                LOG_ERROR("Computation of Regularization was unsuccessful while training model.\n");
-                return -1;
-            }
-
-            // Calculate weights velocity matrix
-            if (computeVelocityWeights(&velocity_weights, model->beta, grad_w))
-            {
-                LOG_ERROR("Computation of Weights Momentum was unsuccessful while training model.\n");
-                return -1;
-            }
-            // Calculate biases velocity vector
-            if (computeVelocityBias(&velocity_bias, model->beta, grad_b))
-            {
-                LOG_ERROR("Computation of Biases Momentum was unsuccessful while training model.\n");
-                return -1;
-            }
-
-            // Gradient descent update with momentum
-            if (mat_mul(velocity_weights, model->config.learning_rate.curr_learning_rate, &velocity_weights) < 0)
-            {
-                LOG_ERROR("Weights gradient descent update with learning rate was not successful.\n");
-                return -1;
-            }
-
-            if (mat_sub(*model->weights, velocity_weights, model->weights) < 0)
-            {
-                LOG_ERROR("Weights update with gradient weights was not successful.\n");
-                return -1;
-            }
-
-            if (vect_mul(velocity_bias, model->config.learning_rate.curr_learning_rate, &velocity_bias) < 0)
-            {
-                LOG_ERROR("Bias gradient descent update with learning rate was not successful.\n");
-                return -1;
-            }
-
-            if (vect_sub(*model->bias, velocity_bias, model->bias) < 0)
-            {
-                LOG_ERROR("Bias update with gradient bias was not successful.\n");
-                return -1;
-            }
-
-            mini_batch_idx += batch_size;
-            freeMatrix(&mini_X);
-            freeMatrix(&mini_y);
-            freeMatrix(model->logits);
-        }
-        mini_batch_idx = 0;
-
-        // Save Loss value to array for output
-        model->metrics.loss_vs_epochs->data[epoch - 1] = loss;
-
-        // Update learning rate
-        if (updateLearningRate(model, epoch) < 0)
-        {
-            LOG_ERROR("Bias update with gradient bias was not successful.\n");
-            return -1;
-        }
-
-        // Progress over time/epoch
-        progress_bar.n_curr_len = (epoch * progress_bar.m_max_len) / model->config.epochs;
-        progress_bar.loss = loss;
-        progress_bar.progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
-        drawProgressBar(&progress_bar);
-    }
-    LOG_INFO("\n");
-
-    // Print end time and total time taken
-    time(&end_time);
-    LOG_INFO("Finish Time: %s\n", ctime(&end_time));
-    double sec_difference = difftime(end_time, start_time);
-    LOG_INFO("Total Elapsed Time: %.4f seconds.\n", sec_difference);
-    
-    // Test model performance and save to JSON
-    testModel(model);
-
-    // Free everything malloc/calloc-ed
-    freeMatrix(&grad_w);
-    freeMatrix(&velocity_weights);
-    freeVector(&grad_b);
-    freeVector(&velocity_bias);
-    free(perm_arr);
-    return 0;
 }
 
 /**
@@ -1263,4 +1038,318 @@ void freeModel(Model *model)
     {
         free(model->metrics.loss_vs_epochs);
     }
+}
+
+/**
+ * @brief
+ *
+ * @param model Model object that holds the configuration, matrices, and vectors to run
+ *
+ * @return 0 if successful, -1 if failure
+ */
+int trainModel(Model *model)
+{
+    int success = 1;
+
+    // Init weights matrix and bias vector
+    if (makeMatrixZeros(model->weights, model->splitdata.train_features.cols, model->classes) < 0)
+    {
+        LOG_ERROR("Problem initializing weight Matrix.\n");
+        return -1;
+    }
+    if (makeVectorZeros(model->bias, model->classes) < 0)
+    {
+        LOG_ERROR("Problem initializing bias Vector.\n");
+        freeModel(model);
+        return -1;
+    }
+
+    // Check that the model has been setup correctly before trying to train
+    if (checkModel(model) < 0)
+    {
+        LOG_ERROR("The model object submitted to train has not be setup properly.\n");
+        return -1;
+    }
+
+    // Init metrics
+    if (makeVectorZeros(model->metrics.loss_vs_epochs, model->config.epochs) < 0)
+    {
+        LOG_ERROR("Problem initializing metrics Vector.\n");
+        freeModel(model);
+        return -1;
+    }
+
+    // Convert y matrix to one-hot encoded form if performing softmax regression
+    if (model->type == SOFTMAX_REGRESSION)
+    {
+        computeOneHotEncodedMatrix(*model->y, model->y, model->classes);
+    }
+
+    // Init gradient weight Matrix, bias Vector, and velocity Matrix
+    success = 1;
+    Matrix grad_w = {0};
+    if (makeMatrixZeros(&grad_w, model->weights->rows, model->weights->cols) < 0)
+    {
+        LOG_ERROR("Unsuccessful initialization of gradient weights Matrix in model training.\n");
+        success = 0;
+    }
+    Vector grad_b = {0};
+    if (makeVectorZeros(&grad_b, model->bias->size) < 0)
+    {
+        LOG_ERROR("Unsuccessful initialization of gradient bias Vector in model training.\n");
+        success = 0;
+    }
+    Matrix velocity_weights = {0};
+    if (makeMatrixZeros(&velocity_weights, model->weights->rows, model->weights->cols) < 0)
+    {
+        LOG_ERROR("Unsuccessful initialization of velocity weights Matrix in model training.\n");
+        success = 0;
+    }
+    Vector velocity_bias = {0};
+    if (makeVectorZeros(&velocity_bias, model->bias->size) < 0)
+    {
+        LOG_ERROR("Unsuccessful initialization of velocity bias Vector in model training.\n");
+        success = 0;
+    }
+    if (!success)
+    {
+        freeTrainingObjects(&grad_w, &velocity_weights, &grad_b, &velocity_bias);
+        return -1;
+    }
+
+    // Init reused variables, build batch sizing
+    double loss = 0;
+    int *perm_arr = (int *)calloc(model->splitdata.train_features.rows, sizeof(int));
+    int batches = (int)ceil(model->splitdata.train_features.rows / (double)model->batch_size);
+    int mini_batch_idx = 0;
+    int batch_size = 0;
+
+    // Print start time
+    time_t start_time, end_time;
+    time(&start_time);
+    LOG_INFO("Start Time: %s\n", ctime(&start_time));
+
+    // Init progress bar
+    PBD progress_bar;
+    initProgressBar(&progress_bar, 50, '[', ']', '#', '.', 0.1);
+    drawProgressBar(&progress_bar);
+
+    // Iterate through N-number of epochs adjusting the weights and bias
+    for (int epoch = 1; epoch <= model->config.epochs; ++epoch)
+    {
+        success = 1;
+        // --- SHUFFLE DATASET ---
+
+        // Create a random permutation of the number of samples in the dataset
+        if (generateRandomPermutation(perm_arr, model->splitdata.train_features.rows) < 0)
+        {
+            LOG_ERROR("Creating random permutation for input shuffling was unsuccessful.\n");
+            return -1;
+        }
+
+        // Iterate through forward and backward pass for each mini-batch matrix
+        for (int b = 0; b < batches; ++b)
+        {
+            if (model->splitdata.train_features.rows - mini_batch_idx < model->batch_size)
+            {
+                batch_size = model->splitdata.train_features.rows - mini_batch_idx;
+            }
+            else
+            {
+                batch_size = model->batch_size;
+            }
+
+            // Make Logits matrix
+            if (makeMatrixZeros(model->logits, batch_size, model->classes) < 0)
+            {
+                LOG_ERROR("Problem initializing logits Matrix.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Get mini-batch of X
+            Matrix mini_X = {0};
+            if (makeMatrixZeros(&mini_X, batch_size, model->splitdata.train_features.cols) < 0)
+            {
+                LOG_ERROR("Creation of empty mini-batch X matrix was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+            if (makeMiniMatrix(*model->X, &mini_X, perm_arr, b, batch_size) < 0)
+            {
+                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Get mini-batch of y
+            Matrix mini_y = {0};
+            if (makeMatrixZeros(&mini_y, batch_size, model->splitdata.train_labels.cols) < 0)
+            {
+                LOG_ERROR("Creation of empty mini-batch y matrix was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+            if (makeMiniMatrix(*model->y, &mini_y, perm_arr, b, batch_size) < 0)
+            {
+                LOG_ERROR("Creation of mini-batch X matrix was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            loss = 0;
+            // --- FORWARD PASS ---
+
+            // Compute logits and apply activation function
+            if (computeLogits(mini_X, model) < 0)
+            {
+                LOG_ERROR("Computation of logits was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Compute loss
+            if (computeLoss(mini_y, model, &loss) < 0)
+            {
+                LOG_ERROR("Computation of Loss was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // --- BACKWARD PASS (GRADIENTS) ---
+
+            if (clearMatrix(&grad_w) < 0)
+            {
+                LOG_ERROR("Clearing gradient weights matrix was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+            if (clearVector(&grad_b) < 0)
+            {
+                LOG_ERROR("Clearing gradient bias vector was unsuccessful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Compute gradients
+            if (computeGradients(mini_X, mini_y, model, &grad_w, &grad_b) < 0)
+            {
+                LOG_ERROR("Computation of Gradient was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Optional regularization
+            if (computeRegularization(*model, &grad_w) < 0)
+            {
+                LOG_ERROR("Computation of Regularization was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Calculate weights velocity matrix
+            if (computeVelocityWeights(&velocity_weights, model->beta, grad_w))
+            {
+                LOG_ERROR("Computation of Weights Momentum was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+            // Calculate biases velocity vector
+            if (computeVelocityBias(&velocity_bias, model->beta, grad_b))
+            {
+                LOG_ERROR("Computation of Biases Momentum was unsuccessful while training model.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            // Gradient descent update with momentum
+            if (mat_mul(velocity_weights, model->config.learning_rate.curr_learning_rate, &velocity_weights) < 0)
+            {
+                LOG_ERROR("Weights gradient descent update with learning rate was not successful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            if (mat_sub(*model->weights, velocity_weights, model->weights) < 0)
+            {
+                LOG_ERROR("Weights update with gradient weights was not successful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            if (vect_mul(velocity_bias, model->config.learning_rate.curr_learning_rate, &velocity_bias) < 0)
+            {
+                LOG_ERROR("Bias gradient descent update with learning rate was not successful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            if (vect_sub(*model->bias, velocity_bias, model->bias) < 0)
+            {
+                LOG_ERROR("Bias update with gradient bias was not successful.\n");
+                goto freeBatch;
+                success = 0;
+            }
+
+            mini_batch_idx += batch_size;
+
+            freeBatch:
+            freeMatrix(&mini_X);
+            freeMatrix(&mini_y);
+            freeMatrix(model->logits);
+            if (!success)
+            {
+                break;
+            }
+        }
+
+        if (!success)
+        {
+            break;
+        }
+
+        mini_batch_idx = 0;
+
+        // Save Loss value to array for output
+        model->metrics.loss_vs_epochs->data[epoch - 1] = loss;
+
+        // Update learning rate
+        if (updateLearningRate(model, epoch) < 0)
+        {
+            LOG_ERROR("Bias update with gradient bias was not successful.\n");
+            success = 0;
+            break;
+        }
+
+        // Progress over time/epoch
+        progress_bar.n_curr_len = (epoch * progress_bar.m_max_len) / model->config.epochs;
+        progress_bar.loss = loss;
+        progress_bar.progress = (int)(((double)epoch / (double)model->config.epochs) * 100.0);
+        drawProgressBar(&progress_bar);
+    }
+
+    LOG_INFO("\n");
+
+    // Print end time and total time taken
+    time(&end_time);
+    LOG_INFO("Finish Time: %s\n", ctime(&end_time));
+    double sec_difference = difftime(end_time, start_time);
+    LOG_INFO("Total Elapsed Time: %.4f seconds.\n", sec_difference);
+
+    if (success)
+    {
+        // Test model performance and save to JSON
+        testModel(model);
+        // Set this to zero so it returns a successful 0
+        success = 0;
+    }
+    else
+    {
+        success = -1;
+    }
+
+    // Free everything malloc/calloc-ed
+    freeTrainingObjects(&grad_w, &velocity_weights, &grad_b, &velocity_bias);
+    free(perm_arr);
+    return success;
 }
